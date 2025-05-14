@@ -22,6 +22,8 @@ const VideoChat = () => {
   const [isConnectedToServer, setIsConnectedToServer] = useState(false);
   const [isCallInProgress, setIsCallInProgress] = useState(false);
   const [iceCandidatesQueue, setIceCandidatesQueue] = useState([]);
+  const [isCameraEnabled, setIsCameraEnabled] = useState(true); // Nuevo estado
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);   // Nuevo estado
 
   const sendMessage = (message) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -275,15 +277,48 @@ const VideoChat = () => {
     }
   };
 
-  return (
+  const toggleCamera = () => {
+    if (localStreamRef.current) {
+      const videoTrack = localStreamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsCameraEnabled(videoTrack.enabled);
+      }
+    }
+  };
+
+  const toggleAudio = () => {
+    if (localStreamRef.current) {
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsAudioEnabled(audioTrack.enabled);
+      }
+    }
+  };
+
+    return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px' }}>
-      <h2>Video Chat (React + WebSockets)</h2>
+      <h2>Video Chat</h2>
       <p>Estado del servidor: {isConnectedToServer ? 'Conectado' : 'Desconectado'}</p>
+      
       {!isCallInProgress && isConnectedToServer && (
         <button onClick={createOffer} style={{ margin: '10px', padding: '10px 20px' }}>
-          Iniciar Llamada (Crear Oferta)
+          Iniciar Llamada
         </button>
       )}
+
+      {isCallInProgress && (
+        <div style={{ margin: '10px' }}>
+          <button onClick={toggleCamera} style={{ marginRight: '10px' }}>
+            {isCameraEnabled ? 'Apagar Cámara' : 'Encender Cámara'}
+          </button>
+          <button onClick={toggleAudio}>
+            {isAudioEnabled ? 'Silenciar Mic' : 'Activar Mic'}
+          </button>
+        </div>
+      )}
+      
       {isCallInProgress && <p style={{ color: 'green' }}>Llamada en curso...</p>}
 
       <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: '700px', marginTop: '20px' }}>
@@ -293,7 +328,7 @@ const VideoChat = () => {
             ref={localVideoRef}
             autoPlay
             playsInline
-            muted
+            muted // Siempre muteado para evitar eco local
             style={{ border: '1px solid black', width: '320px', height: '240px', backgroundColor: '#333' }}
           />
         </div>
