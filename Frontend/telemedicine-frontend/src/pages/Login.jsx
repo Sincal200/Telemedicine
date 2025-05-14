@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Form, Input, Button, Typography, Card, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import '@ant-design/v5-patch-for-react-19';
+import { Link } from 'react-router-dom';
 
 
 const { Title } = Typography;
@@ -74,6 +75,7 @@ function Login() {
           />
         </Form.Item>
         <Form.Item>
+          <Link to="/video">
           <Button
             type="primary"
             htmlType="submit"
@@ -89,6 +91,7 @@ function Login() {
           >
             Login
           </Button>
+          </Link>
         </Form.Item>
       </Form>
     </Card>
