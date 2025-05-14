@@ -9,14 +9,14 @@ import './App.css'
 function App() {
   return (
     <BrowserRouter>
-    <Router>
+
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/about" element={<About />} />
         <Route path="/home" element={<Home />} />
         <Route path="/video" element={<Video />} />
       </Routes>
-    </Router>
+
     </BrowserRouter>
   );
 }
