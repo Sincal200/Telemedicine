@@ -8,6 +8,7 @@ import './App.css'
 
 function App() {
   return (
+    <BrowserRouter>
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
@@ -16,6 +17,7 @@ function App() {
         <Route path="/video" element={<Video />} />
       </Routes>
     </Router>
+    </BrowserRouter>
   );
 }
 
