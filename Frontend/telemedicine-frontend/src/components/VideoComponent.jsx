@@ -8,7 +8,7 @@ const stunServers = {
 };
 
 // URL del servidor de señalización WebSocket
-const SIGNALING_SERVER_URL = 'ws://localhost:3000';
+const SIGNALING_SERVER_URL = 'wss://telemedicine-jvok.onrender.com';
 
 const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   const localVideoRef = useRef(null);
