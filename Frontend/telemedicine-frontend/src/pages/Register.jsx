@@ -147,7 +147,7 @@ function Register() {
   return (
     <div className={styles.container}>
       <div className={styles.formWrapper}>
-        <Card className={styles.card} bordered={false}>
+        <Card className={styles.card} variant={false}>
           <div className={styles.decorativeElements}>
             <div className={styles.decorativeCircle1}></div>
             <div className={styles.decorativeCircle2}></div>

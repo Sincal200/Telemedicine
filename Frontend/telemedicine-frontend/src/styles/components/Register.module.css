@@ -372,3 +372,147 @@
     padding: 12px;
   }
 }
+
+/* Para tablets grandes */
+@media (max-width: 1024px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .welcomeSection {
+    padding: 20px 16px;
+  }
+  
+  .statsRow {
+    margin-bottom: 24px;
+  }
+}
+
+/* Para tablets */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 16px;
+  }
+  
+  .content {
+    padding: 16px;
+  }
+  
+  .welcomeSection {
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .welcomeTitle {
+    font-size: 20px !important;
+  }
+  
+  .userInfo {
+    display: none; /* Ocultar nombre de usuario en móvil */
+  }
+  
+  .headerLeft {
+    gap: 8px;
+  }
+  
+  .headerTitle {
+    font-size: 18px !important;
+  }
+  
+  .logo {
+    font-size: 24px;
+  }
+  
+  /* Hacer las estadísticas más compactas */
+  .statCard .ant-statistic-content {
+    font-size: 16px !important;
+  }
+  
+  .statCard .ant-statistic-title {
+    font-size: 12px !important;
+  }
+}
+
+/* Para móviles */
+@media (max-width: 480px) {
+  .statsRow {
+    margin-bottom: 24px;
+  }
+  
+  .actionButton {
+    height: 44px !important;
+    font-size: 14px !important;
+  }
+  
+  .appointmentHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  /* Botones de acción en columna única */
+  .actionCard .ant-row {
+    flex-direction: column !important;
+  }
+  
+  .actionCard .ant-col {
+    width: 100% !important;
+    margin-bottom: 8px;
+  }
+  
+  /* Ajustar el calendario mini */
+  .miniCalendar .ant-picker-content {
+    height: 200px;
+  }
+  
+  /* Layout en una columna para móvil */
+  .mainContent .ant-col:first-child {
+    margin-bottom: 20px;
+  }
+}
+
+/* Para móviles muy pequeños */
+@media (max-width: 320px) {
+  .header {
+    padding: 0 8px;
+  }
+  
+  .content {
+    padding: 8px;
+  }
+  
+  .welcomeSection {
+    padding: 12px;
+  }
+  
+  .welcomeTitle {
+    font-size: 18px !important;
+  }
+  
+  .logo {
+    font-size: 20px;
+  }
+  
+  .headerTitle {
+    font-size: 16px !important;
+  }
+}
+
+/* Para orientación horizontal en móviles */
+@media (max-height: 500px) and (orientation: landscape) {
+  .welcomeSection {
+    display: none; /* Ocultar bienvenida para ahorrar espacio */
+  }
+  
+  .header {
+    height: 48px; /* Header más pequeño */
+  }
+  
+  .content {
+    padding: 8px;
+  }
+  
+  .statsRow {
+    margin-bottom: 16px;
+  }
+}

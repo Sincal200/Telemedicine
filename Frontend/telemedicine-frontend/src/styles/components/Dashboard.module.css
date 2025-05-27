@@ -1,0 +1,324 @@
+.layout {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  font-size: 32px;
+  color: white;
+}
+
+.headerTitle {
+  color: white !important;
+  margin: 0 !important;
+  font-weight: 700;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.iconButton {
+  color: white !important;
+  font-size: 18px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.iconButton:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.userProfile:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.avatar {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.userName {
+  color: white !important;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.userRole {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: 12px;
+}
+
+.content {
+  padding: 24px;
+  background: #f5f7fa;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.welcomeSection {
+  margin-bottom: 32px;
+  text-align: center;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.welcomeTitle {
+  color: #2c3e50 !important;
+  margin-bottom: 8px !important;
+  font-weight: 700;
+}
+
+.welcomeSubtitle {
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+.statsRow {
+  margin-bottom: 32px;
+}
+
+.statCard {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.statIcon {
+  font-size: 24px;
+}
+
+.mainContent {
+  gap: 24px;
+}
+
+.actionCard {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+.actionCard .ant-card-head-title {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.actionButton {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+  transition: all 0.3s ease !important;
+}
+
+.actionButton.ant-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+}
+
+.actionButton.ant-btn-primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+.actionButton:not(.ant-btn-primary) {
+  border: 2px solid #e1e8ed !important;
+  color: #667eea !important;
+}
+
+.actionButton:not(.ant-btn-primary):hover {
+  border-color: #667eea !important;
+  color: #667eea !important;
+  transform: translateY(-1px) !important;
+}
+
+.appointmentsCard {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.appointmentsCard .ant-card-head-title {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.appointmentItem {
+  padding: 16px 0 !important;
+  border-bottom: 1px solid #f0f2f5 !important;
+}
+
+.appointmentItem:last-child {
+  border-bottom: none !important;
+}
+
+.appointmentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appointmentAvatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.appointmentBadge .ant-badge-status-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.calendarCard {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+.calendarCard .ant-card-head-title {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.miniCalendar .ant-picker-calendar-header {
+  padding: 8px 0;
+}
+
+.miniCalendar .ant-picker-content {
+  height: 250px;
+  overflow: hidden;
+}
+
+.activityCard {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.activityCard .ant-card-head-title {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.activityItem {
+  padding: 12px 0 !important;
+  border-bottom: 1px solid #f0f2f5 !important;
+}
+
+.activityItem:last-child {
+  border-bottom: none !important;
+}
+
+.activityTime {
+  font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 16px;
+  }
+  
+  .content {
+    padding: 16px;
+  }
+  
+  .welcomeSection {
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .welcomeTitle {
+    font-size: 20px !important;
+  }
+  
+  .userInfo {
+    display: none;
+  }
+  
+  .headerLeft {
+    gap: 8px;
+  }
+  
+  .headerTitle {
+    font-size: 18px !important;
+  }
+  
+  .logo {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .statsRow {
+    margin-bottom: 24px;
+  }
+  
+  .actionButton {
+    height: 44px !important;
+    font-size: 14px !important;
+  }
+  
+  .appointmentHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
