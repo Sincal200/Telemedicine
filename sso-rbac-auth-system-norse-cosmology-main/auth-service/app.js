@@ -147,7 +147,7 @@ app.post("/create-user", async (req, res) => {
   if (!userData) return res.status(400).send("Missing user data in request body");
 
   try {
-    const { data } = await axios({
+    const response = await axios({
       method: "post",
       url: `${process.env.KEYCLOAK_AUTH_SERVER_URL}/admin/realms/${tenant}/users`,
       headers: {
@@ -157,9 +157,14 @@ app.post("/create-user", async (req, res) => {
       data: userData,
     });
     
+    // Extraer el ID del usuario del header Location
+    const locationHeader = response.headers.location;
+    const userId = locationHeader ? locationHeader.split('/').pop() : null;
+    
     res.status(201).json({
       message: "Usuario creado exitosamente",
-      data: data
+      userId: userId,
+      data: response.data
     });
   } catch (err) {
     console.error("Error al crear usuario:", err.message);
