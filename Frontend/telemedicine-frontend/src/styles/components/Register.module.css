@@ -1,0 +1,374 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+}
+
+.formWrapper {
+  width: 100%;
+  max-width: 450px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.decorativeElements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.decorativeCircle1 {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(45deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+  border-radius: 50%;
+  top: -50px;
+  right: -50px;
+  animation: float 6s ease-in-out infinite;
+}
+
+.decorativeCircle2 {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(45deg, rgba(118, 75, 162, 0.06), rgba(102, 126, 234, 0.06));
+  border-radius: 50%;
+  bottom: -30px;
+  left: -30px;
+  animation: float 4s ease-in-out infinite reverse;
+}
+
+.decorativeCircle3 {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(45deg, rgba(102, 126, 234, 0.04), rgba(118, 75, 162, 0.04));
+  border-radius: 50%;
+  top: 60%;
+  right: -20px;
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.logo {
+  font-size: 36px;
+  color: #667eea;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.title {
+  color: #2c3e50;
+  margin-bottom: 2px !important;
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.subtitle {
+  color: #7f8c8d;
+  font-size: 13px;
+  display: block;
+}
+
+.form {
+  position: relative;
+  z-index: 2;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.formItem {
+  margin-bottom: 12px !important;
+}
+
+.formItem label {
+  color: #2c3e50 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  margin-bottom: 3px !important;
+}
+
+.modernInput {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1.5px solid #e1e8ed !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  padding: 10px 14px !important;
+  height: 42px !important;
+  transition: all 0.3s ease !important;
+}
+
+.modernInput:focus,
+.modernInput:hover {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+  background: rgba(255, 255, 255, 1) !important;
+}
+
+.modernSelect .ant-select-selector {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1.5px solid #e1e8ed !important;
+  border-radius: 10px !important;
+  padding: 6px 12px !important;
+  height: 42px !important;
+  transition: all 0.3s ease !important;
+}
+
+.modernSelect .ant-select-selector:focus,
+.modernSelect .ant-select-selector:hover,
+.modernSelect.ant-select-focused .ant-select-selector {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+  background: rgba(255, 255, 255, 1) !important;
+}
+
+.modernSelect .ant-select-selection-item {
+  line-height: 30px !important;
+}
+
+.inputIcon {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.selectOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.selectOption span {
+  color: #2c3e50;
+}
+
+.submitItem {
+  margin-bottom: 12px !important;
+  margin-top: 4px !important;
+}
+
+.submitButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  height: 44px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.submitButton:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+.submitButton:active {
+  transform: translateY(0) !important;
+}
+
+.loginLink {
+  text-align: center;
+  margin-top: 6px;
+}
+
+.loginLink .ant-typography {
+  color: #7f8c8d;
+  font-size: 13px;
+}
+
+.link {
+  color: #667eea !important;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.link:hover {
+  color: #764ba2 !important;
+  text-decoration: underline;
+}
+
+/* Responsive - Sin scroll */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .card {
+    padding: 20px;
+  }
+  
+  .formRow {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  
+  .title {
+    font-size: 20px;
+  }
+  
+  .logo {
+    font-size: 32px;
+  }
+  
+  .header {
+    margin-bottom: 16px;
+  }
+  
+  .formItem {
+    margin-bottom: 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+  }
+  
+  .card {
+    border-radius: 14px;
+    padding: 18px;
+  }
+  
+  .modernInput,
+  .modernSelect .ant-select-selector,
+  .submitButton {
+    height: 40px !important;
+  }
+  
+  .modernInput {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .formItem label {
+    font-size: 12px !important;
+  }
+  
+  .title {
+    font-size: 18px;
+  }
+  
+  .logo {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+  
+  .subtitle {
+    font-size: 12px;
+  }
+}
+
+/* Para pantallas muy pequeñas en altura */
+@media (max-height: 600px) {
+  .container {
+    padding: 10px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
+  .header {
+    margin-bottom: 12px;
+  }
+  
+  .logo {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  
+  .title {
+    font-size: 16px;
+  }
+  
+  .subtitle {
+    font-size: 11px;
+  }
+  
+  .formItem {
+    margin-bottom: 8px !important;
+  }
+  
+  .card {
+    padding: 16px;
+  }
+}
+
+/* Para móviles en horizontal */
+@media (max-height: 500px) and (orientation: landscape) {
+  .container {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 10px;
+  }
+  
+  .formRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  
+  .header {
+    margin-bottom: 8px;
+  }
+  
+  .logo {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+  
+  .title {
+    font-size: 14px;
+  }
+  
+  .subtitle {
+    display: none;
+  }
+  
+  .formItem {
+    margin-bottom: 6px !important;
+  }
+  
+  .modernInput,
+  .modernSelect .ant-select-selector,
+  .submitButton {
+    height: 36px !important;
+  }
+  
+  .card {
+    padding: 12px;
+  }
+}

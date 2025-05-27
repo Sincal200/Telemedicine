@@ -1,0 +1,35 @@
+:root {
+  /* Colores principales */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  
+  /* Colores de texto */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #9ca3af;
+  
+  /* Colores de fondo */
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-input: rgba(248, 250, 252, 0.8);
+  
+  /* Bordes y sombras */
+  --border-light: 1px solid rgba(226, 232, 240, 0.6);
+  --shadow-card: 0 25px 50px rgba(0, 0, 0, 0.15);
+  --shadow-button: 0 8px 25px rgba(102, 126, 234, 0.4);
+  
+  /* Espaciado */
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 32px;
+  --spacing-xl: 40px;
+  
+  /* Bordes redondeados */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  
+  /* Transiciones */
+  --transition-fast: all 0.3s ease;
+}
