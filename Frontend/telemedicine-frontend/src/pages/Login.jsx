@@ -78,7 +78,7 @@ function Login() {
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 16 }}>
-            <Link to="/forgot-password" className={styles.link}>
+            <Link to="http://localhost:8080/realms/telemedicine/login-actions/reset-credentials?client_id=bifrost&redirect_uri=http://localhost:5173/" className={styles.link}>
               ¿Olvidaste tu contraseña?
             </Link>
           </Form.Item>
