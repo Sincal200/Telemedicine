@@ -1,100 +1,114 @@
 import { useState } from 'react';
 import { Form, Input, Button, Typography, Card, message } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import '@ant-design/v5-patch-for-react-19';
 import { Link } from 'react-router-dom';
+import styles from '../styles/components/Login.module.css';
 
-
-const { Title } = Typography;
-
-const cardStyle = {
-  maxWidth: 350,
-  margin: '80px auto',
-  background: '#f9fafb',
-  borderRadius: 16,
-  boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
-  border: '1px solid #e3e8ee',
-};
+const { Title, Text } = Typography;
 
 function Login() {
   const [loading, setLoading] = useState(false);
 
   const onFinish = (values) => {
     setLoading(true);
-    // Simulación de autenticación
     setTimeout(() => {
       setLoading(false);
       if (values.email === 'user@telemed.com' && values.password === 'password123') {
-        message.success('Login successful!');
-        // Aquí puedes redirigir o guardar el token
+        message.success('¡Inicio de sesión exitoso!');
       } else {
-        message.error('Invalid credentials. Please try again.');
+        message.error('Credenciales inválidas. Inténtalo de nuevo.');
       }
     }, 1200);
   };
 
   return (
-    <Card style={cardStyle}>
-      <Title level={3} style={{ color: '#1e293b', textAlign: 'center', marginBottom: 24 }}>
-        Telemedicine Login
-      </Title>
-      <Form
-        name="login"
-        layout="vertical"
-        onFinish={onFinish}
-        requiredMark={false}
-        initialValues={{ email: '', password: '' }}
-      >
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[
-            { required: true, message: 'Please enter your email' },
-            { type: 'email', message: 'Enter a valid email' },
-          ]}
+    <div className={styles.container}>
+      <Card className={styles.card} variant={false}>
+        <div className={styles.decorativeCircle1}></div>
+        <div className={styles.decorativeCircle2}></div>
+        
+        <div className={styles.header}>
+          <MedicineBoxOutlined className={styles.logo} />
+          <Title level={2} className={styles.title}>
+            Telemedicine
+          </Title>
+          <Text className={styles.subtitle}>
+            Accede a tu cuenta para continuar
+          </Text>
+        </div>
+
+        <Form
+          name="login"
+          layout="vertical"
+          onFinish={onFinish}
+          requiredMark={false}
+          initialValues={{ email: '', password: '' }}
+          style={{ position: 'relative', zIndex: 2 }}
         >
-          <Input
-            prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="user@telemed.com"
-            size="large"
-            autoComplete="email"
-            style={{ background: '#f1f5f9', borderRadius: 8 }}
-          />
-        </Form.Item>
-        <Form.Item
-          label="Password"
-          name="password"
-          rules={[{ required: true, message: 'Please enter your password' }]}
-        >
-          <Input.Password
-            prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="Password"
-            size="large"
-            autoComplete="current-password"
-            style={{ background: '#f1f5f9', borderRadius: 8 }}
-          />
-        </Form.Item>
-        <Form.Item>
-          <Link to="/video">
-          <Button
-            type="primary"
-            htmlType="submit"
-            size="large"
-            loading={loading}
-            block
-            style={{
-              background: '#38bdf8',
-              borderColor: '#38bdf8',
-              borderRadius: 8,
-              fontWeight: 500,
-            }}
+          <Form.Item
+            label={<span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>Correo Electrónico</span>}
+            name="email"
+            rules={[
+              { required: true, message: 'Por favor ingresa tu correo electrónico' },
+              { type: 'email', message: 'Ingresa un correo válido' },
+            ]}
           >
-            Login
-          </Button>
-          </Link>
-        </Form.Item>
-      </Form>
-    </Card>
+            <Input
+              prefix={<UserOutlined style={{ color: 'var(--text-muted)' }} />}
+              placeholder="usuario@telemed.com"
+              size="large"
+              autoComplete="email"
+              className={styles.modernInput}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>Contraseña</span>}
+            name="password"
+            rules={[{ required: true, message: 'Por favor ingresa tu contraseña' }]}
+          >
+            <Input.Password
+              prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />}
+              placeholder="••••••••"
+              size="large"
+              autoComplete="current-password"
+              className={styles.modernInput}
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 16 }}>
+            <Link to="/forgot-password" className={styles.link}>
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 24 }}>
+            <Link to="/video">
+              <Button
+                type="primary"
+                htmlType="submit"
+                size="large"
+                loading={loading}
+                block
+                className={styles.modernButton}
+              >
+                Iniciar Sesión
+              </Button>
+            </Link>
+          </Form.Item>
+
+          <div style={{ textAlign: 'center' }}>
+            <Text style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+              ¿No tienes una cuenta?{' '}
+              <Link to="/register" className={styles.registerLink}>
+                Regístrate aquí
+              </Link>
+            </Text>
+          </div>
+        </Form>
+      </Card>
+    </div>
   );
 }
 
