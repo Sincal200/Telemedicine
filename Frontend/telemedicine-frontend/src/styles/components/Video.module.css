@@ -1,0 +1,387 @@
+.videoContainer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.videoContainer h2 {
+  color: white;
+  text-align: center;
+  margin-bottom: 24px;
+  font-weight: 700;
+  font-size: 28px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.callControls {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 10;
+}
+
+.callControls button {
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.callControls button:first-child,
+.callControls button:nth-child(2) {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+}
+
+.callControls button:first-child:hover,
+.callControls button:nth-child(2):hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.callControls button:last-child {
+  background: #ff4d4f;
+  color: white;
+}
+
+.callControls button:last-child:hover {
+  background: #ff3333;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.4);
+}
+
+.videoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: center;
+}
+
+.localVideo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.localVideo video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #1a1a1a;
+}
+
+.remoteVideosContainer {
+  display: contents;
+}
+
+.remoteVideoWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.remoteVideoWrapper video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #1a1a1a;
+}
+
+.roleLabel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.statusIndicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #52c41a;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.statusIndicator.disconnected {
+  background: #ff4d4f;
+}
+
+.errorMessage {
+  background: rgba(255, 77, 79, 0.9);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.loadingMessage {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  padding: 16px 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .videoContainer {
+    padding: 16px;
+  }
+  
+  .videoGrid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    max-width: 100%;
+  }
+  
+  .videoContainer h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .videoContainer {
+    padding: 12px;
+  }
+  
+  .videoContainer h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  
+  .callControls {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  
+  .callControls button {
+    padding: 10px 16px;
+    min-width: 120px;
+    font-size: 13px;
+  }
+  
+  .videoGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .localVideo,
+  .remoteVideoWrapper {
+    aspect-ratio: 4/3;
+  }
+  
+  .roleLabel {
+    font-size: 11px;
+    padding: 4px 8px;
+    top: 8px;
+    left: 8px;
+  }
+  
+  .statusIndicator {
+    width: 10px;
+    height: 10px;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .videoContainer {
+    padding: 8px;
+    min-height: 100vh;
+  }
+  
+  .videoContainer h2 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  
+  .callControls {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 20px;
+  }
+  
+  .callControls button {
+    width: 100%;
+    min-width: unset;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .videoGrid {
+    gap: 12px;
+    width: 100%;
+  }
+  
+  .localVideo,
+  .remoteVideoWrapper {
+    aspect-ratio: 1/1;
+    border-radius: 12px;
+  }
+  
+  .errorMessage,
+  .loadingMessage {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Para orientación horizontal en móviles */
+@media (max-height: 500px) and (orientation: landscape) {
+  .videoContainer {
+    padding: 8px;
+  }
+  
+  .videoContainer h2 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  
+  .callControls {
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .callControls button {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-width: 100px;
+  }
+  
+  .videoGrid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    max-height: 60vh;
+  }
+  
+  .localVideo,
+  .remoteVideoWrapper {
+    aspect-ratio: 16/9;
+  }
+  
+  .roleLabel {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+
+/* Para pantallas muy pequeñas */
+@media (max-width: 320px) {
+  .videoContainer {
+    padding: 4px;
+  }
+  
+  .videoContainer h2 {
+    font-size: 16px;
+  }
+  
+  .callControls button {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .videoGrid {
+    gap: 8px;
+  }
+  
+  .localVideo,
+  .remoteVideoWrapper {
+    border-radius: 8px;
+    border-width: 2px;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.localVideo,
+.remoteVideoWrapper {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Estados de cámara/micrófono */
+.cameraOff::after {
+  content: '📷';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  opacity: 0.7;
+}
+
+.micOff::before {
+  content: '🔇';
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-size: 20px;
+  z-index: 10;
+}
+
+/* Hover effects para desktop */
+@media (hover: hover) {
+  .localVideo:hover,
+  .remoteVideoWrapper:hover {
+    transform: scale(1.02);
+    transition: transform 0.3s ease;
+  }
+}

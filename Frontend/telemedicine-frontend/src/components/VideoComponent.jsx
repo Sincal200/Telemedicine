@@ -1,4 +1,6 @@
+/* filepath: c:\Users\sinca\OneDrive\Documents\Telemedicine\Frontend\telemedicine-frontend\src\components\VideoComponent.jsx */
 import React, { useEffect, useRef, useState } from 'react';
+import styles from '../styles/components/Video.module.css';
 
 const stunServers = {
   iceServers: [
@@ -7,13 +9,12 @@ const stunServers = {
   ],
 };
 
-// URL del servidor de señalización WebSocket
-const SIGNALING_SERVER_URL = 'wss://telemedicine-jvok.onrender.com';
+const SIGNALING_SERVER_URL = 'ws://localhost:8081/api/telemedicine/';
 
 const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   const localVideoRef = useRef(null);
-  const remoteVideosRef = useRef({}); // Ahora guardamos múltiples videos remotos
-  const peerConnectionsRef = useRef({}); // Múltiples conexiones peer
+  const remoteVideosRef = useRef({});
+  const peerConnectionsRef = useRef({});
   const localStreamRef = useRef(null);
   const wsRef = useRef(null);
 
@@ -25,6 +26,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [participants, setParticipants] = useState([]);
   const [roomInfo, setRoomInfo] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const sendMessage = (message) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -42,11 +44,19 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   const createPeerConnection = (remoteUserId) => {
     console.log(`Creando conexión peer con usuario: ${remoteUserId}`);
     
+    // Si ya existe una conexión, cerrarla primero
+    if (peerConnectionsRef.current[remoteUserId]) {
+      console.log(`Cerrando conexión existente con ${remoteUserId}`);
+      peerConnectionsRef.current[remoteUserId].close();
+      delete peerConnectionsRef.current[remoteUserId];
+    }
+    
     const pc = new RTCPeerConnection(stunServers);
     
     // Añadir tracks locales al peer connection
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => {
+        console.log(`Añadiendo track: ${track.kind}`);
         pc.addTrack(track, localStreamRef.current);
       });
     }
@@ -54,6 +64,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     // Manejar candidatos ICE
     pc.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log(`Enviando candidato ICE a ${remoteUserId}`);
         sendMessage({
           type: 'candidate',
           candidate: event.candidate,
@@ -65,6 +76,21 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     // Manejar cambios de estado de la conexión ICE
     pc.oniceconnectionstatechange = () => {
       console.log(`ICE connection state con ${remoteUserId}: ${pc.iceConnectionState}`);
+      
+      // Actualizar indicador visual de estado
+      const statusIndicator = document.querySelector(`#remote-video-${remoteUserId}`)?.parentElement?.querySelector(`.${styles.statusIndicator}`);
+      if (statusIndicator) {
+        if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+          statusIndicator.classList.remove(styles.disconnected);
+        } else {
+          statusIndicator.classList.add(styles.disconnected);
+        }
+      }
+    };
+
+    // Manejar cambios de estado de señalización
+    pc.onsignalingstatechange = () => {
+      console.log(`Signaling state con ${remoteUserId}: ${pc.signalingState}`);
     };
     
     // Manejar streams remotas
@@ -82,16 +108,22 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         const remoteVideosContainer = document.getElementById('remote-videos-container');
         if (remoteVideosContainer) {
           const videoContainer = document.createElement('div');
-          videoContainer.className = 'remote-video-wrapper';
+          videoContainer.className = styles.remoteVideoWrapper;
           
           // Añadir etiqueta con el rol
           const roleLabel = document.createElement('div');
-          roleLabel.className = 'role-label';
+          roleLabel.className = styles.roleLabel;
           const participant = participants.find(p => p.userId === remoteUserId);
-          roleLabel.textContent = participant ? participant.userRole : 'Usuario';
+          roleLabel.textContent = participant ? 
+            (participant.userRole === 'doctor' ? 'Doctor' : 'Paciente') : 'Usuario';
+          
+          // Añadir indicador de estado
+          const statusIndicator = document.createElement('div');
+          statusIndicator.className = `${styles.statusIndicator} ${styles.disconnected}`;
           
           videoContainer.appendChild(videoElement);
           videoContainer.appendChild(roleLabel);
+          videoContainer.appendChild(statusIndicator);
           remoteVideosContainer.appendChild(videoContainer);
           
           remoteVideosRef.current[remoteUserId] = videoElement;
@@ -102,6 +134,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
       if (remoteVideosRef.current[remoteUserId]) {
         remoteVideosRef.current[remoteUserId].srcObject = event.streams[0];
         setIsCallInProgress(true);
+        setIsLoading(false);
       }
     };
     
@@ -109,173 +142,230 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     return pc;
   };
 
-  const processPendingIceCandidates = (remoteUserId) => {
-    const pc = peerConnectionsRef.current[remoteUserId];
-    const candidates = iceCandidatesQueue[remoteUserId] || [];
-    
-    if (pc && pc.remoteDescription && candidates.length > 0) {
-      console.log(`Procesando ${candidates.length} candidatos ICE pendientes para ${remoteUserId}`);
+  const handleOffer = async (offer, senderId) => {
+    try {
+      console.log(`Manejando offer de ${senderId}`);
       
-      // Copia actual y limpia la cola para este usuario
-      const candidatesToProcess = [...candidates];
-      setIceCandidatesQueue(prev => ({
-        ...prev,
-        [remoteUserId]: []
-      }));
+      // Crear o obtener peer connection
+      let pc = peerConnectionsRef.current[senderId];
+      if (!pc) {
+        pc = createPeerConnection(senderId);
+      }
+
+      // Verificar el estado antes de proceder
+      console.log(`Estado de señalización actual: ${pc.signalingState}`);
       
-      // Añadir cada candidato
-      for (const candidate of candidatesToProcess) {
-        try {
-          pc.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
-          console.warn(`Error al añadir candidato ICE para ${remoteUserId}:`, e.message);
+      // Solo proceder si el estado es correcto
+      if (pc.signalingState === 'stable' || pc.signalingState === 'have-remote-offer') {
+        if (pc.signalingState === 'have-remote-offer') {
+          console.log('Ya hay una oferta remota pendiente, recreando conexión...');
+          pc.close();
+          pc = createPeerConnection(senderId);
         }
-      }
-    }
-  };
-
-  const handleOffer = async (message) => {
-    const { senderId, offer } = message;
-    
-    console.log(`Recibida oferta de ${senderId}`);
-    
-    let pc = peerConnectionsRef.current[senderId];
-    if (!pc) {
-      pc = createPeerConnection(senderId);
-    }
-    
-    try {
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      console.log(`Oferta remota establecida para ${senderId}`);
-      
-      // Procesar candidatos ICE pendientes
-      processPendingIceCandidates(senderId);
-      
-      // Crear respuesta
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      
-      // Enviar respuesta
-      sendMessage({
-        type: 'answer',
-        answer,
-        targetUserId: senderId
-      });
-      
-    } catch (e) {
-      console.error(`Error al procesar oferta de ${senderId}:`, e);
-      setError(`Error al procesar oferta: ${e.message}`);
-    }
-  };
-
-  const handleAnswer = async (message) => {
-    const { senderId, answer } = message;
-    
-    console.log(`Recibida respuesta de ${senderId}`);
-    
-    const pc = peerConnectionsRef.current[senderId];
-    if (!pc) {
-      console.error(`No hay conexión peer para ${senderId}`);
-      return;
-    }
-    
-    try {
-      await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      console.log(`Respuesta remota establecida para ${senderId}`);
-      
-      // Procesar candidatos ICE pendientes
-      processPendingIceCandidates(senderId);
-      
-    } catch (e) {
-      console.error(`Error al procesar respuesta de ${senderId}:`, e);
-      setError(`Error al procesar respuesta: ${e.message}`);
-    }
-  };
-
-  const handleCandidate = async (message) => {
-    const { senderId, candidate } = message;
-    
-    const pc = peerConnectionsRef.current[senderId];
-    
-    if (pc && pc.remoteDescription) {
-      try {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (e) {
-        console.warn(`Error al añadir candidato ICE de ${senderId}:`, e.message);
-      }
-    } else {
-      // Guardar candidato para procesamiento posterior
-      setIceCandidatesQueue(prev => ({
-        ...prev,
-        [senderId]: [...(prev[senderId] || []), candidate]
-      }));
-    }
-  };
-
-  const handleUserJoined = async (message) => {
-    const { userId: newUserId, userRole: newUserRole } = message;
-    
-    console.log(`Nuevo usuario unido a la sala: ${newUserId} (${newUserRole})`);
-    
-    // Actualizar lista de participantes
-    setParticipants(prev => [
-      ...prev,
-      { userId: newUserId, userRole: newUserRole }
-    ]);
-    
-    // Si somos doctor, iniciar llamada con el nuevo participante
-    // O si somos paciente y se une un doctor
-    if ((userRole === 'doctor') || (userRole === 'patient' && newUserRole === 'doctor')) {
-      // Crear conexión y enviar oferta
-      const pc = createPeerConnection(newUserId);
-      
-      try {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
+        
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        console.log(`Remote description establecida para ${senderId}`);
+        
+        // Procesar candidatos ICE en cola
+        if (iceCandidatesQueue[senderId]) {
+          console.log(`Procesando ${iceCandidatesQueue[senderId].length} candidatos ICE en cola para ${senderId}`);
+          for (const candidate of iceCandidatesQueue[senderId]) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (err) {
+              console.warn('Error añadiendo candidato ICE:', err);
+            }
+          }
+          // Limpiar la cola
+          setIceCandidatesQueue(prev => {
+            const newQueue = { ...prev };
+            delete newQueue[senderId];
+            return newQueue;
+          });
+        }
+        
+        // Crear y enviar respuesta
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
         
         sendMessage({
-          type: 'offer',
-          offer,
-          targetUserId: newUserId
+          type: 'answer',
+          answer: answer,
+          targetUserId: senderId
         });
         
-      } catch (e) {
-        console.error(`Error al crear oferta para ${newUserId}:`, e);
-        setError(`Error al crear oferta: ${e.message}`);
+        console.log(`Answer enviada a ${senderId}`);
+      } else {
+        console.warn(`No se puede procesar offer en estado: ${pc.signalingState}`);
       }
+    } catch (error) {
+      console.error('Error manejando offer:', error);
+      setError(`Error al procesar llamada: ${error.message}`);
     }
   };
 
-  const handleUserLeft = (message) => {
-    const { userId: leftUserId } = message;
+  const handleAnswer = async (answer, senderId) => {
+    try {
+      console.log(`Manejando answer de ${senderId}`);
+      
+      const pc = peerConnectionsRef.current[senderId];
+      if (!pc) {
+        console.error(`No se encontró peer connection para ${senderId}`);
+        return;
+      }
+
+      console.log(`Estado de señalización actual: ${pc.signalingState}`);
+      
+      // Solo proceder si estamos esperando una respuesta
+      if (pc.signalingState === 'have-local-offer') {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        console.log(`Remote description (answer) establecida para ${senderId}`);
+        
+        // Procesar candidatos ICE en cola
+        if (iceCandidatesQueue[senderId]) {
+          console.log(`Procesando ${iceCandidatesQueue[senderId].length} candidatos ICE en cola para ${senderId}`);
+          for (const candidate of iceCandidatesQueue[senderId]) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (err) {
+              console.warn('Error añadiendo candidato ICE:', err);
+            }
+          }
+          // Limpiar la cola
+          setIceCandidatesQueue(prev => {
+            const newQueue = { ...prev };
+            delete newQueue[senderId];
+            return newQueue;
+          });
+        }
+      } else {
+        console.warn(`No se puede procesar answer en estado: ${pc.signalingState}. Estado esperado: have-local-offer`);
+      }
+    } catch (error) {
+      console.error('Error manejando answer:', error);
+      setError(`Error al procesar respuesta: ${error.message}`);
+    }
+  };
+
+  const handleIceCandidate = async (candidate, senderId) => {
+    try {
+      const pc = peerConnectionsRef.current[senderId];
+      
+      if (!pc) {
+        console.log(`Peer connection no encontrada para ${senderId}, guardando candidato en cola`);
+        setIceCandidatesQueue(prev => ({
+          ...prev,
+          [senderId]: [...(prev[senderId] || []), candidate]
+        }));
+        return;
+      }
+
+      // Solo añadir candidatos si la descripción remota está establecida
+      if (pc.remoteDescription) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log(`Candidato ICE añadido para ${senderId}`);
+      } else {
+        console.log(`Descripción remota no establecida para ${senderId}, guardando candidato en cola`);
+        setIceCandidatesQueue(prev => ({
+          ...prev,
+          [senderId]: [...(prev[senderId] || []), candidate]
+        }));
+      }
+    } catch (error) {
+      console.error('Error manejando candidato ICE:', error);
+    }
+  };
+
+  const handleUserJoined = async (newUserId, newUserRole) => {
+    try {
+      console.log(`Usuario ${newUserId} (${newUserRole}) se unió a la sala`);
+      
+      // Actualizar lista de participantes
+      setParticipants(prev => [
+        ...prev.filter(p => p.userId !== newUserId),
+        { userId: newUserId, userRole: newUserRole }
+      ]);
+      
+      // Si somos el que inicia (normalmente el doctor), crear offer
+      if (userRole === 'doctor' || userId < newUserId) {
+        console.log(`Iniciando llamada con ${newUserId}`);
+        
+        const pc = createPeerConnection(newUserId);
+        
+        try {
+          const offer = await pc.createOffer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true
+          });
+          
+          await pc.setLocalDescription(offer);
+          
+          sendMessage({
+            type: 'offer',
+            offer: offer,
+            targetUserId: newUserId
+          });
+          
+          console.log(`Offer enviada a ${newUserId}`);
+        } catch (error) {
+          console.error('Error creando offer:', error);
+          setError(`Error iniciando llamada: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error manejando usuario que se unió:', error);
+    }
+  };
+
+  const handleUserLeft = (leftUserId) => {
+    console.log(`Usuario ${leftUserId} dejó la sala`);
     
-    console.log(`Usuario ${leftUserId} ha dejado la sala`);
-    
-    // Cerrar la conexión peer con ese usuario
-    const pc = peerConnectionsRef.current[leftUserId];
-    if (pc) {
-      pc.close();
+    // Cerrar peer connection
+    if (peerConnectionsRef.current[leftUserId]) {
+      peerConnectionsRef.current[leftUserId].close();
       delete peerConnectionsRef.current[leftUserId];
     }
     
-    // Eliminar su video
-    const videoElement = remoteVideosRef.current[leftUserId];
-    if (videoElement) {
-      const container = videoElement.parentElement;
-      if (container) {
-        container.remove();
+    // Remover video elemento
+    if (remoteVideosRef.current[leftUserId]) {
+      const videoElement = remoteVideosRef.current[leftUserId];
+      const videoContainer = videoElement.parentElement;
+      if (videoContainer) {
+        videoContainer.remove();
       }
       delete remoteVideosRef.current[leftUserId];
     }
     
     // Actualizar lista de participantes
     setParticipants(prev => prev.filter(p => p.userId !== leftUserId));
+    
+    // Limpiar candidatos ICE en cola
+    setIceCandidatesQueue(prev => {
+      const newQueue = { ...prev };
+      delete newQueue[leftUserId];
+      return newQueue;
+    });
   };
 
   const startMediaAndJoinRoom = async () => {
     try {
+      setIsLoading(true);
+      setError('');
+      
       // Obtener acceso a la cámara y micrófono
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 },
+          facingMode: 'user'
+        }, 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+      
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
@@ -288,6 +378,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         console.log('Conectado al servidor de señalización WebSocket.');
         setIsConnectedToServer(true);
         setError('');
+        setIsLoading(false);
         
         // Unirse a la sala
         sendMessage({
@@ -298,93 +389,123 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         });
       };
       
-      wsRef.current.onmessage = async (event) => {
+      wsRef.current.onmessage = (event) => {
         try {
-          const message = JSON.parse(await event.data);
-          console.log('Mensaje recibido:', message.type);
+          const message = JSON.parse(event.data);
+          console.log('Mensaje recibido:', message.type, message);
           
           switch (message.type) {
-            case 'connection-success':
-              break;
-              
             case 'room-joined':
-              setRoomInfo(message);
-              // Actualizar lista de participantes
-              if (message.usersInRoom) {
-                setParticipants(message.usersInRoom.filter(u => u.userId !== userId));
-              }
+              console.log('Te uniste a la sala exitosamente');
+              setRoomInfo(message.roomInfo);
               break;
               
             case 'user-joined':
-              handleUserJoined(message);
+              handleUserJoined(message.userId, message.userRole);
               break;
               
             case 'user-left':
-              handleUserLeft(message);
+              handleUserLeft(message.userId);
               break;
               
             case 'offer':
-              handleOffer(message);
+              handleOffer(message.offer, message.senderId);
               break;
               
             case 'answer':
-              handleAnswer(message);
+              handleAnswer(message.answer, message.senderId);
               break;
               
             case 'candidate':
-              handleCandidate(message);
+              handleIceCandidate(message.candidate, message.senderId);
+              break;
+              
+            case 'error':
+              setError(message.error);
               break;
               
             default:
-              console.log('Mensaje desconocido recibido:', message);
+              console.log('Tipo de mensaje desconocido:', message.type);
           }
-        } catch (e) {
-          console.error('Error al procesar mensaje:', e);
-          setError(`Error al procesar mensaje: ${e.message}`);
+        } catch (error) {
+          console.error('Error procesando mensaje:', error);
         }
       };
       
-      wsRef.current.onerror = (err) => {
-        console.error('Error en WebSocket:', err);
-        setError('Error de conexión con el servidor de señalización.');
-        setIsConnectedToServer(false);
+      wsRef.current.onerror = (error) => {
+        console.error('Error en WebSocket:', error);
+        setError('Error de conexión al servidor.');
+        setIsLoading(false);
       };
       
       wsRef.current.onclose = () => {
-        console.log('Desconectado del servidor de señalización.');
+        console.log('Conexión WebSocket cerrada.');
         setIsConnectedToServer(false);
+        if (!error) {
+          setError('Conexión perdida con el servidor.');
+        }
       };
       
     } catch (err) {
       console.error('Error en startMediaAndJoinRoom:', err);
-      setError(`Error al iniciar medios: ${err.name}.`);
+      setError(`Error al acceder a cámara/micrófono: ${err.name}.`);
+      setIsLoading(false);
     }
   };
 
   const leaveRoom = () => {
-    // Notificar al servidor que dejamos la sala
-    sendMessage({
-      type: 'leave-room',
-      roomId
-    });
+    console.log('Dejando la sala...');
+    
+    // Enviar mensaje de salida
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      sendMessage({
+        type: 'leave-room',
+        roomId,
+        userId
+      });
+    }
+    
+    // Detener todos los tracks de media
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Track ${track.kind} detenido`);
+      });
+      localStreamRef.current = null;
+    }
     
     // Cerrar todas las conexiones peer
-    Object.values(peerConnectionsRef.current).forEach(pc => {
-      if (pc) pc.close();
+    Object.keys(peerConnectionsRef.current).forEach(userId => {
+      if (peerConnectionsRef.current[userId]) {
+        peerConnectionsRef.current[userId].close();
+        console.log(`Peer connection con ${userId} cerrada`);
+      }
     });
     peerConnectionsRef.current = {};
     
-    // Detener streams locales
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => track.stop());
-    }
+    // Limpiar videos remotos
+    Object.keys(remoteVideosRef.current).forEach(userId => {
+      const videoElement = remoteVideosRef.current[userId];
+      const videoContainer = videoElement.parentElement;
+      if (videoContainer) {
+        videoContainer.remove();
+      }
+    });
+    remoteVideosRef.current = {};
     
     // Cerrar WebSocket
     if (wsRef.current) {
       wsRef.current.close();
+      wsRef.current = null;
     }
     
-    // Notificar al componente padre
+    // Resetear estados
+    setIsConnectedToServer(false);
+    setIsCallInProgress(false);
+    setParticipants([]);
+    setIceCandidatesQueue({});
+    setError('');
+    
     if (onLeaveRoom) onLeaveRoom();
   };
 
@@ -394,6 +515,15 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setIsCameraEnabled(videoTrack.enabled);
+        
+        // Actualizar clase CSS para indicador visual
+        if (localVideoRef.current) {
+          if (videoTrack.enabled) {
+            localVideoRef.current.parentElement.classList.remove(styles.cameraOff);
+          } else {
+            localVideoRef.current.parentElement.classList.add(styles.cameraOff);
+          }
+        }
       }
     }
   };
@@ -404,6 +534,15 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setIsAudioEnabled(audioTrack.enabled);
+        
+        // Actualizar clase CSS para indicador visual
+        if (localVideoRef.current) {
+          if (audioTrack.enabled) {
+            localVideoRef.current.parentElement.classList.remove(styles.micOff);
+          } else {
+            localVideoRef.current.parentElement.classList.add(styles.micOff);
+          }
+        }
       }
     }
   };
@@ -413,7 +552,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     
     return () => {
       console.log('Limpiando VideoChat...');
-      // Limpieza similar a leaveRoom
+      // Limpieza similar a leaveRoom pero sin enviar mensajes
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -429,67 +568,46 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   }, [roomId, userId, userRole]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px' }}>
+    <div className={styles.videoContainer}>
       <h2>Sala de Consulta: {roomId}</h2>
-      <p>
-        Estado: {isConnectedToServer ? 'Conectado' : 'Desconectado'} | 
-        Rol: <strong>{userRole === 'doctor' ? 'Doctor' : 'Paciente'}</strong> | 
-        Participantes: {participants.length + 1}
-      </p>
       
-      <div className="call-controls" style={{ margin: '10px 0' }}>
-        <button onClick={toggleCamera} style={{ marginRight: '10px' }}>
-          {isCameraEnabled ? 'Apagar Cámara' : 'Encender Cámara'}
-        </button>
-        <button onClick={toggleAudio} style={{ marginRight: '10px' }}>
-          {isAudioEnabled ? 'Silenciar Mic' : 'Activar Mic'}
-        </button>
-        <button onClick={leaveRoom} style={{ backgroundColor: '#ff4d4f', color: 'white' }}>
-          Salir de la Sala
-        </button>
-      </div>
-      
-      {isCallInProgress && <p style={{ color: 'green' }}>Llamada en curso...</p>}
-
-      <div className="video-grid" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', width: '100%', gap: '20px' }}>
-        {/* Video local */}
-        <div className="video-container" style={{ position: 'relative', width: '280px' }}>
-          <h3>Mi Video ({userRole === 'doctor' ? 'Doctor' : 'Paciente'})</h3>
-          <video
-            ref={localVideoRef}
-            autoPlay
-            playsInline
-            muted
-            style={{ border: '1px solid black', width: '100%', height: 'auto', backgroundColor: '#333', borderRadius: '8px' }}
-          />
-          <div className="video-controls" style={{ position: 'absolute', bottom: '5px', right: '5px' }}>
-            {!isCameraEnabled && (
-              <div style={{ background: 'rgba(255,0,0,0.7)', color: 'white', padding: '3px 6px', borderRadius: '4px' }}>
-                Cámara apagada
-              </div>
-            )}
-            {!isAudioEnabled && (
-              <div style={{ background: 'rgba(255,0,0,0.7)', color: 'white', padding: '3px 6px', borderRadius: '4px', marginTop: '3px' }}>
-                Micrófono silenciado
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Videos remotos */}
-        <div id="remote-videos-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-          {/* Los videos remotos se añadirán dinámicamente aquí */}
-        </div>
-      </div>
-      
-      {participants.length === 0 && (
-        <div style={{ margin: '20px', padding: '15px', backgroundColor: '#f0f2f5', borderRadius: '8px', textAlign: 'center' }}>
-          <p>Esperando a que otros participantes se unan a la sala...</p>
-          <p>Comparta este código de sala para invitar: <strong>{roomId}</strong></p>
+      {error && (
+        <div className={styles.errorMessage}>
+          {error}
         </div>
       )}
       
-      {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+      {isLoading && (
+        <div className={styles.loadingMessage}>
+          Conectando a la sala...
+        </div>
+      )}
+      
+      <div className={styles.callControls}>
+        <button onClick={toggleCamera}>
+          {isCameraEnabled ? '📷 Apagar Cámara' : '📷 Encender Cámara'}
+        </button>
+        <button onClick={toggleAudio}>
+          {isAudioEnabled ? '🎤 Silenciar Mic' : '🎤 Activar Mic'}
+        </button>
+        <button onClick={leaveRoom}>
+          📞 Salir de la Sala
+        </button>
+      </div>
+      
+      <div className={styles.videoGrid}>
+        <div className={`${styles.localVideo} ${!isCameraEnabled ? styles.cameraOff : ''} ${!isAudioEnabled ? styles.micOff : ''}`}>
+          <video ref={localVideoRef} autoPlay muted playsInline />
+          <div className={styles.roleLabel}>
+            {userRole === 'doctor' ? 'Doctor' : 'Paciente'} (Tú)
+          </div>
+          <div className={`${styles.statusIndicator} ${isConnectedToServer ? '' : styles.disconnected}`}></div>
+        </div>
+        
+        <div id="remote-videos-container" className={styles.remoteVideosContainer}>
+          {/* Videos remotos se añaden aquí dinámicamente */}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,6 +1,8 @@
+/* filepath: c:\Users\sinca\OneDrive\Documents\Telemedicine\Frontend\telemedicine-frontend\src\pages\Video.jsx */
 import React, { useState } from 'react';
 import VideoChat from '../components/VideoComponent.jsx';
 import RoomSelector from '../components/RoomSelector.jsx';
+import styles from '../styles/components/Video.module.css';
 
 function Video() {
   const [roomDetails, setRoomDetails] = useState(null);
@@ -14,7 +16,7 @@ function Video() {
   };
   
   return (
-    <div className="video-page">
+    <div className={styles.videoContainer}>
       {!roomDetails ? (
         <RoomSelector onRoomJoin={handleRoomJoin} />
       ) : (
