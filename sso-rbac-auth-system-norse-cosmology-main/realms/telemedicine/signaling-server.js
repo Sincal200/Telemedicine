@@ -1,8 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
 import redis from "ioredis";
-import http from 'http'; // Added: Import http module
+import http from 'http'; 
 import { WebSocketServer } from 'ws'; 
+import mysql from 'mysql2/promise';
 
 dotenv.config();
 
@@ -56,30 +57,27 @@ app.get("/authenticate", (req, res) => {
   res.send("success");
 });
 
-app.get("/authorize", authorizationMiddleware("characters"), (req, res) => {
+app.get("/authorize", authorizationMiddleware("doctor"), (req, res) => {
   res.send("success");
 });
 
 const PORT = process.env.PORT || 3002;
 
-// Create HTTP server
+
 const server = http.createServer(app);
 
-// Initialize WebSocket server without directly binding to a port
-const wss = new WebSocketServer({ noServer: true }); // Changed: Use WebSocketServer
+
+const wss = new WebSocketServer({ noServer: true }); 
 
 
-
-// Estructura para manejar salas y clientes
 const rooms = new Map(); // Map para almacenar salas: key = roomId, value = Set de clientes
 
 console.log(`Servidor de señalización WebSocket iniciado en el puerto ${PORT}`);
 
-wss.on('connection', (ws, request) => { // Added 'request' parameter if needed from handleUpgrade
+wss.on('connection', (ws, request) => { 
     console.log('Cliente conectado');
     let clientRoom = null; // Para rastrear en qué sala está el cliente
 
-    // Enviar mensaje de conexión exitosa
     ws.send(JSON.stringify({ type: 'connection-success', message: 'Conectado al servidor de señalización!' }));
 
     ws.on('message', (messageAsString) => {
@@ -93,23 +91,19 @@ wss.on('connection', (ws, request) => { // Added 'request' parameter if needed f
                     // Unirse a una sala específica
                     const { roomId, userRole, userId } = message;
                     
-                    // Si la sala no existe, crearla
                     if (!rooms.has(roomId)) {
                         rooms.set(roomId, new Set());
                         console.log(`Nueva sala creada: ${roomId}`);
                     }
                     
-                    // Añadir metadatos al cliente
                     ws.userId = userId;
                     ws.userRole = userRole;
                     ws.roomId = roomId;
                     clientRoom = roomId;
                     
-                    // Añadir el cliente a la sala
                     rooms.get(roomId).add(ws);
                     console.log(`Cliente ${userId} (${userRole}) unido a sala ${roomId}`);
                     
-                    // Notificar al cliente que se unió correctamente
                     ws.send(JSON.stringify({
                         type: 'room-joined',
                         roomId,
@@ -172,7 +166,7 @@ wss.on('connection', (ws, request) => { // Added 'request' parameter if needed f
             const room = rooms.get(client.roomId);
             room.delete(client);
             
-            // Notificar a otros en la sala que este usuario se fue
+
             broadcastToRoom(client.roomId, client, {
                 type: 'user-left',
                 userId: client.userId
