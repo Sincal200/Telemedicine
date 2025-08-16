@@ -42,12 +42,11 @@ function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Obtener información del usuario del token
     getUserInfo();
   }, []);
 
   const getUserInfo = () => {
-    // Aquí decodificarías el token JWT para obtener la info del usuario
+
     const token = sessionStorage.getItem('accessToken');
     if (token) {
       try {

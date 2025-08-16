@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid'; // Necesitarás instalar este paquete: npm install uuid
+import { v4 as uuidv4 } from 'uuid'; 
 import { Button, Input, Select, Card, Typography, Space, Divider } from 'antd';
 
 const { Option } = Select;

@@ -17,7 +17,7 @@ function Login() {
     try {
       // Preparar datos para el login
       const loginData = {
-        username: values.email, // Usar email como username
+        username: values.email, 
         password: values.password,
         tenant: "telemedicine"
       };
@@ -28,9 +28,7 @@ function Login() {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_API_KEY}`
-          // Nota: El Authorization header parece ser requerido según tu curl
-          // Necesitarás obtener este token de alguna manera o configurar tu backend
-          // 'Authorization': `Bearer ${import.meta.env.VITE_API_KEY}` 
+
         },
         body: JSON.stringify(loginData)
       });
@@ -49,7 +47,6 @@ function Login() {
       sessionStorage.setItem('expiresIn', data.expires_in);
       sessionStorage.setItem('sessionState', data.session_state);
       
-      // Opcional: Guardar información del usuario si está disponible
       if (data.userInfo) {
         sessionStorage.setItem('userInfo', JSON.stringify(data.userInfo));
       }
@@ -62,9 +59,9 @@ function Login() {
 
       message.success('¡Inicio de sesión exitoso!');
       
-      // Redireccionar después del login exitoso
+ 
       setTimeout(() => {
-        navigate('/dashboard'); // o la ruta que corresponda después del login
+        navigate('/dashboard'); 
       }, 1000);
 
     } catch (error) {

@@ -166,7 +166,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Responsive Design */
+
 @media (max-width: 1024px) {
   .videoContainer {
     padding: 16px;
@@ -274,7 +274,7 @@
   }
 }
 
-/* Para orientación horizontal en móviles */
+
 @media (max-height: 500px) and (orientation: landscape) {
   .videoContainer {
     padding: 8px;
@@ -314,7 +314,7 @@
   }
 }
 
-/* Para pantallas muy pequeñas */
+
 @media (max-width: 320px) {
   .videoContainer {
     padding: 4px;
@@ -357,7 +357,7 @@
   animation: fadeIn 0.5s ease-out;
 }
 
-/* Estados de cámara/micrófono */
+
 .cameraOff::after {
   content: '📷';
   position: absolute;
@@ -377,7 +377,7 @@
   z-index: 10;
 }
 
-/* Hover effects para desktop */
+
 @media (hover: hover) {
   .localVideo:hover,
   .remoteVideoWrapper:hover {

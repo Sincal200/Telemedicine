@@ -1,4 +1,3 @@
-/* filepath: c:\Users\sinca\OneDrive\Documents\Telemedicine\Frontend\telemedicine-frontend\src\pages\Register.jsx */
 import { useState } from 'react';
 import { Form, Input, Button, Typography, Card, message, Select } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, MedicineBoxOutlined, IdcardOutlined, UserSwitchOutlined } from '@ant-design/icons';
@@ -13,18 +12,18 @@ function Register() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  // Configuración de roles (actualiza estos IDs con los reales de tu Keycloak)
+  // Configuración de roles 
   const ROLES_CONFIG = {
     doctor: {
-      id: "716760e5-576b-4777-bb8e-05389cdefa44", // Reemplaza con el ID real del rol doctor
+      id: "11edbd0f-2eb9-4c04-a6b0-d76cb1bc6851", 
       name: "doctor",
       description: "",
       composite: false,
       clientRole: true,
-      containerId: "a08c20f3-b6d6-472f-9101-89d48ad61895"
+      containerId: "8da3b139-a4a3-4ff9-b607-43658847a683"
     },
     patient: {
-      id: "2eec45da-b9c3-4656-90c9-51cb7ba3b313", // Tu ID actual del rol patient
+      id: "2eec45da-b9c3-4656-90c9-51cb7ba3b313", 
       name: "patient",
       description: "",
       composite: false,
@@ -37,7 +36,7 @@ function Register() {
     setLoading(true);
 
     try {
-      // Preparar datos del usuario para Keycloak (simplificado)
+      // Preparar datos del usuario para Keycloak 
       const userData = {
         firstName: values.firstName,
         lastName: values.lastName,

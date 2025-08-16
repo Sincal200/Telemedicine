@@ -223,7 +223,6 @@
   text-decoration: underline;
 }
 
-/* Responsive - Sin scroll */
 @media (max-width: 768px) {
   .container {
     padding: 16px;
@@ -294,7 +293,6 @@
   }
 }
 
-/* Para pantallas muy pequeñas en altura */
 @media (max-height: 600px) {
   .container {
     padding: 10px;
@@ -328,7 +326,6 @@
   }
 }
 
-/* Para móviles en horizontal */
 @media (max-height: 500px) and (orientation: landscape) {
   .container {
     padding: 8px;
@@ -373,7 +370,6 @@
   }
 }
 
-/* Para tablets grandes */
 @media (max-width: 1024px) {
   .container {
     padding: 16px;
@@ -388,7 +384,6 @@
   }
 }
 
-/* Para tablets */
 @media (max-width: 768px) {
   .header {
     padding: 0 16px;
@@ -408,7 +403,7 @@
   }
   
   .userInfo {
-    display: none; /* Ocultar nombre de usuario en móvil */
+    display: none; 
   }
   
   .headerLeft {
@@ -423,7 +418,7 @@
     font-size: 24px;
   }
   
-  /* Hacer las estadísticas más compactas */
+
   .statCard .ant-statistic-content {
     font-size: 16px !important;
   }
@@ -433,7 +428,7 @@
   }
 }
 
-/* Para móviles */
+
 @media (max-width: 480px) {
   .statsRow {
     margin-bottom: 24px;
@@ -449,8 +444,7 @@
     align-items: flex-start;
     gap: 4px;
   }
-  
-  /* Botones de acción en columna única */
+
   .actionCard .ant-row {
     flex-direction: column !important;
   }
@@ -460,18 +454,18 @@
     margin-bottom: 8px;
   }
   
-  /* Ajustar el calendario mini */
+
   .miniCalendar .ant-picker-content {
     height: 200px;
   }
   
-  /* Layout en una columna para móvil */
+
   .mainContent .ant-col:first-child {
     margin-bottom: 20px;
   }
 }
 
-/* Para móviles muy pequeños */
+
 @media (max-width: 320px) {
   .header {
     padding: 0 8px;
@@ -498,14 +492,14 @@
   }
 }
 
-/* Para orientación horizontal en móviles */
+
 @media (max-height: 500px) and (orientation: landscape) {
   .welcomeSection {
-    display: none; /* Ocultar bienvenida para ahorrar espacio */
+    display: none; 
   }
   
   .header {
-    height: 48px; /* Header más pequeño */
+    height: 48px; 
   }
   
   .content {

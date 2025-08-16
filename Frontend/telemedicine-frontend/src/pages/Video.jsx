@@ -1,4 +1,3 @@
-/* filepath: c:\Users\sinca\OneDrive\Documents\Telemedicine\Frontend\telemedicine-frontend\src\pages\Video.jsx */
 import React, { useState } from 'react';
 import VideoChat from '../components/VideoComponent.jsx';
 import RoomSelector from '../components/RoomSelector.jsx';
