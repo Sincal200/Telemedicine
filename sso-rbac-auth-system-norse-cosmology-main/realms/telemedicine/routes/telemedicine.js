@@ -1,19 +1,7 @@
 import express from 'express';
+import { authorize } from '../middleware/authorization.js';
 
 const router = express.Router();
-
-// Middleware de autorización específico para telemedicina
-const authorizationMiddleware = (requiredRole) => {
-    return async (req, res, next) => {
-        try {
-            const availableRoles = req.user.realm_access.roles;
-            if (!availableRoles.includes(requiredRole)) throw new Error();
-            next();
-        } catch (err) {
-            res.status(403).send({ error: "access denied" });
-        }
-    };
-};
 
 // Rutas de autenticación
 router.get("/authenticate", (req, res) => {
@@ -28,7 +16,7 @@ router.get("/authenticate", (req, res) => {
     });
 });
 
-router.get("/authorize", authorizationMiddleware("doctor"), (req, res) => {
+router.get('/authorize', authorize('doctor'), (req, res) => {
     res.json({ 
         status: "success",
         message: "User authorized as doctor"
@@ -36,24 +24,18 @@ router.get("/authorize", authorizationMiddleware("doctor"), (req, res) => {
 });
 
 // Rutas para gestión de salas (requiere rol de doctor)
-router.get("/rooms/stats", authorizationMiddleware("doctor"), (req, res) => {
-    // Esta función será inyectada desde el servidor principal
-    if (req.signalingServer) {
-        const stats = req.signalingServer.getRoomsStats();
-        res.json({
-            status: "success",
-            data: stats
-        });
+router.get('/rooms/stats', authorize('doctor'), (req, res) => {
+    const signalingServer = req.app.locals.signalingServer;
+    if (signalingServer) {
+        const stats = signalingServer.getRoomsStats();
+        res.json({ status: 'success', data: stats });
     } else {
-        res.status(500).json({
-            status: "error",
-            message: "Signaling server not available"
-        });
+        res.status(500).json({ status: 'error', message: 'Signaling server not available' });
     }
 });
 
 // Ruta para crear una nueva sala de consulta
-router.post("/rooms/create", authorizationMiddleware("doctor"), (req, res) => {
+router.post('/rooms/create', authorize('doctor'), (req, res) => {
     const { patientId, appointmentId } = req.body;
     
     if (!patientId || !appointmentId) {
@@ -78,7 +60,7 @@ router.post("/rooms/create", authorizationMiddleware("doctor"), (req, res) => {
 });
 
 // Ruta para unirse a una sala (para pacientes)
-router.post("/rooms/join", authorizationMiddleware("patient"), (req, res) => {
+router.post('/rooms/join', authorize('patient'), (req, res) => {
     const { roomId } = req.body;
     
     if (!roomId) {
@@ -100,7 +82,7 @@ router.post("/rooms/join", authorizationMiddleware("patient"), (req, res) => {
 });
 
 // Ruta para obtener el historial de consultas (solo doctores)
-router.get("/consultations/history", authorizationMiddleware("doctor"), (req, res) => {
+router.get('/consultations/history', authorize('doctor'), (req, res) => {
     // Aquí implementarías la lógica para obtener el historial desde la base de datos
     res.json({
         status: "success",
