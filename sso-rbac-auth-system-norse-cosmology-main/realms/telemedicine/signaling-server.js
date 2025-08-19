@@ -2,8 +2,9 @@ import express from "express";
 import dotenv from "dotenv";
 import redis from "ioredis";
 import http from 'http'; 
-import { WebSocketServer } from 'ws'; 
 import mysql from 'mysql2/promise';
+import WebRTCSignalingServer from './sockets/webrtc-signaling.js';
+import telemedicineRoutes from './routes/telemedicine.js';
 
 dotenv.config();
 
@@ -21,22 +22,48 @@ redisClient.on("end", () => {
 });
 
 const app = express();
+
+// Middleware de manejo de errores
 const errorHandlingMiddleware = (err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).send(err.message || "Internal server error");
 };
 
+// Middleware de autenticación
 app.use(async (req, res, next) => {
-  const token = req.headers.authorization.split(" ")[1];
-  const userDataString = await redisClient.get(token);
-  if (userDataString) {
-    req.user = JSON.parse(userDataString);
-    next();
-  } else {
-    res.status(401).send("Invalid or expired user key");
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).send("Authorization header required");
+    }
+    
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).send("Bearer token required");
+    }
+    
+    const userDataString = await redisClient.get(token);
+    if (userDataString) {
+      req.user = JSON.parse(userDataString);
+      next();
+    } else {
+      res.status(401).send("Invalid or expired user key");
+    }
+  } catch (error) {
+    res.status(401).send("Invalid authorization header");
   }
 });
 
+// Middleware para inyectar el servidor de señalización en las rutas
+app.use((req, res, next) => {
+  req.signalingServer = signalingServer;
+  next();
+});
+
+app.use(express.json());
+app.use(errorHandlingMiddleware);
+
+// Middleware de autorización (mantenido para compatibilidad con rutas existentes)
 const authorizationMiddleware = (requiredRole) => {
   return async (req, res, next) => {
     try {
@@ -49,194 +76,41 @@ const authorizationMiddleware = (requiredRole) => {
   };
 };
 
-app.use(errorHandlingMiddleware);
-app.use(express.json());
+// Usar las rutas de telemedicina
+app.use('/api/telemedicine', telemedicineRoutes);
 
+// Rutas heredadas (mantener para compatibilidad)
 app.get("/authenticate", (req, res) => {
-  //It seems like this is a dummy route, it doesn't; api gateway is validating the token.
-  res.send("success");
+  res.json({ 
+    status: "success",
+    message: "User authenticated"
+  });
 });
 
 app.get("/authorize", authorizationMiddleware("doctor"), (req, res) => {
-  res.send("success");
+  res.json({ 
+    status: "success",
+    message: "User authorized"
+  });
 });
 
 const PORT = process.env.PORT || 3002;
 
-
 const server = http.createServer(app);
 
+// Inicializar el servidor de señalización WebRTC
+const signalingServer = new WebRTCSignalingServer();
+const wss = signalingServer.initialize(server);
 
-const wss = new WebSocketServer({ noServer: true }); 
+console.log(`Servidor de telemedicina iniciado en el puerto ${PORT}`);
+console.log(`WebSocket de señalización disponible en ws://localhost:${PORT}`);
 
-
-const rooms = new Map(); // Map para almacenar salas: key = roomId, value = Set de clientes
-
-console.log(`Servidor de señalización WebSocket iniciado en el puerto ${PORT}`);
-
-wss.on('connection', (ws, request) => { 
-    console.log('Cliente conectado');
-    let clientRoom = null; // Para rastrear en qué sala está el cliente
-
-    ws.send(JSON.stringify({ type: 'connection-success', message: 'Conectado al servidor de señalización!' }));
-
-    ws.on('message', (messageAsString) => {
-        try {
-            const message = JSON.parse(messageAsString);
-            console.log('Mensaje recibido:', message);
-
-            // Manejar mensajes según su tipo
-            switch (message.type) {
-                case 'join-room':
-                    // Unirse a una sala específica
-                    const { roomId, userRole, userId } = message;
-                    
-                    if (!rooms.has(roomId)) {
-                        rooms.set(roomId, new Set());
-                        console.log(`Nueva sala creada: ${roomId}`);
-                    }
-                    
-                    ws.userId = userId;
-                    ws.userRole = userRole;
-                    ws.roomId = roomId;
-                    clientRoom = roomId;
-                    
-                    rooms.get(roomId).add(ws);
-                    console.log(`Cliente ${userId} (${userRole}) unido a sala ${roomId}`);
-                    
-                    ws.send(JSON.stringify({
-                        type: 'room-joined',
-                        roomId,
-                        usersInRoom: Array.from(rooms.get(roomId)).map(client => ({
-                            userId: client.userId,
-                            userRole: client.userRole
-                        }))
-                    }));
-                    
-                    // Notificar a otros usuarios en la sala sobre el nuevo participante
-                    broadcastToRoom(roomId, ws, {
-                        type: 'user-joined',
-                        userId,
-                        userRole
-                    });
-                    break;
-
-                case 'leave-room':
-                    removeFromRoom(ws);
-                    break;
-                
-                // Mensajes de señalización WebRTC
-                case 'offer':
-                case 'answer':
-                case 'candidate':
-                    // Añadir roomId a los mensajes de señalización
-                    const signalMessage = { ...message };
-                    
-                    // Si hay un destinatario específico (targetUserId), enviar solo a ese usuario
-                    if (message.targetUserId && clientRoom) {
-                        sendToUser(clientRoom, message.targetUserId, signalMessage);
-                    } else if (clientRoom) {
-                        // De lo contrario, enviar a todos en la sala excepto el remitente
-                        broadcastToRoom(clientRoom, ws, signalMessage);
-                    }
-                    break;
-                
-                default:
-                    console.log(`Mensaje de tipo desconocido: ${message.type}`);
-            }
-        } catch (error) {
-            console.error('Error al procesar mensaje:', error);
-        }
-    });
-
-    // Cuando un cliente se desconecta
-    ws.on('close', () => {
-        console.log('Cliente desconectado');
-        removeFromRoom(ws);
-    });
-
-    ws.on('error', (error) => {
-        console.error('Error en WebSocket:', error);
-        removeFromRoom(ws);
-    });
-
-    // Función para eliminar un cliente de su sala actual
-    function removeFromRoom(client) {
-        if (client.roomId && rooms.has(client.roomId)) {
-            const room = rooms.get(client.roomId);
-            room.delete(client);
-            
-
-            broadcastToRoom(client.roomId, client, {
-                type: 'user-left',
-                userId: client.userId
-            });
-            
-            // Si la sala queda vacía, eliminarla
-            if (room.size === 0) {
-                rooms.delete(client.roomId);
-                console.log(`Sala ${client.roomId} eliminada por estar vacía`);
-            }
-            
-            clientRoom = null;
-            console.log(`Cliente ${client.userId} eliminado de sala ${client.roomId}`);
-        }
-    }
-
-    // Función para enviar mensaje a todos en una sala excepto al remitente
-    function broadcastToRoom(roomId, sender, message) {
-        if (rooms.has(roomId)) {
-            const room = rooms.get(roomId);
-            for (const client of room) {
-                if (client !== sender && client.readyState === WebSocket.OPEN) {
-                    try {
-                        client.send(JSON.stringify(message));
-                    } catch (error) {
-                        console.error('Error al enviar mensaje a cliente:', error);
-                    }
-                }
-            }
-        }
-    }
-
-    // Función para enviar mensaje a un usuario específico en una sala
-    function sendToUser(roomId, targetUserId, message) {
-        if (rooms.has(roomId)) {
-            const room = rooms.get(roomId);
-            for (const client of room) {
-                if (client.userId === targetUserId && client.readyState === WebSocket.OPEN) {
-                    try {
-                        client.send(JSON.stringify(message));
-                        return true;
-                    } catch (error) {
-                        console.error('Error al enviar mensaje a usuario específico:', error);
-                        return false;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-});
-
-
-wss.on('error', (error) => {
-    console.error('Error en el servidor WebSocket principal:', error);
-});
-
+// Manejar las actualizaciones de WebSocket
 server.on('upgrade', (request, socket, head) => {
-  // You can implement authentication for WebSocket connections here if needed.
-  // For example, check `request.headers.cookie` if using session-based auth,
-  // or a token in `request.url` or `request.headers['sec-websocket-protocol']`.
-
-  // For now, directly handle the upgrade:
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit('connection', ws, request);
-  });
+  signalingServer.handleUpgrade(request, socket, head, server);
 });
 
-
-// Start the HTTP server (which also handles WebSocket upgrades)
+// Iniciar el servidor
 server.listen(PORT, () => {
-  console.log(`Asgard listening on port ${PORT}`);
+  console.log(`Telemedicine API listening on port ${PORT}`);
 });
