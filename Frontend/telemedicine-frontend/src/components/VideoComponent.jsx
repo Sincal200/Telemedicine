@@ -8,7 +8,27 @@ const stunServers = {
   ],
 };
 
-const SIGNALING_SERVER_URL = 'ws://localhost:8081/api/telemedicine/';
+// Señalización: preferir variable de entorno para flexibilidad
+export const SIGNALING_SERVER_URL = import.meta.env.VITE_SIGNALING_URL || 'ws://localhost:8081/api/telemedicine/';
+
+// Helpers para manejar la cola de candidatos ICE
+const enqueueIceCandidate = (setQueue, senderId, candidate) => {
+  setQueue(prev => ({
+    ...prev,
+    [senderId]: [...(prev[senderId] || []), candidate]
+  }));
+};
+
+const processIceQueue = async (pc, queue) => {
+  if (!queue || !pc) return;
+  for (const candidate of queue) {
+    try {
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (err) {
+      console.warn('Error añadiendo candidato ICE desde cola:', err);
+    }
+  }
+};
 
 const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   const localVideoRef = useRef(null);
@@ -280,22 +300,25 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
 
       if (!pc) {
         console.log(`Peer connection no encontrada para ${senderId}, guardando candidato en cola`);
-        setIceCandidatesQueue(prev => ({
-          ...prev,
-          [senderId]: [...(prev[senderId] || []), candidate]
-        }));
+        enqueueIceCandidate(setIceCandidatesQueue, senderId, candidate);
         return;
       }
 
       if (pc.remoteDescription) {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
         console.log(`Candidato ICE añadido para ${senderId}`);
+        // Procesar cualquier cola restante
+        if (iceCandidatesQueue[senderId] && iceCandidatesQueue[senderId].length) {
+          await processIceQueue(pc, iceCandidatesQueue[senderId]);
+          setIceCandidatesQueue(prev => {
+            const newQueue = { ...prev };
+            delete newQueue[senderId];
+            return newQueue;
+          });
+        }
       } else {
         console.log(`Descripción remota no establecida para ${senderId}, guardando candidato en cola`);
-        setIceCandidatesQueue(prev => ({
-          ...prev,
-          [senderId]: [...(prev[senderId] || []), candidate]
-        }));
+        enqueueIceCandidate(setIceCandidatesQueue, senderId, candidate);
       }
     } catch (error) {
       console.error('Error manejando candidato ICE:', error);

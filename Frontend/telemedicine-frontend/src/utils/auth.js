@@ -57,6 +57,18 @@ export const authUtils = {
     }
   }
 };
+ 
+// Guardar tokens (helper reutilizable)
+export const saveTokens = (tokenData) => {
+  if (!tokenData) return;
+
+  sessionStorage.setItem('accessToken', tokenData.accessToken || tokenData.access_token || '');
+  sessionStorage.setItem('refreshToken', tokenData.refreshToken || tokenData.refresh_token || '');
+  sessionStorage.setItem('tokenType', tokenData.token_type || 'Bearer');
+  if (tokenData.expires_in) sessionStorage.setItem('expiresIn', tokenData.expires_in);
+  if (tokenData.session_state) sessionStorage.setItem('sessionState', tokenData.session_state);
+  if (tokenData.userInfo) sessionStorage.setItem('userInfo', JSON.stringify(tokenData.userInfo));
+};
 
 // Hook para uso en componentes React
 import { useState, useEffect } from 'react';
@@ -76,14 +88,9 @@ export const useAuth = () => {
   }, []);
 
   const login = (tokenData) => {
-    // Guardar tokens
-    sessionStorage.setItem('accessToken', tokenData.accessToken || tokenData.access_token);
-    sessionStorage.setItem('refreshToken', tokenData.refreshToken || tokenData.refresh_token);
-    sessionStorage.setItem('tokenType', tokenData.token_type || 'Bearer');
-    sessionStorage.setItem('expiresIn', tokenData.expires_in);
-    sessionStorage.setItem('sessionState', tokenData.session_state);
-    
-    setIsAuthenticated(true);
+  // Guardar tokens usando el helper centralizado
+  saveTokens(tokenData);
+  setIsAuthenticated(true);
   };
 
   const logout = () => {

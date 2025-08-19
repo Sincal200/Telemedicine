@@ -4,6 +4,7 @@ import { UserOutlined, LockOutlined, MedicineBoxOutlined } from '@ant-design/ico
 import '@ant-design/v5-patch-for-react-19';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Login.module.css';
+import { saveTokens } from '../utils/auth.js';
 
 const { Title, Text } = Typography;
 
@@ -40,16 +41,8 @@ function Login() {
 
       const data = await response.json();
       
-      // Guardar tokens en sessionStorage
-      sessionStorage.setItem('accessToken', data.accessToken || data.access_token);
-      sessionStorage.setItem('refreshToken', data.refreshToken || data.refresh_token);
-      sessionStorage.setItem('tokenType', data.token_type || 'Bearer');
-      sessionStorage.setItem('expiresIn', data.expires_in);
-      sessionStorage.setItem('sessionState', data.session_state);
-      
-      if (data.userInfo) {
-        sessionStorage.setItem('userInfo', JSON.stringify(data.userInfo));
-      }
+  // Guardar tokens usando helper centralizado
+  saveTokens(data);
 
       console.log('Login exitoso, tokens guardados:', {
         accessToken: data.accessToken ? 'Guardado' : 'No encontrado',
