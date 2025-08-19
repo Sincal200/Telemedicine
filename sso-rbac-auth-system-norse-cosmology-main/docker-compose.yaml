@@ -66,7 +66,6 @@ services:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - AUTH_URL=${AUTH_URL}
-      - ASGARD_URL=${ASGARD_URL}
       - TELEMEDICINE_URL=${TELEMEDICINE_URL}
     depends_on:
       - redis
@@ -85,21 +84,7 @@ services:
     depends_on:
       - keycloak
       - api-gateway
-  
-  asgard:
-    image: asgard:latest
-    build:
-      context: ./realms/asgard
-      dockerfile: Dockerfile
-    ports:
-      - "8090:8090"
-    environment:
-      - PORT=8090
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-    depends_on:
-      - auth-service
-  
+
   telemedicine:
     image: telemedicine:latest
     build:
