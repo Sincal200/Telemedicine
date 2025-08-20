@@ -21,6 +21,9 @@ redisClient.on("end", () => {
 
 const app = express();
 
+// Configure Express to trust proxy (para Nginx)
+app.set('trust proxy', true);
+
 // Configurar CORS para permitir solicitudes desde http://localhost:5173
 app.use(cors({
   origin: 'http://localhost:5173',
