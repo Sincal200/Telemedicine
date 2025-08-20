@@ -1,0 +1,48 @@
+name: Deploy Frontend to DigitalOcean
+
+on:
+  push:
+    paths:
+      - 'Frontend/telemedicine-frontend/**'
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Crear archivo .env
+        run: |
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> Frontend/telemedicine-frontend/.env
+          echo "VITE_KEYCLOAK_CLIENT_ID=${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}" >> Frontend/telemedicine-frontend/.env
+          echo "VITE_KEYCLOAK_CLIENT_SECRET=${{ secrets.VITE_KEYCLOAK_CLIENT_SECRET }}" >> Frontend/telemedicine-frontend/.env
+          echo "VITE_TENANT=${{ secrets.VITE_TENANT }}" >> Frontend/telemedicine-frontend/.env
+          echo "VITE_API_KEY=${{ secrets.VITE_API_KEY }}" >> Frontend/telemedicine-frontend/.env
+
+      - name: Install dependencies
+        run: cd Frontend/telemedicine-frontend && yarn install --frozen-lockfile
+
+      - name: Build frontend
+        run: cd Frontend/telemedicine-frontend && yarn build
+
+      - name: Deploy via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          source: "Frontend/telemedicine-frontend/dist/*"
+          target: "~/nginx-docker/html"
+          strip_components: 3
