@@ -9,7 +9,7 @@ const stunServers = {
 };
 
 // Señalización: preferir variable de entorno para flexibilidad
-export const SIGNALING_SERVER_URL = import.meta.env.VITE_SIGNALING_URL || 'ws://localhost:8081/api/telemedicine/';
+export const SIGNALING_SERVER_URL = import.meta.env.VITE_SIGNALING_URL || 'wss://sincal.software/api/telemedicine/';
 
 // Helpers para manejar la cola de candidatos ICE
 const enqueueIceCandidate = (setQueue, senderId, candidate) => {

@@ -10,6 +10,22 @@ COPY package*.json ./
 # Instalar dependencias
 RUN npm install
 
+# Build-time envs for Vite (will be provided via build args)
+ARG VITE_API_URL
+ARG VITE_API_KEY
+ARG VITE_TENANT
+ARG VITE_KEYCLOAK_CLIENT_ID
+ARG VITE_KEYCLOAK_CLIENT_SECRET
+ARG VITE_SIGNALING_URL
+
+# Expose them to the build environment so Vite picks them up
+ENV VITE_API_URL=$VITE_API_URL \
+	VITE_API_KEY=$VITE_API_KEY \
+	VITE_TENANT=$VITE_TENANT \
+	VITE_KEYCLOAK_CLIENT_ID=$VITE_KEYCLOAK_CLIENT_ID \
+	VITE_KEYCLOAK_CLIENT_SECRET=$VITE_KEYCLOAK_CLIENT_SECRET \
+	VITE_SIGNALING_URL=$VITE_SIGNALING_URL
+
 # Copiar el resto de los archivos de la aplicación
 COPY . .
 
