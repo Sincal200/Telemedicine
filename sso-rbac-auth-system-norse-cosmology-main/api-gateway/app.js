@@ -22,7 +22,7 @@ redisClient.on("end", () => {
 const app = express();
 
 // Configure Express to trust proxy (para Nginx)
-app.set('trust proxy', true);
+app.set('trust proxy', 1); // Solo confiar en el primer proxy
 
 // Configurar CORS para permitir solicitudes desde http://localhost:5173
 app.use(cors({
@@ -34,8 +34,17 @@ app.use(cors({
 
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 600000, // limit each IP to 100 requests per windowMs
+  max: 600000, // limit each IP to 600000 requests per windowMs
   message: "Too many requests, please try again later.",
+  keyGenerator: (req) => {
+    // Usar X-Forwarded-For si está disponible, sino usar req.ip
+    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
+  },
+  skip: (req) => {
+    // Opcionalmente, skip rate limiting para requests internos
+    const userAgent = req.headers['user-agent'] || '';
+    return userAgent.includes('node') || userAgent.includes('axios');
+  }
 });
 app.use(apiLimiter);
 
