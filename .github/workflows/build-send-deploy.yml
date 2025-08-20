@@ -44,26 +44,28 @@ jobs:
             service:
               - ${{ matrix.path_filter }}
 
+      # FORZAR CONSTRUCCIÓN: Quita las condiciones temporalmente
       - name: Set up Docker Buildx
-        if: steps.changes.outputs.service == 'true'
+        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
         uses: docker/setup-buildx-action@v3
 
       - name: Build image
-        if: steps.changes.outputs.service == 'true'
+        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
         run: |
+          echo "Building ${{ matrix.name }}..."
           DOCKER_BUILDKIT=1 docker build \
             -f "${{ matrix.dockerfile }}" \
             -t "${{ matrix.image }}:sha-${{ github.sha }}" \
             "${{ matrix.context }}"
 
       - name: Save & compress image
-        if: steps.changes.outputs.service == 'true'
+        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
         run: |
           docker save "${{ matrix.image }}:sha-${{ github.sha }}" | gzip > "${{ matrix.name }}-image.tar.gz"
           ls -lh "${{ matrix.name }}-image.tar.gz"
 
       - name: Send image to Droplet (SCP)
-        if: steps.changes.outputs.service == 'true'
+        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -71,7 +73,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           source: "${{ matrix.name }}-image.tar.gz"
-          target: "/root/images"
+          target: "~/images"  # CAMBIADO DE /root/images
 
   deploy:
     runs-on: ubuntu-latest
@@ -92,7 +94,7 @@ jobs:
             
             echo "Starting deployment process..."
             
-            # Crear directorio y navegar (usar directorio home si /root no funciona)
+            # Crear directorio y navegar (usar directorio home)
             IMAGE_DIR="/home/$USER/images"
             echo "Creating images directory: $IMAGE_DIR"
             mkdir -p "$IMAGE_DIR"
@@ -179,9 +181,20 @@ jobs:
               cd "$COMPOSE_PATH"
               echo "Current directory: $(pwd)"
               
-              # Verificar que existe docker-compose.yml
-              if [ -f "docker-compose.yml" ] || [ -f "compose.yml" ]; then
+              # Verificar que existe docker-compose.yml/yaml
+              if [ -f "docker-compose.yml" ] || [ -f "docker-compose.yaml" ] || [ -f "compose.yml" ] || [ -f "compose.yaml" ]; then
                 echo "Found compose file, starting services..."
+                
+                # Mostrar qué archivo de compose estamos usando
+                if [ -f "docker-compose.yaml" ]; then
+                  echo "Using docker-compose.yaml"
+                elif [ -f "docker-compose.yml" ]; then
+                  echo "Using docker-compose.yml"
+                elif [ -f "compose.yaml" ]; then
+                  echo "Using compose.yaml"
+                else
+                  echo "Using compose.yml"
+                fi
                 
                 # Intentar levantar servicios
                 if docker compose up -d; then
