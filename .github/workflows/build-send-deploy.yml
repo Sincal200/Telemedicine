@@ -1,87 +1,164 @@
-name: Build images locally, send to Droplet & deploy (no registry)
+name: Build existing services only
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'api-gateway/**'
-      - 'auth-service/**'
-      - 'realms/telemedicine/**'
-      - '.github/workflows/build-send-deploy.yml'
   workflow_dispatch: {}
 
 jobs:
-  build-and-send:
+  check-services:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: api-gateway
-            context: api-gateway
-            dockerfile: api-gateway/Dockerfile
-            image: local/api-gateway
-            path_filter: 'api-gateway/**'
-          - name: auth-service
-            context: auth-service
-            dockerfile: auth-service/Dockerfile
-            image: local/auth-service
-            path_filter: 'auth-service/**'
-          - name: telemedicine
-            context: realms/telemedicine
-            dockerfile: realms/telemedicine/Dockerfile
-            image: local/telemedicine
-            path_filter: 'realms/telemedicine/**'
-
+    outputs:
+      api-gateway-exists: ${{ steps.check.outputs.api-gateway }}
+      auth-service-exists: ${{ steps.check.outputs.auth-service }}
+      telemedicine-exists: ${{ steps.check.outputs.telemedicine }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
+      - name: Check which services exist
+        id: check
+        run: |
+          # Check api-gateway
+          if [ -d "api-gateway" ] && [ -f "api-gateway/Dockerfile" ]; then
+            echo "api-gateway=true" >> $GITHUB_OUTPUT
+            echo "✅ api-gateway exists"
+          else
+            echo "api-gateway=false" >> $GITHUB_OUTPUT
+            echo "❌ api-gateway missing"
+          fi
+          
+          # Check auth-service
+          if [ -d "auth-service" ] && [ -f "auth-service/Dockerfile" ]; then
+            echo "auth-service=true" >> $GITHUB_OUTPUT
+            echo "✅ auth-service exists"
+          else
+            echo "auth-service=false" >> $GITHUB_OUTPUT
+            echo "❌ auth-service missing"
+          fi
+          
+          # Check telemedicine (multiple possible locations)
+          if [ -d "realms/telemedicine" ] && [ -f "realms/telemedicine/Dockerfile" ]; then
+            echo "telemedicine=realms/telemedicine" >> $GITHUB_OUTPUT
+            echo "✅ telemedicine exists at realms/telemedicine"
+          elif [ -d "telemedicine" ] && [ -f "telemedicine/Dockerfile" ]; then
+            echo "telemedicine=telemedicine" >> $GITHUB_OUTPUT
+            echo "✅ telemedicine exists at telemedicine"
+          else
+            echo "telemedicine=false" >> $GITHUB_OUTPUT
+            echo "❌ telemedicine missing"
+          fi
 
-      - name: Detect service changes
-        id: changes
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            service:
-              - ${{ matrix.path_filter }}
-
-      # FORZAR CONSTRUCCIÓN: Quita las condiciones temporalmente
+  build-api-gateway:
+    runs-on: ubuntu-latest
+    needs: check-services
+    if: needs.check-services.outputs.api-gateway-exists == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
       - name: Set up Docker Buildx
-        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
         uses: docker/setup-buildx-action@v3
 
-      - name: Build image
-        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
+      - name: Build api-gateway
         run: |
-          echo "Building ${{ matrix.name }}..."
+          echo "Building api-gateway..."
           DOCKER_BUILDKIT=1 docker build \
-            -f "${{ matrix.dockerfile }}" \
-            -t "${{ matrix.image }}:sha-${{ github.sha }}" \
-            "${{ matrix.context }}"
+            -f "api-gateway/Dockerfile" \
+            -t "local/api-gateway:sha-${{ github.sha }}" \
+            "api-gateway"
 
       - name: Save & compress image
-        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
         run: |
-          docker save "${{ matrix.image }}:sha-${{ github.sha }}" | gzip > "${{ matrix.name }}-image.tar.gz"
-          ls -lh "${{ matrix.name }}-image.tar.gz"
+          docker save "local/api-gateway:sha-${{ github.sha }}" | gzip > "api-gateway-image.tar.gz"
+          ls -lh "api-gateway-image.tar.gz"
 
-      - name: Send image to Droplet (SCP)
-        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
+      - name: Send image to Droplet
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "${{ matrix.name }}-image.tar.gz"
-          target: "~/images"  # CAMBIADO DE /root/images
+          source: "api-gateway-image.tar.gz"
+          target: "~/images"
+
+  build-auth-service:
+    runs-on: ubuntu-latest
+    needs: check-services
+    if: needs.check-services.outputs.auth-service-exists == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build auth-service
+        run: |
+          echo "Building auth-service..."
+          DOCKER_BUILDKIT=1 docker build \
+            -f "auth-service/Dockerfile" \
+            -t "local/auth-service:sha-${{ github.sha }}" \
+            "auth-service"
+
+      - name: Save & compress image
+        run: |
+          docker save "local/auth-service:sha-${{ github.sha }}" | gzip > "auth-service-image.tar.gz"
+          ls -lh "auth-service-image.tar.gz"
+
+      - name: Send image to Droplet
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "auth-service-image.tar.gz"
+          target: "~/images"
+
+  build-telemedicine:
+    runs-on: ubuntu-latest
+    needs: check-services
+    if: needs.check-services.outputs.telemedicine-exists != 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build telemedicine
+        run: |
+          TELEMEDICINE_PATH="${{ needs.check-services.outputs.telemedicine-exists }}"
+          echo "Building telemedicine from path: $TELEMEDICINE_PATH"
+          
+          DOCKER_BUILDKIT=1 docker build \
+            -f "$TELEMEDICINE_PATH/Dockerfile" \
+            -t "local/telemedicine:sha-${{ github.sha }}" \
+            "$TELEMEDICINE_PATH"
+
+      - name: Save & compress image
+        run: |
+          docker save "local/telemedicine:sha-${{ github.sha }}" | gzip > "telemedicine-image.tar.gz"
+          ls -lh "telemedicine-image.tar.gz"
+
+      - name: Send image to Droplet
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "telemedicine-image.tar.gz"
+          target: "~/images"
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-send
+    needs: [check-services, build-api-gateway, build-auth-service, build-telemedicine]
+    if: always() && (needs.build-api-gateway.result == 'success' || needs.build-auth-service.result == 'success' || needs.build-telemedicine.result == 'success' || needs.build-api-gateway.result == 'skipped' || needs.build-auth-service.result == 'skipped' || needs.build-telemedicine.result == 'skipped')
     env:
       COMPOSE_DIR: ${{ secrets.COMPOSE_DIR }}
     steps:
-      - name: Deploy (load, retag to :deployed, compose up)
+      - name: Deploy services
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -94,133 +171,53 @@ jobs:
             
             echo "Starting deployment process..."
             
-            # Crear directorio y navegar (usar directorio home)
+            # Usar directorio home para imágenes
             IMAGE_DIR="/home/$USER/images"
-            echo "Creating images directory: $IMAGE_DIR"
             mkdir -p "$IMAGE_DIR"
-            
-            echo "Changing to images directory..."
             cd "$IMAGE_DIR"
             
             echo "Current directory: $(pwd)"
-            echo "Directory contents:"
+            echo "Available files:"
             ls -la
             
-            # Verificar permisos
-            echo "Checking permissions..."
-            whoami
-            
-            # Carga imágenes recibidas, retag a :deployed y limpia tars
+            # Cargar imágenes que existan
             for svc in api-gateway auth-service telemedicine; do
               TAR="${svc}-image.tar.gz"
-              echo "Processing service: ${svc}"
-              
               if [ -f "$TAR" ]; then
-                echo "Found $TAR, loading..."
+                echo "Loading $TAR..."
+                gunzip -c "$TAR" | docker load
                 
-                # Verificar que el archivo no esté corrupto
-                echo "Verifying tar file integrity..."
-                if ! gzip -t "$TAR"; then
-                  echo "ERROR: $TAR is corrupted"
-                  continue
-                fi
-                
-                echo "Loading Docker image from $TAR..."
-                if gunzip -c "$TAR" | docker load; then
-                  echo "Successfully loaded $TAR"
-                  
-                  # Encuentra la imagen cargada con tag sha-<commit>
-                  IMG=$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "local/${svc}:sha-" | head -n1 || true)
-                  
-                  if [ -n "$IMG" ]; then
-                    echo "Found loaded image: $IMG"
-                    
-                    # Mantén rollback: guarda el tag previo como :prev si existía
-                    if docker image inspect "local/${svc}:deployed" >/dev/null 2>&1; then
-                      echo "Backing up current deployed image as :prev"
-                      docker tag "local/${svc}:deployed" "local/${svc}:prev" || true
-                    fi
-                    
-                    # Tag como deployed
-                    echo "Tagging as deployed: $IMG -> local/${svc}:deployed"
-                    docker tag "$IMG" "local/${svc}:deployed"
-                    
-                  else
-                    echo "ERROR: No loaded image found for ${svc}"
+                # Encontrar y re-taggear imagen
+                IMG=$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "local/${svc}:sha-" | head -n1 || true)
+                if [ -n "$IMG" ]; then
+                  # Backup anterior si existe
+                  if docker image inspect "local/${svc}:deployed" >/dev/null 2>&1; then
+                    docker tag "local/${svc}:deployed" "local/${svc}:prev" || true
                   fi
-                else
-                  echo "ERROR: Failed to load $TAR"
+                  docker tag "$IMG" "local/${svc}:deployed"
+                  echo "Tagged: $IMG -> local/${svc}:deployed"
                 fi
-                
-                # Limpiar archivo tar
-                echo "Removing $TAR"
                 rm -f "$TAR"
-                
-              else
-                echo "No tar file found for ${svc}, checking existing images..."
-                
-                if docker image inspect "local/${svc}:deployed" >/dev/null 2>&1; then
-                  echo "Existing deployed image found for ${svc}"
-                else
-                  echo "WARNING: No deployed image exists for ${svc}"
-                fi
               fi
-              
-              echo "---"
             done
             
             # Mostrar imágenes disponibles
-            echo "Available Docker images:"
-            docker images | grep -E "(local/|REPOSITORY)" || true
+            echo "Available images:"
+            docker images | grep local/ || echo "No local images found"
             
-            # Cambiar al directorio de compose
-            COMPOSE_PATH="${COMPOSE_DIR:-/root/telemedicine-stack}"
-            echo "Changing to compose directory: $COMPOSE_PATH"
+            # Deploy con compose
+            COMPOSE_PATH="${COMPOSE_DIR:-/home/$USER}"
+            cd "$COMPOSE_PATH"
             
-            if [ -d "$COMPOSE_PATH" ]; then
-              cd "$COMPOSE_PATH"
-              echo "Current directory: $(pwd)"
-              
-              # Verificar que existe docker-compose.yml/yaml
-              if [ -f "docker-compose.yml" ] || [ -f "docker-compose.yaml" ] || [ -f "compose.yml" ] || [ -f "compose.yaml" ]; then
-                echo "Found compose file, starting services..."
-                
-                # Mostrar qué archivo de compose estamos usando
-                if [ -f "docker-compose.yaml" ]; then
-                  echo "Using docker-compose.yaml"
-                elif [ -f "docker-compose.yml" ]; then
-                  echo "Using docker-compose.yml"
-                elif [ -f "compose.yaml" ]; then
-                  echo "Using compose.yaml"
-                else
-                  echo "Using compose.yml"
-                fi
-                
-                # Intentar levantar servicios
-                if docker compose up -d; then
-                  echo "Successfully started services"
-                  
-                  # Mostrar estado de los servicios
-                  echo "Service status:"
-                  docker compose ps
-                else
-                  echo "ERROR: Failed to start services"
-                  echo "Compose logs:"
-                  docker compose logs --tail=50
-                  exit 1
-                fi
-              else
-                echo "ERROR: No docker-compose.yml or compose.yml found in $COMPOSE_PATH"
-                ls -la
-                exit 1
-              fi
+            if [ -f "docker-compose.yaml" ] || [ -f "docker-compose.yml" ]; then
+              echo "Starting services with docker compose..."
+              docker compose up -d
+              echo "Services status:"
+              docker compose ps
             else
-              echo "ERROR: Compose directory $COMPOSE_PATH does not exist"
-              exit 1
+              echo "No compose file found in $COMPOSE_PATH"
+              ls -la
             fi
             
-            # Limpia imágenes huérfanas
-            echo "Cleaning up dangling images..."
+            # Limpiar imágenes huérfanas
             docker image prune -f
-            
-            echo "Deployment completed successfully!"
