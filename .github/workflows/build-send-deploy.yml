@@ -4,9 +4,9 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'api-gateway/**'
-      - 'auth-service/**'
-      - 'realms/telemedicine/**'
+      - 'sso-rbac-auth-system-norse-cosmology-main/api-gateway/**'
+      - 'sso-rbac-auth-system-norse-cosmology-main/auth-service/**'
+      - 'sso-rbac-auth-system-norse-cosmology-main/realms/telemedicine/**'
       - '.github/workflows/build-send-deploy.yml'
   workflow_dispatch: {}
 
@@ -17,24 +17,45 @@ jobs:
       matrix:
         include:
           - name: api-gateway
-            context: api-gateway
-            dockerfile: api-gateway/Dockerfile
+            context: sso-rbac-auth-system-norse-cosmology-main/api-gateway
+            dockerfile: sso-rbac-auth-system-norse-cosmology-main/api-gateway/Dockerfile
             image: local/api-gateway
-            path_filter: 'api-gateway/**'
+            path_filter: 'sso-rbac-auth-system-norse-cosmology-main/api-gateway/**'
           - name: auth-service
-            context: auth-service
-            dockerfile: auth-service/Dockerfile
+            context: sso-rbac-auth-system-norse-cosmology-main/auth-service
+            dockerfile: sso-rbac-auth-system-norse-cosmology-main/auth-service/Dockerfile
             image: local/auth-service
-            path_filter: 'auth-service/**'
+            path_filter: 'sso-rbac-auth-system-norse-cosmology-main/auth-service/**'
           - name: telemedicine
-            context: realms/telemedicine
-            dockerfile: realms/telemedicine/Dockerfile
+            context: sso-rbac-auth-system-norse-cosmology-main/realms/telemedicine
+            dockerfile: sso-rbac-auth-system-norse-cosmology-main/realms/telemedicine/Dockerfile
             image: local/telemedicine
-            path_filter: 'realms/telemedicine/**'
+            path_filter: 'sso-rbac-auth-system-norse-cosmology-main/realms/telemedicine/**'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Verify service exists
+        run: |
+          echo "Checking if service ${{ matrix.name }} exists..."
+          echo "Context path: ${{ matrix.context }}"
+          echo "Dockerfile path: ${{ matrix.dockerfile }}"
+          
+          if [ -d "${{ matrix.context }}" ]; then
+            echo "✅ Context directory exists"
+            ls -la "${{ matrix.context }}"
+          else
+            echo "❌ Context directory does not exist"
+            exit 1
+          fi
+          
+          if [ -f "${{ matrix.dockerfile }}" ]; then
+            echo "✅ Dockerfile exists"
+          else
+            echo "❌ Dockerfile does not exist"
+            exit 1
+          fi
 
       - name: Detect service changes
         id: changes
@@ -44,6 +65,14 @@ jobs:
             service:
               - ${{ matrix.path_filter }}
 
+      - name: Check if build is needed
+        run: |
+          if [ "${{ steps.changes.outputs.service }}" == "true" ]; then
+            echo "🔨 Changes detected for ${{ matrix.name }} - will build"
+          else
+            echo "⏭️ No changes detected for ${{ matrix.name }} - skipping build"
+          fi
+
       - name: Set up Docker Buildx
         if: steps.changes.outputs.service == 'true'
         uses: docker/setup-buildx-action@v3
@@ -51,10 +80,16 @@ jobs:
       - name: Build image
         if: steps.changes.outputs.service == 'true'
         run: |
+          echo "Building ${{ matrix.name }}..."
+          echo "Using context: ${{ matrix.context }}"
+          echo "Using dockerfile: ${{ matrix.dockerfile }}"
+          
           DOCKER_BUILDKIT=1 docker build \
             -f "${{ matrix.dockerfile }}" \
             -t "${{ matrix.image }}:sha-${{ github.sha }}" \
             "${{ matrix.context }}"
+          
+          echo "✅ Successfully built ${{ matrix.image }}:sha-${{ github.sha }}"
 
       - name: Save & compress image
         if: steps.changes.outputs.service == 'true'
@@ -76,6 +111,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build-and-send
+    if: always() # Ejecuta siempre, aunque algunos builds se salten
     env:
       COMPOSE_DIR: ${{ secrets.COMPOSE_DIR }}
     steps:
@@ -90,124 +126,140 @@ jobs:
             #!/bin/bash
             set -e
             
-            echo "Starting deployment process..."
+            echo "🚀 Starting deployment process..."
             
-            # Crear directorio y navegar (usar directorio home si /root no funciona)
-            IMAGE_DIR="/home/$USER/images"
+            # Usar directorio root para imágenes
+            IMAGE_DIR="/root/images"
             echo "Creating images directory: $IMAGE_DIR"
             mkdir -p "$IMAGE_DIR"
-            
-            echo "Changing to images directory..."
             cd "$IMAGE_DIR"
             
             echo "Current directory: $(pwd)"
-            echo "Directory contents:"
+            echo "Available files:"
             ls -la
             
-            # Verificar permisos
-            echo "Checking permissions..."
-            whoami
+            # Track servicios actualizados
+            UPDATED_SERVICES=""
             
-            # Carga imágenes recibidas, retag a :deployed y limpia tars
+            # Cargar imágenes recibidas
             for svc in api-gateway auth-service telemedicine; do
               TAR="${svc}-image.tar.gz"
-              echo "Processing service: ${svc}"
+              echo "🔍 Processing service: ${svc}"
               
               if [ -f "$TAR" ]; then
-                echo "Found $TAR, loading..."
+                echo "📦 Found $TAR, loading..."
                 
-                # Verificar que el archivo no esté corrupto
-                echo "Verifying tar file integrity..."
-                if ! gzip -t "$TAR"; then
-                  echo "ERROR: $TAR is corrupted"
-                  continue
-                fi
-                
-                echo "Loading Docker image from $TAR..."
                 if gunzip -c "$TAR" | docker load; then
-                  echo "Successfully loaded $TAR"
+                  echo "✅ Successfully loaded $TAR"
                   
-                  # Encuentra la imagen cargada con tag sha-<commit>
+                  # Encontrar imagen cargada
                   IMG=$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "local/${svc}:sha-" | head -n1 || true)
                   
                   if [ -n "$IMG" ]; then
-                    echo "Found loaded image: $IMG"
+                    echo "🏷️ Found loaded image: $IMG"
                     
-                    # Mantén rollback: guarda el tag previo como :prev si existía
+                    # Backup imagen anterior si existe
                     if docker image inspect "local/${svc}:deployed" >/dev/null 2>&1; then
-                      echo "Backing up current deployed image as :prev"
+                      echo "💾 Backing up current deployed image as :prev"
                       docker tag "local/${svc}:deployed" "local/${svc}:prev" || true
                     fi
                     
                     # Tag como deployed
-                    echo "Tagging as deployed: $IMG -> local/${svc}:deployed"
+                    echo "🏷️ Tagging as deployed: $IMG -> local/${svc}:deployed"
                     docker tag "$IMG" "local/${svc}:deployed"
                     
+                    # Agregar a lista de servicios actualizados
+                    UPDATED_SERVICES="$UPDATED_SERVICES $svc"
+                    
                   else
-                    echo "ERROR: No loaded image found for ${svc}"
+                    echo "❌ ERROR: No loaded image found for ${svc}"
                   fi
                 else
-                  echo "ERROR: Failed to load $TAR"
+                  echo "❌ ERROR: Failed to load $TAR"
                 fi
                 
                 # Limpiar archivo tar
-                echo "Removing $TAR"
+                echo "🗑️ Removing $TAR"
                 rm -f "$TAR"
                 
               else
-                echo "No tar file found for ${svc}, checking existing images..."
+                echo "⏭️ No tar file found for ${svc} (no changes detected)"
                 
                 if docker image inspect "local/${svc}:deployed" >/dev/null 2>&1; then
-                  echo "Existing deployed image found for ${svc}"
+                  echo "✅ Existing deployed image found for ${svc}"
                 else
-                  echo "WARNING: No deployed image exists for ${svc}"
+                  echo "⚠️ WARNING: No deployed image exists for ${svc}"
                 fi
               fi
               
               echo "---"
             done
             
+            # Mostrar resumen de actualizaciones
+            if [ -n "$UPDATED_SERVICES" ]; then
+              echo "🔄 Services updated in this deployment:$UPDATED_SERVICES"
+            else
+              echo "⏭️ No services were updated (no changes detected)"
+            fi
+            
             # Mostrar imágenes disponibles
-            echo "Available Docker images:"
-            docker images | grep -E "(local/|REPOSITORY)" || true
+            echo "📋 Available Docker images:"
+            docker images | grep -E "(local/|REPOSITORY)" || echo "No local images found"
             
             # Cambiar al directorio de compose
             COMPOSE_PATH="${COMPOSE_DIR:-/root/telemedicine-stack}"
-            echo "Changing to compose directory: $COMPOSE_PATH"
+            echo "📁 Changing to compose directory: $COMPOSE_PATH"
             
             if [ -d "$COMPOSE_PATH" ]; then
               cd "$COMPOSE_PATH"
               echo "Current directory: $(pwd)"
+              echo "Directory contents:"
+              ls -la
               
-              # Verificar que existe docker-compose.yml
-              if [ -f "docker-compose.yml" ] || [ -f "compose.yml" ]; then
-                echo "Found compose file, starting services..."
+              # Buscar archivo de compose
+              if [ -f "docker-compose.yaml" ]; then
+                COMPOSE_FILE="docker-compose.yaml"
+              elif [ -f "docker-compose.yml" ]; then
+                COMPOSE_FILE="docker-compose.yml"
+              elif [ -f "compose.yaml" ]; then
+                COMPOSE_FILE="compose.yaml"
+              elif [ -f "compose.yml" ]; then
+                COMPOSE_FILE="compose.yml"
+              else
+                COMPOSE_FILE=""
+              fi
+              
+              if [ -n "$COMPOSE_FILE" ]; then
+                echo "Found compose file: $COMPOSE_FILE"
+                echo "Starting services..."
                 
-                # Intentar levantar servicios
-                if docker compose up -d; then
-                  echo "Successfully started services"
+                if docker compose -f "$COMPOSE_FILE" up -d; then
+                  echo "✅ Successfully started services"
                   
-                  # Mostrar estado de los servicios
                   echo "Service status:"
-                  docker compose ps
+                  docker compose -f "$COMPOSE_FILE" ps
+                  
+                  echo "Service logs (last 10 lines each):"
+                  docker compose -f "$COMPOSE_FILE" logs --tail=10
                 else
-                  echo "ERROR: Failed to start services"
+                  echo "❌ Failed to start services"
                   echo "Compose logs:"
-                  docker compose logs --tail=50
+                  docker compose -f "$COMPOSE_FILE" logs --tail=50
                   exit 1
                 fi
               else
-                echo "ERROR: No docker-compose.yml or compose.yml found in $COMPOSE_PATH"
+                echo "❌ No compose file found in $COMPOSE_PATH"
+                echo "Available files:"
                 ls -la
                 exit 1
               fi
             else
-              echo "ERROR: Compose directory $COMPOSE_PATH does not exist"
+              echo "❌ Compose directory $COMPOSE_PATH does not exist"
               exit 1
             fi
             
-            # Limpia imágenes huérfanas
+            # Limpiar imágenes huérfanas
             echo "Cleaning up dangling images..."
             docker image prune -f
             
-            echo "Deployment completed successfully!"
+            echo "🎉 Deployment completed successfully!"
