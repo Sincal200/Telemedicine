@@ -65,13 +65,20 @@ jobs:
             service:
               - ${{ matrix.path_filter }}
 
-      # FORZAR CONSTRUCCIÓN - quita las condiciones temporalmente
+      - name: Check if build is needed
+        run: |
+          if [ "${{ steps.changes.outputs.service }}" == "true" ]; then
+            echo "🔨 Changes detected for ${{ matrix.name }} - will build"
+          else
+            echo "⏭️ No changes detected for ${{ matrix.name }} - skipping build"
+          fi
+
       - name: Set up Docker Buildx
-        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
+        if: steps.changes.outputs.service == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Build image
-        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
+        if: steps.changes.outputs.service == 'true'
         run: |
           echo "Building ${{ matrix.name }}..."
           echo "Using context: ${{ matrix.context }}"
@@ -85,13 +92,13 @@ jobs:
           echo "✅ Successfully built ${{ matrix.image }}:sha-${{ github.sha }}"
 
       - name: Save & compress image
-        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
+        if: steps.changes.outputs.service == 'true'
         run: |
           docker save "${{ matrix.image }}:sha-${{ github.sha }}" | gzip > "${{ matrix.name }}-image.tar.gz"
           ls -lh "${{ matrix.name }}-image.tar.gz"
 
       - name: Send image to Droplet (SCP)
-        # if: steps.changes.outputs.service == 'true'  # COMENTADO PARA FORZAR BUILD
+        if: steps.changes.outputs.service == 'true'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -99,11 +106,12 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           source: "${{ matrix.name }}-image.tar.gz"
-          target: "~/images"
+          target: "/root/images"
 
   deploy:
     runs-on: ubuntu-latest
     needs: build-and-send
+    if: always() # Ejecuta siempre, aunque algunos builds se salten
     env:
       COMPOSE_DIR: ${{ secrets.COMPOSE_DIR }}
     steps:
@@ -118,10 +126,10 @@ jobs:
             #!/bin/bash
             set -e
             
-            echo "Starting deployment process..."
+            echo "🚀 Starting deployment process..."
             
-            # Usar directorio home para imágenes
-            IMAGE_DIR="/home/$USER/images"
+            # Usar directorio root para imágenes
+            IMAGE_DIR="/root/images"
             echo "Creating images directory: $IMAGE_DIR"
             mkdir -p "$IMAGE_DIR"
             cd "$IMAGE_DIR"
@@ -130,64 +138,77 @@ jobs:
             echo "Available files:"
             ls -la
             
+            # Track servicios actualizados
+            UPDATED_SERVICES=""
+            
             # Cargar imágenes recibidas
             for svc in api-gateway auth-service telemedicine; do
               TAR="${svc}-image.tar.gz"
-              echo "Processing service: ${svc}"
+              echo "🔍 Processing service: ${svc}"
               
               if [ -f "$TAR" ]; then
-                echo "Found $TAR, loading..."
+                echo "📦 Found $TAR, loading..."
                 
                 if gunzip -c "$TAR" | docker load; then
-                  echo "Successfully loaded $TAR"
+                  echo "✅ Successfully loaded $TAR"
                   
                   # Encontrar imagen cargada
                   IMG=$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "local/${svc}:sha-" | head -n1 || true)
                   
                   if [ -n "$IMG" ]; then
-                    echo "Found loaded image: $IMG"
+                    echo "🏷️ Found loaded image: $IMG"
                     
                     # Backup imagen anterior si existe
                     if docker image inspect "local/${svc}:deployed" >/dev/null 2>&1; then
-                      echo "Backing up current deployed image as :prev"
+                      echo "💾 Backing up current deployed image as :prev"
                       docker tag "local/${svc}:deployed" "local/${svc}:prev" || true
                     fi
                     
                     # Tag como deployed
-                    echo "Tagging as deployed: $IMG -> local/${svc}:deployed"
+                    echo "🏷️ Tagging as deployed: $IMG -> local/${svc}:deployed"
                     docker tag "$IMG" "local/${svc}:deployed"
                     
+                    # Agregar a lista de servicios actualizados
+                    UPDATED_SERVICES="$UPDATED_SERVICES $svc"
+                    
                   else
-                    echo "ERROR: No loaded image found for ${svc}"
+                    echo "❌ ERROR: No loaded image found for ${svc}"
                   fi
                 else
-                  echo "ERROR: Failed to load $TAR"
+                  echo "❌ ERROR: Failed to load $TAR"
                 fi
                 
                 # Limpiar archivo tar
-                echo "Removing $TAR"
+                echo "🗑️ Removing $TAR"
                 rm -f "$TAR"
                 
               else
-                echo "No tar file found for ${svc}"
+                echo "⏭️ No tar file found for ${svc} (no changes detected)"
                 
                 if docker image inspect "local/${svc}:deployed" >/dev/null 2>&1; then
-                  echo "Existing deployed image found for ${svc}"
+                  echo "✅ Existing deployed image found for ${svc}"
                 else
-                  echo "WARNING: No deployed image exists for ${svc}"
+                  echo "⚠️ WARNING: No deployed image exists for ${svc}"
                 fi
               fi
               
               echo "---"
             done
             
+            # Mostrar resumen de actualizaciones
+            if [ -n "$UPDATED_SERVICES" ]; then
+              echo "🔄 Services updated in this deployment:$UPDATED_SERVICES"
+            else
+              echo "⏭️ No services were updated (no changes detected)"
+            fi
+            
             # Mostrar imágenes disponibles
-            echo "Available Docker images:"
+            echo "📋 Available Docker images:"
             docker images | grep -E "(local/|REPOSITORY)" || echo "No local images found"
             
             # Cambiar al directorio de compose
-            COMPOSE_PATH="${COMPOSE_DIR:-/home/$USER}"
-            echo "Changing to compose directory: $COMPOSE_PATH"
+            COMPOSE_PATH="${COMPOSE_DIR:-/root/telemedicine-stack}"
+            echo "📁 Changing to compose directory: $COMPOSE_PATH"
             
             if [ -d "$COMPOSE_PATH" ]; then
               cd "$COMPOSE_PATH"
