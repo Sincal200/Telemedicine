@@ -74,9 +74,11 @@ jobs:
           source: "${{ matrix.name }}-image.tar.gz"
           target: "/root/images"
 
-  deploy:
+   deploy:
     runs-on: ubuntu-latest
     needs: build-and-send
+    env:
+      COMPOSE_DIR: ${{ secrets.COMPOSE_DIR }}
     steps:
       - name: Deploy (load, retag to :deployed, compose up)
         uses: appleboy/ssh-action@v1.0.3
@@ -87,21 +89,16 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             set -e
-            COMPOSE_DIR="${{ secrets.COMPOSE_DIR:-/root/telemedicine-stack }}"
             mkdir -p /root/images
             cd /root/images
 
-            # Carga imágenes recibidas, retag a :deployed y limpia tars
             for svc in api-gateway auth-service telemedicine; do
               TAR="${svc}-image.tar.gz"
               if [ -f "$TAR" ]; then
                 echo "Loading $TAR..."
                 gunzip -c "$TAR" | docker load
-
-                # Encuentra la imagen cargada con tag sha-<commit>
                 IMG=$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep "local/${svc}:sha-" | head -n1 || true)
                 if [ -n "$IMG" ]; then
-                  # Mantén rollback: guarda el tag previo como :prev si existía
                   if docker image inspect "local/${svc}:deployed" >/dev/null 2>&1; then
                     docker tag "local/${svc}:deployed" "local/${svc}:prev" || true
                   fi
@@ -109,14 +106,11 @@ jobs:
                   echo "Retag: $IMG -> local/${svc}:deployed"
                 fi
                 rm -f "$TAR"
-              else
-                echo "No tar for ${svc}, skipping."
               fi
             done
 
-            # Levanta/actualiza contenedores
-            cd "$COMPOSE_DIR"
+            # Fallback si COMPOSE_DIR está vacío
+            cd "${COMPOSE_DIR:-/root/telemedicine-stack}"
             docker compose up -d
-
-            # Limpia imágenes huérfanas
             docker image prune -f
+
