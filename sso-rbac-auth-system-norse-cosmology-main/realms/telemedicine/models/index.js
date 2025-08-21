@@ -1,0 +1,31 @@
+import dbConfig from '../config/database.js';
+import { Sequelize, DataTypes } from 'sequelize';
+import initModels from './init-models.js';
+
+const sequelize = new Sequelize(dbConfig.DATABASE, dbConfig.USER, dbConfig.PASSWORD, {
+  host: dbConfig.HOST,
+  dialect: dbConfig.DIALECT,
+  operatorsAliases: false,
+  pool: {
+    max: dbConfig.pool.max,
+    min: dbConfig.pool.min,
+    acquire: dbConfig.pool.acquire,
+    idle: dbConfig.pool.idle
+  }
+});
+
+sequelize.authenticate()
+  .then(() => {
+    console.log('Connection has been established successfully.');
+  })
+  .catch(err => {
+    console.error('Unable to connect to the database:', err);
+  });
+
+const models = initModels(sequelize);
+
+export default {
+  Sequelize,
+  sequelize,
+  ...models
+};

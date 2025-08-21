@@ -81,25 +81,5 @@ router.post('/rooms/join', authorize('patient'), (req, res) => {
     });
 });
 
-// Ruta para obtener el historial de consultas (solo doctores)
-router.get('/consultations/history', authorize('doctor'), (req, res) => {
-    // Aquí implementarías la lógica para obtener el historial desde la base de datos
-    res.json({
-        status: "success",
-        data: {
-            consultations: [
-                // Ejemplo de estructura de datos
-                {
-                    id: "consultation-123",
-                    patientId: "patient-456",
-                    doctorId: req.user.sub,
-                    startTime: "2025-01-15T10:00:00Z",
-                    endTime: "2025-01-15T10:30:00Z",
-                    status: "completed"
-                }
-            ]
-        }
-    });
-});
 
 export default router;
