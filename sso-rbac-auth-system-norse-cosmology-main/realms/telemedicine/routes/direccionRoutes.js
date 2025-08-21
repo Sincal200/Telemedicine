@@ -2,7 +2,7 @@ import db from '../models/index.js';
 import crudController from '../controllers/crudController.js';
 import createCrudRoutes from "./createCrudRoutes.js";
 
-const sexoCrud = crudController(db.Sexo);
-const router = createCrudRoutes(sexoCrud);
+const direccionCrud = crudController(db.Direccion);
+const router = createCrudRoutes(direccionCrud);
 
 export default router;
