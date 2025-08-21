@@ -1,0 +1,483 @@
+@startuml DiagramaClasesTelemedicina
+
+!theme plain
+skinparam class {
+    BackgroundColor LightBlue
+    BorderColor Black
+    ArrowColor Black
+}
+
+skinparam package {
+    BackgroundColor LightGray
+    BorderColor Black
+}
+
+package "Models (Sequelize)" {
+
+    class Usuario {
+        - idUsuario: INTEGER (PK)
+        - keycloak_user_id: STRING(100)
+        - persona_id: INTEGER (FK)
+        - roles_asignados: STRING(500)
+        - estado_aprobacion: ENUM('pendiente','aprobado','rechazado')
+        - activo: BOOLEAN
+        - creado: DATE
+        - actualizado: DATE
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    class Persona {
+        - idPersona: INTEGER (PK)
+        - tipo_documento_id: INTEGER (FK)
+        - numero_documento: STRING(50)
+        - nombres: STRING(100)
+        - apellidos: STRING(100)
+        - email: STRING(150)
+        - telefono: STRING(20)
+        - telefono_emergencia: STRING(20)
+        - fecha_nacimiento: DATE
+        - sexo_id: INTEGER (FK)
+        - direccion_id: INTEGER (FK)
+        - foto_perfil: STRING(255)
+        - activo: BOOLEAN
+        - creado: DATE
+        - actualizado: DATE
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    class Paciente {
+        - idPaciente: INTEGER (PK)
+        - persona_id: INTEGER (FK)
+        - numero_expediente: STRING(50)
+        - tipo_sangre: STRING(5)
+        - alergias: TEXT
+        - enfermedades_cronicas: TEXT
+        - medicamentos_actuales: TEXT
+        - contacto_emergencia_nombre: STRING(100)
+        - contacto_emergencia_telefono: STRING(20)
+        - contacto_emergencia_parentesco: STRING(50)
+        - seguro_medico: STRING(100)
+        - numero_seguro: STRING(50)
+        - fecha_primera_consulta: DATE
+        - activo: BOOLEAN
+        - creado: DATE
+        - actualizado: DATE
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    class PersonalMedico {
+        - idPersonalMedico: INTEGER (PK)
+        - persona_id: INTEGER (FK)
+        - centro_id: INTEGER (FK)
+        - numero_licencia: STRING(50)
+        - numero_colegiado: STRING(50)
+        - especialidad_id: INTEGER (FK)
+        - cargo: STRING(100)
+        - universidad: STRING(200)
+        - anos_experiencia: INTEGER
+        - biografia: TEXT
+        - calificacion_promedio: DECIMAL(3,2)
+        - total_consultas: INTEGER
+        - activo: BOOLEAN
+        - verificado: BOOLEAN
+        - creado: DATE
+        - actualizado: DATE
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    class Cita {
+        - idCita: INTEGER (PK)
+        - numero_cita: STRING(50)
+        - paciente_id: INTEGER (FK)
+        - personal_medico_id: INTEGER (FK)
+        - centro_id: INTEGER (FK)
+        - tipo_cita_id: INTEGER (FK)
+        - estado_cita_id: INTEGER (FK)
+        - prioridad_id: INTEGER (FK)
+        - fecha_hora: DATE
+        - motivo: TEXT
+        - creado: DATE
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    class Consulta {
+        - idConsulta: INTEGER (PK)
+        - cita_id: INTEGER (FK)
+        - diagnostico_principal: TEXT
+        - diagnosticos_secundarios: TEXT
+        - tratamiento: TEXT
+        - observaciones: TEXT
+        - receta_medica: TEXT
+        - examenes_solicitados: TEXT
+        - proxima_cita_recomendada: DATE
+        - duracion_minutos: INTEGER
+        - calificacion_paciente: INTEGER
+        - comentario_paciente: TEXT
+        - requiere_seguimiento: BOOLEAN
+        - fecha_seguimiento: DATE
+        - creado: DATE
+        - actualizado: DATE
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    class ConfiguracionCentro {
+        - idConfiguracion: INTEGER (PK)
+        - nombre_centro: STRING(200)
+        - direccion: STRING(500)
+        - telefono: STRING(20)
+        - email: STRING(150)
+        - director_medico_id: INTEGER (FK)
+        - administrador_sistema_id: INTEGER (FK)
+        - activo: BOOLEAN
+        - creado: DATE
+        - actualizado: DATE
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    class Mensaje {
+        - idMensaje: INTEGER (PK)
+        - remitente_id: INTEGER (FK)
+        - paciente_id: INTEGER (FK)
+        - personal_medico_id: INTEGER (FK)
+        - contenido: TEXT
+        - fecha_envio: DATE
+        - leido: BOOLEAN
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    class SignosVitales {
+        - idSignosVitales: INTEGER (PK)
+        - consulta_id: INTEGER (FK)
+        - presion_sistolica: INTEGER
+        - presion_diastolica: INTEGER
+        - frecuencia_cardiaca: INTEGER
+        - temperatura: DECIMAL(4,2)
+        - peso: DECIMAL(5,2)
+        - altura: DECIMAL(5,2)
+        - saturacion_oxigeno: INTEGER
+        - tomado_por: INTEGER (FK)
+        - fecha_toma: DATE
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    class Archivo {
+        - idArchivo: INTEGER (PK)
+        - consulta_id: INTEGER (FK)
+        - paciente_id: INTEGER (FK)
+        - nombre_archivo: STRING(255)
+        - ruta_archivo: STRING(500)
+        - tipo_archivo: STRING(100)
+        - tamano_bytes: BIGINT
+        - creado_por: INTEGER (FK)
+        - fecha_subida: DATE
+        --
+        + findByPk(id)
+        + findAll()
+        + create(data)
+        + update(data, where)
+        + destroy(where)
+    }
+
+    ' Tablas de referencia
+    class TiposDocumentoIdentidad {
+        - idTipoDocumento: INTEGER (PK)
+        - nombre: STRING(50)
+        - codigo: STRING(10)
+        - activo: BOOLEAN
+    }
+
+    class Sexo {
+        - idSexo: INTEGER (PK)
+        - nombre: STRING(20)
+        - codigo: STRING(1)
+    }
+
+    class Direccion {
+        - idDireccion: INTEGER (PK)
+        - departamento_id: INTEGER (FK)
+        - municipio_id: INTEGER (FK)
+        - aldea_id: INTEGER (FK)
+        - direccion_exacta: TEXT
+    }
+
+    class Departamento {
+        - idDepartamento: INTEGER (PK)
+        - nombre: STRING(100)
+        - codigo: STRING(10)
+    }
+
+    class Municipio {
+        - idMunicipio: INTEGER (PK)
+        - departamento_id: INTEGER (FK)
+        - nombre: STRING(100)
+        - codigo: STRING(10)
+    }
+
+    class Aldea {
+        - idAldea: INTEGER (PK)
+        - municipio_id: INTEGER (FK)
+        - nombre: STRING(100)
+        - codigo: STRING(10)
+    }
+
+    class Especialidades {
+        - idEspecialidad: INTEGER (PK)
+        - nombre: STRING(100)
+        - descripcion: TEXT
+        - activo: BOOLEAN
+    }
+
+    class TiposCita {
+        - idTipoCita: INTEGER (PK)
+        - nombre: STRING(50)
+        - descripcion: TEXT
+        - duracion_estimada: INTEGER
+        - precio: DECIMAL(10,2)
+        - activo: BOOLEAN
+    }
+
+    class EstadosCita {
+        - idEstadoCita: INTEGER (PK)
+        - nombre: STRING(50)
+        - descripcion: TEXT
+        - color: STRING(7)
+    }
+
+    class PrioridadesCita {
+        - idPrioridad: INTEGER (PK)
+        - nombre: STRING(50)
+        - nivel: INTEGER
+        - descripcion: TEXT
+        - color: STRING(7)
+    }
+
+    class DisponibilidadPersonalMedico {
+        - idDisponibilidad: INTEGER (PK)
+        - personal_medico_id: INTEGER (FK)
+        - dia_semana_id: INTEGER (FK)
+        - hora_inicio: TIME
+        - hora_fin: TIME
+        - activo: BOOLEAN
+    }
+
+    class DiasSemana {
+        - idDiaSemana: INTEGER (PK)
+        - nombre: STRING(20)
+        - numero_dia: INTEGER
+    }
+
+    class Recordatorio {
+        - idRecordatorio: INTEGER (PK)
+        - usuario_id: INTEGER (FK)
+        - titulo: STRING(200)
+        - mensaje: TEXT
+        - fecha_recordatorio: DATE
+        - enviado: BOOLEAN
+    }
+
+    class SolicitudRol {
+        - idSolicitudRol: INTEGER (PK)
+        - usuario_id: INTEGER (FK)
+        - rol_solicitado: STRING(100)
+        - justificacion: TEXT
+        - estado: ENUM('pendiente','aprobada','rechazada')
+        - revisado_por: INTEGER (FK)
+        - fecha_revision: DATE
+        - creado: DATE
+    }
+
+    class EstadisticasDiarias {
+        - idEstadistica: INTEGER (PK)
+        - centro_id: INTEGER (FK)
+        - fecha: DATE
+        - total_citas: INTEGER
+        - citas_completadas: INTEGER
+        - citas_canceladas: INTEGER
+        - nuevos_pacientes: INTEGER
+        - total_consultas: INTEGER
+    }
+
+    class LogSistema {
+        - idLog: INTEGER (PK)
+        - usuario_id: INTEGER (FK)
+        - accion: STRING(100)
+        - tabla_afectada: STRING(50)
+        - registro_id: INTEGER
+        - datos_anteriores: JSON
+        - datos_nuevos: JSON
+        - ip_address: STRING(45)
+        - user_agent: TEXT
+        - fecha: DATE
+    }
+}
+
+package "Controllers" {
+    class CrudController {
+        - Model: SequelizeModel
+        --
+        + getAll(req, res, next): Promise<void>
+        + getById(req, res, next): Promise<void>
+        + create(req, res, next): Promise<void>
+        + update(req, res, next): Promise<void>
+        + delete(req, res, next): Promise<void>
+    }
+}
+
+package "Services" {
+    class CrudService {
+        - Model: SequelizeModel
+        --
+        + findAll(): Promise<Array>
+        + findById(id): Promise<Object>
+        + create(data): Promise<Object>
+        + update(id, data): Promise<Array>
+        + delete(id): Promise<number>
+    }
+}
+
+package "Middleware" {
+    class AuthMiddleware {
+        --
+        + verifyToken(req, res, next): Promise<void>
+        + extractUserFromToken(token): Object
+    }
+
+    class AuthorizationMiddleware {
+        --
+        + requireRole(roles): Function
+        + checkPermission(permission): Function
+        + hasAccess(user, resource): boolean
+    }
+
+    class ErrorHandler {
+        --
+        + handleError(err, req, res, next): void
+        + notFound(req, res, next): void
+        + validationError(err): Object
+    }
+}
+
+package "Sockets" {
+    class WebRTCSignaling {
+        - io: SocketIO
+        - connectedUsers: Map
+        --
+        + handleConnection(socket): void
+        + handleDisconnection(socket): void
+        + handleOffer(socket, data): void
+        + handleAnswer(socket, data): void
+        + handleIceCandidate(socket, data): void
+        + joinRoom(socket, roomId): void
+        + leaveRoom(socket, roomId): void
+    }
+}
+
+' Relaciones entre Models
+Usuario ||--o{ Persona : persona_id
+Persona ||--o{ Paciente : persona_id
+Persona ||--o{ PersonalMedico : persona_id
+Persona ||--o{ TiposDocumentoIdentidad : tipo_documento_id
+Persona ||--o{ Sexo : sexo_id
+Persona ||--o{ Direccion : direccion_id
+
+Direccion ||--o{ Departamento : departamento_id
+Direccion ||--o{ Municipio : municipio_id
+Direccion ||--o{ Aldea : aldea_id
+Municipio ||--o{ Departamento : departamento_id
+Aldea ||--o{ Municipio : municipio_id
+
+Paciente ||--o{ Cita : paciente_id
+PersonalMedico ||--o{ Cita : personal_medico_id
+Cita ||--o{ TiposCita : tipo_cita_id
+Cita ||--o{ EstadosCita : estado_cita_id
+Cita ||--o{ PrioridadesCita : prioridad_id
+Cita ||--o{ ConfiguracionCentro : centro_id
+
+Cita ||--|| Consulta : cita_id
+Consulta ||--o{ SignosVitales : consulta_id
+Consulta ||--o{ Archivo : consulta_id
+
+PersonalMedico ||--o{ Especialidades : especialidad_id
+PersonalMedico ||--o{ ConfiguracionCentro : centro_id
+PersonalMedico ||--o{ DisponibilidadPersonalMedico : personal_medico_id
+DisponibilidadPersonalMedico ||--o{ DiasSemana : dia_semana_id
+
+ConfiguracionCentro ||--o{ PersonalMedico : director_medico_id
+ConfiguracionCentro ||--o{ Usuario : administrador_sistema_id
+
+Usuario ||--o{ Mensaje : remitente_id
+Paciente ||--o{ Mensaje : paciente_id
+PersonalMedico ||--o{ Mensaje : personal_medico_id
+
+Usuario ||--o{ Recordatorio : usuario_id
+Usuario ||--o{ SolicitudRol : usuario_id
+Usuario ||--o{ LogSistema : usuario_id
+Usuario ||--o{ SignosVitales : tomado_por
+Usuario ||--o{ Archivo : creado_por
+
+ConfiguracionCentro ||--o{ EstadisticasDiarias : centro_id
+
+' Relaciones Controllers-Services-Models
+CrudController --> CrudService : uses
+CrudService --> Usuario : manages
+CrudService --> Persona : manages
+CrudService --> Paciente : manages
+CrudService --> PersonalMedico : manages
+CrudService --> Cita : manages
+CrudService --> Consulta : manages
+
+' Middleware connections
+AuthMiddleware --> Usuario : validates
+AuthorizationMiddleware --> Usuario : authorizes
+ErrorHandler --> CrudController : handles errors
+
+' WebRTC connections
+WebRTCSignaling --> Mensaje : creates
+WebRTCSignaling --> Usuario : authenticates
+
+@enduml

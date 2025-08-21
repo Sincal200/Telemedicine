@@ -1,0 +1,106 @@
+@startuml Arquitectura
+
+package "Controllers" {
+    class CitaController {
+        + getAll()
+        + getById()
+        + create()
+        + update()
+        + delete()
+    }
+
+    class PacienteController {
+        + getAll()
+        + getById()
+        + create()
+        + update()
+        + delete()
+    }
+
+    class ConsultaController {
+        + getAll()
+        + getById()
+        + create()
+        + update()
+        + delete()
+    }
+}
+
+package "Services" {
+    class CrudService {
+        + findAll()
+        + findById()
+        + create()
+        + update()
+        + delete()
+    }
+
+    class CitaService {
+        + agendarCita()
+        + cancelarCita()
+        + validarDisponibilidad()
+    }
+
+    class TelemedicineService {
+        + iniciarConsulta()
+        + finalizarConsulta()
+        + registrarSignos()
+    }
+}
+
+package "Middleware" {
+    class AuthMiddleware {
+        + verifyToken()
+        + extractUser()
+    }
+
+    class AuthorizationMiddleware {
+        + requireRole()
+        + checkPermission()
+    }
+
+    class ErrorHandler {
+        + handleError()
+        + logError()
+    }
+}
+
+package "Models" {
+    class Usuario
+    class Persona
+    class Paciente
+    class PersonalMedico
+    class Cita
+    class Consulta
+}
+
+package "Sockets" {
+    class WebRTCSignaling {
+        + handleConnection()
+        + joinRoom()
+        + handleOffer()
+        + handleAnswer()
+    }
+}
+
+' Relaciones
+CitaController --> CrudService
+CitaController --> CitaService
+PacienteController --> CrudService
+ConsultaController --> TelemedicineService
+
+CrudService --> Usuario
+CrudService --> Paciente
+CrudService --> Cita
+CrudService --> Consulta
+
+CitaService --> Cita
+TelemedicineService --> Consulta
+
+AuthMiddleware --> CitaController
+AuthorizationMiddleware --> PacienteController
+ErrorHandler --> ConsultaController
+
+WebRTCSignaling --> Consulta
+
+@enduml
