@@ -5,6 +5,7 @@ import WebRTCSignalingServer from './sockets/webrtc-signaling.js';
 import telemedicineRoutes from './routes/telemedicine.js';
 import { authenticate } from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
+import sexoRoutes from './routes/sexoRoutes.js';
 
 dotenv.config();
 
@@ -24,6 +25,8 @@ app.locals.signalingServer = signalingServer;
 
 // Rutas de telemedicina
 app.use('/api/telemedicine', telemedicineRoutes);
+app.use('/api/sexos', sexoRoutes);
+
 
 // Rutas heredadas mínimas para compatibilidad
 app.get('/authenticate', (req, res) => {
