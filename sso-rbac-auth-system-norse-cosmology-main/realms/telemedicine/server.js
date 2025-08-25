@@ -32,6 +32,7 @@ import solicitudRolRoutes from "./routes/solicitudRolRoutes.js";
 import tiposCitaRoutes from "./routes/tiposCitaRoutes.js";
 import tiposDocumentoIdentidadRoutes from "./routes/tiposDocumentoIdentidadRoutes.js";
 import usuarioRoutes from "./routes/usuarioRoutes.js";
+import setupRoutes from "./routes/setupRoutes.js";
 
 dotenv.config();
 
@@ -39,6 +40,9 @@ const app = express();
 const PORT = process.env.PORT || 3002;
 
 app.use(express.json());
+
+// Documentación Swagger pública
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Autenticación centralizada (usa Redis internamente)
 app.use(authenticate);
@@ -50,34 +54,34 @@ signalingServer.initialize(server);
 app.locals.signalingServer = signalingServer;
 
 // Rutas de telemedicina
-app.use('/api/telemedicine', telemedicineRoutes);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use('/api/aldea', aldeaRoutes);
-app.use('/api/archivo', archivoRoutes);
-app.use('/api/cita', citaRoutes);
-app.use('/api/configuracion-centro', configuracionCentroRoutes);
-app.use('/api/conslta' , consultaCentroRoutes);
-app.use('/api/departamento', departamentoRoutes);
-app.use('/api/dias-semana', diasSemanaRoutes);
-app.use('/api/direccion', direccionRoutes)
-app.use('/api/disponibilidad-personal-medico', disponibilidadPersonalMedicoRoutes);
-app.use('/api/especialidades', especialidadesRoutes)
-app.use('/api/estadisticas-diarias', estadisticasDiariasRoutes);
-app.use('/api/estados-cita', estadosCitaRoutes)
-app.use('/api/log-sistema', logSistemaRoutes)
-app.use('/api/mensaje', mensajeRoutes)
-app.use('/api/municipio', municipioRoutes)
-app.use('/api/paciente', pacienteRoutes)
-app.use('/api/persona', personaRoutes)
-app.use('/api/personal-medico', personalMedicoRoutes)
-app.use('/api/prioridad-cita', prioridadCitaRoutes)
-app.use('/api/recordatorio', recordatorioRoutes)
-app.use('/api/sexo', sexoRoutes);
-app.use('/api/signos-vitales', signosVitalesRoutes)
-app.use('/api/solicitud-rol', solicitudRolRoutes)
-app.use('/api/tipos-cita', tiposCitaRoutes)
-app.use('/api/tipos-documento-identidad', tiposDocumentoIdentidadRoutes)
-app.use('/api/usuario', usuarioRoutes)
+app.use('/telemedicine', telemedicineRoutes);
+app.use('/aldea', aldeaRoutes);
+app.use('/archivo', archivoRoutes);
+app.use('/cita', citaRoutes);
+app.use('/configuracion-centro', configuracionCentroRoutes);
+app.use('/consulta' , consultaCentroRoutes);
+app.use('/departamento', departamentoRoutes);
+app.use('/dias-semana', diasSemanaRoutes);
+app.use('/direccion', direccionRoutes)
+app.use('/disponibilidad-personal-medico', disponibilidadPersonalMedicoRoutes);
+app.use('/especialidades', especialidadesRoutes)
+app.use('/estadisticas-diarias', estadisticasDiariasRoutes);
+app.use('/estados-cita', estadosCitaRoutes)
+app.use('/log-sistema', logSistemaRoutes)
+app.use('/mensaje', mensajeRoutes)
+app.use('/municipio', municipioRoutes)
+app.use('/paciente', pacienteRoutes)
+app.use('/persona', personaRoutes)
+app.use('/personal-medico', personalMedicoRoutes)
+app.use('/prioridad-cita', prioridadCitaRoutes)
+app.use('/recordatorio', recordatorioRoutes)
+app.use('/sexo', sexoRoutes);
+app.use('/signos-vitales', signosVitalesRoutes)
+app.use('/solicitud-rol', solicitudRolRoutes)
+app.use('/tipos-cita', tiposCitaRoutes)
+app.use('/tipos-documento-identidad', tiposDocumentoIdentidadRoutes)
+app.use('/usuario', usuarioRoutes)
+app.use('/setup', setupRoutes)
 
 
 // Rutas heredadas mínimas para compatibilidad
