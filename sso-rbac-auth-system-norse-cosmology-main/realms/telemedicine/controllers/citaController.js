@@ -66,21 +66,22 @@ const citaController = {
       const { 
         pacienteId, 
         personalMedicoId, 
-        fechaHora, 
+        fecha,
+        horaInicio,
         tipoCitaId, 
-        motivo,
+        motivoConsulta,
         prioridadId 
       } = req.body;
 
       // Validaciones
-      if (!pacienteId || !personalMedicoId || !fechaHora || !tipoCitaId) {
+      if (!pacienteId || !personalMedicoId || !fecha || !horaInicio || !tipoCitaId) {
         return res.status(400).json({
-          error: 'Faltan campos requeridos: pacienteId, personalMedicoId, fechaHora, tipoCitaId'
+          error: 'Faltan campos requeridos: pacienteId, personalMedicoId, fecha, horaInicio, tipoCitaId'
         });
       }
 
       // Validar que la fecha no sea en el pasado
-      const fechaCita = new Date(fechaHora);
+      const fechaCita = new Date(`${fecha} ${horaInicio}`);
       const ahora = new Date();
       
       if (fechaCita <= ahora) {
@@ -108,9 +109,10 @@ const citaController = {
       const datosCita = {
         pacienteId,
         personalMedicoId,
-        fechaHora,
+        fecha,
+        horaInicio,
         tipoCitaId,
-        motivo,
+        motivoConsulta,
         prioridadId
       };
 
@@ -153,7 +155,7 @@ const citaController = {
       }
 
       if (desde && hasta) {
-        whereClause.fecha_hora = {
+        whereClause.fecha = {
           [db.Sequelize.Op.between]: [desde, hasta]
         };
       }
@@ -184,7 +186,7 @@ const citaController = {
             as: 'estado_citum'
           }
         ],
-        order: [['fecha_hora', 'DESC']]
+        order: [['fecha', 'DESC'], ['hora_inicio', 'DESC']]
       });
 
       res.json({
@@ -217,11 +219,7 @@ const citaController = {
       }
 
       if (fecha) {
-        const fechaInicio = `${fecha} 00:00:00`;
-        const fechaFin = `${fecha} 23:59:59`;
-        whereClause.fecha_hora = {
-          [db.Sequelize.Op.between]: [fechaInicio, fechaFin]
-        };
+        whereClause.fecha = fecha;
       }
 
       const citas = await db.Cita.findAll({
@@ -244,7 +242,7 @@ const citaController = {
             as: 'estado_citum'
           }
         ],
-        order: [['fecha_hora', 'ASC']]
+        order: [['fecha', 'ASC'], ['hora_inicio', 'ASC']]
       });
 
       res.json({
@@ -284,7 +282,7 @@ const citaController = {
       }
 
       // Verificar que la cita no haya pasado
-      const fechaCita = new Date(cita.fecha_hora);
+      const fechaCita = new Date(`${cita.fecha} ${cita.hora_inicio}`);
       const ahora = new Date();
       
       if (fechaCita <= ahora) {
@@ -295,7 +293,7 @@ const citaController = {
 
       await cita.update({
         estado_cita_id: 4, // Cancelada
-        motivo: motivo_cancelacion || cita.motivo
+        motivo_cancelacion: motivo_cancelacion || cita.motivo_cancelacion
       });
 
       const citaActualizada = await agendaService.obtenerCitaCompleta(id);

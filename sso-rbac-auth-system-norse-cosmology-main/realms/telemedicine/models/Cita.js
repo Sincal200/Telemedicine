@@ -56,21 +56,80 @@ const Cita = (sequelize, DataTypes) => {
     },
     prioridad_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
       references: {
         model: 'PrioridadesCita',
         key: 'idPrioridad'
       }
     },
-    fecha_hora: {
-      type: DataTypes.DATE,
+    fecha: {
+      type: DataTypes.DATEONLY,
       allowNull: false
     },
-    motivo: {
+    hora_inicio: {
+      type: DataTypes.TIME,
+      allowNull: false
+    },
+    hora_fin: {
+      type: DataTypes.TIME,
+      allowNull: false
+    },
+    motivo_consulta: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    sintomas: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    notas_paciente: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    notas_personal: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    recordatorio_enviado: {
+      type: DataTypes.TINYINT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    es_telemedicina: {
+      type: DataTypes.TINYINT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    url_videollamada: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      comment: "URL completa de la videollamada"
+    },
+    room_id: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: "ID único de la sala de videollamada"
+    },
+    token_acceso: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: "Token de seguridad para la videollamada"
+    },
+    cancelado_por: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "ID del usuario que canceló"
+    },
+    motivo_cancelacion: {
       type: DataTypes.TEXT,
       allowNull: true
     },
     creado: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    },
+    actualizado: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')

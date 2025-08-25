@@ -159,11 +159,8 @@ const agendaService = {
     const citasExistentes = await db.Cita.findAll({
       where: {
         personal_medico_id: { [Op.in]: personalMedicoIds },
-        fecha_hora: {
-          [Op.between]: [
-            `${fechas[0]} 00:00:00`,
-            `${fechas[fechas.length - 1]} 23:59:59`
-          ]
+        fecha: {
+          [Op.between]: [fechas[0], fechas[fechas.length - 1]]
         },
         estado_cita_id: {
           [Op.notIn]: [4, 5] // Asumiendo que 4=cancelada, 5=no_asistio
@@ -173,9 +170,10 @@ const agendaService = {
 
     // Crear set de horarios ocupados para búsqueda rápida
     const horariosOcupados = new Set(
-      citasExistentes.map(cita => 
-        `${cita.personal_medico_id}-${cita.fecha_hora.toISOString().slice(0, 19).replace('T', ' ')}`
-      )
+      citasExistentes.map(cita => {
+        const fechaHora = `${cita.fecha} ${cita.hora_inicio}:00`;
+        return `${cita.personal_medico_id}-${fechaHora}`;
+      })
     );
 
     // Filtrar horarios disponibles
@@ -197,17 +195,50 @@ const agendaService = {
       const { 
         pacienteId, 
         personalMedicoId, 
-        fechaHora, 
+        fecha,
+        horaInicio,
         tipoCitaId, 
-        motivo,
+        motivoConsulta,
         prioridadId = 1 // Normal por defecto
       } = datosCita;
 
-      // 1. Verificar que el horario sigue disponible
+      // 1. Obtener tipo de cita para calcular hora_fin
+      const tipoCita = await db.TiposCita.findByPk(tipoCitaId);
+      if (!tipoCita) {
+        throw new Error('Tipo de cita no encontrado');
+      }
+
+      // Calcular hora_fin basada en la duración
+      const [horaH, horaM] = horaInicio.split(':').map(Number);
+      const minutosInicio = horaH * 60 + horaM;
+      const minutosFin = minutosInicio + tipoCita.duracion_minutos;
+      const horaFinH = Math.floor(minutosFin / 60);
+      const horaFinM = minutosFin % 60;
+      const horaFin = `${horaFinH.toString().padStart(2, '0')}:${horaFinM.toString().padStart(2, '0')}`;
+
+      // 2. Verificar que el horario sigue disponible
       const citaExistente = await db.Cita.findOne({
         where: {
           personal_medico_id: personalMedicoId,
-          fecha_hora: fechaHora,
+          fecha: fecha,
+          [Op.or]: [
+            {
+              hora_inicio: {
+                [Op.between]: [horaInicio, horaFin]
+              }
+            },
+            {
+              hora_fin: {
+                [Op.between]: [horaInicio, horaFin]
+              }
+            },
+            {
+              [Op.and]: [
+                { hora_inicio: { [Op.lte]: horaInicio } },
+                { hora_fin: { [Op.gte]: horaFin } }
+              ]
+            }
+          ],
           estado_cita_id: {
             [Op.notIn]: [4, 5] // No canceladas o no asistidas
           }
@@ -219,10 +250,10 @@ const agendaService = {
         throw new Error('El horario ya no está disponible');
       }
 
-      // 2. Generar número de cita único
+      // 3. Generar número de cita único
       const numeroCita = await this.generarNumeroCita();
 
-      // 3. Crear la cita
+      // 4. Crear la cita
       const nuevaCita = await db.Cita.create({
         numero_cita: numeroCita,
         paciente_id: pacienteId,
@@ -230,13 +261,15 @@ const agendaService = {
         tipo_cita_id: tipoCitaId,
         estado_cita_id: 1, // Asumiendo 1 = Programada
         prioridad_id: prioridadId,
-        fecha_hora: fechaHora,
-        motivo: motivo
+        fecha: fecha,
+        hora_inicio: horaInicio,
+        hora_fin: horaFin,
+        motivo_consulta: motivoConsulta
       }, { transaction });
 
       await transaction.commit();
 
-      // 4. Retornar cita con información adicional
+      // 5. Retornar cita con información adicional
       return await this.obtenerCitaCompleta(nuevaCita.idCita);
 
     } catch (error) {

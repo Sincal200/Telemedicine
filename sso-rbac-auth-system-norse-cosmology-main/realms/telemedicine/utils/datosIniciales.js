@@ -29,9 +29,9 @@ async function insertarDatosBasicos() {
     console.log('✓ Tipos de documento insertados');
 
     const sexos = [
-      { idSexo: 1, codigo: 'M', nombre: 'Masculino', activo: true },
-      { idSexo: 2, codigo: 'F', nombre: 'Femenino', activo: true },
-      { idSexo: 3, codigo: 'O', nombre: 'Otro', activo: true }
+      { idSexo: 1, descripcion: 'Masculino', activo: true },
+      { idSexo: 2, descripcion: 'Femenino', activo: true },
+      { idSexo: 3, descripcion: 'Otro', activo: true }
     ];
 
     for (const sexo of sexos) {
@@ -41,7 +41,7 @@ async function insertarDatosBasicos() {
           defaults: sexo
         });
       } catch (error) {
-        console.log(`Sexo ${sexo.codigo} ya existe o error:`, error.message);
+        console.log(`Sexo ${sexo.descripcion} ya existe o error:`, error.message);
       }
     }
     console.log('✓ Sexos insertados');
@@ -223,16 +223,122 @@ async function insertarDatosEjemplo() {
       return;
     }
 
-    // 1. Crear personas de ejemplo (usando campos correctos)
+    // 1. Crear datos geográficos básicos primero
+    // Departamentos
+    const departamentos = [
+      { idDepartamento: 1, nombre: 'Guatemala', codigo: 'GT', activo: true },
+      { idDepartamento: 2, nombre: 'Sacatepéquez', codigo: 'SA', activo: true }
+    ];
+
+    for (const dept of departamentos) {
+      try {
+        await db.Departamento.findOrCreate({
+          where: { idDepartamento: dept.idDepartamento },
+          defaults: dept
+        });
+      } catch (error) {
+        console.log(`Departamento ${dept.nombre} ya existe o error:`, error.message);
+      }
+    }
+    console.log('✓ Departamentos de ejemplo insertados');
+
+    // Municipios
+    const municipios = [
+      { idMunicipio: 1, nombre: 'Guatemala', codigo: 'GT01', departamento_id: 1, activo: true },
+      { idMunicipio: 2, nombre: 'Mixco', codigo: 'GT02', departamento_id: 1, activo: true }
+    ];
+
+    for (const mun of municipios) {
+      try {
+        await db.Municipio.findOrCreate({
+          where: { idMunicipio: mun.idMunicipio },
+          defaults: mun
+        });
+      } catch (error) {
+        console.log(`Municipio ${mun.nombre} ya existe o error:`, error.message);
+      }
+    }
+    console.log('✓ Municipios de ejemplo insertados');
+
+    // Aldeas
+    const aldeas = [
+      { idAldea: 1, nombre: 'Centro', municipio_id: 1, activo: true },
+      { idAldea: 2, nombre: 'Zona 1', municipio_id: 1, activo: true }
+    ];
+
+    for (const aldea of aldeas) {
+      try {
+        await db.Aldea.findOrCreate({
+          where: { idAldea: aldea.idAldea },
+          defaults: aldea
+        });
+      } catch (error) {
+        console.log(`Aldea ${aldea.nombre} ya existe o error:`, error.message);
+      }
+    }
+    console.log('✓ Aldeas de ejemplo insertadas');
+
+    // Direcciones
+    const direcciones = [
+      {
+        idDireccion: 1,
+        direccion_completa: '1a Calle 2-34 Zona 1',
+        departamento_id: 1,
+        municipio_id: 1,
+        aldea_id: 1,
+        zona: 'Zona 1',
+        referencia: 'Frente al parque central',
+        activo: true
+      },
+      {
+        idDireccion: 2,
+        direccion_completa: '5a Avenida 10-25 Zona 2',
+        departamento_id: 1,
+        municipio_id: 1,
+        aldea_id: 1,
+        zona: 'Zona 2',
+        referencia: 'Cerca del hospital',
+        activo: true
+      },
+      {
+        idDireccion: 3,
+        direccion_completa: '12 Calle 5-67 Zona 10',
+        departamento_id: 1,
+        municipio_id: 1,
+        aldea_id: 1,
+        zona: 'Zona 10',
+        referencia: 'Edificio Torre Médica',
+        activo: true
+      }
+    ];
+
+    for (const dir of direcciones) {
+      try {
+        await db.Direccion.findOrCreate({
+          where: { idDireccion: dir.idDireccion },
+          defaults: dir
+        });
+      } catch (error) {
+        console.log(`Dirección ${dir.idDireccion} ya existe o error:`, error.message);
+      }
+    }
+    console.log('✓ Direcciones de ejemplo insertadas');
+
+    // Verificar que las direcciones se crearon correctamente
+    const direccionesCreadas = await db.Direccion.count();
+    console.log(`📍 Total de direcciones en BD: ${direccionesCreadas}`);
+
+    // 2. Crear personas de ejemplo (usando campos correctos)
     const personas = [
       {
         idPersona: 1,
-        tipo_documento_id: 1, // Asumiendo que existe
+        tipo_documento_id: 1,
         numero_documento: '12345678',
         nombres: 'Juan Carlos',
         apellidos: 'Pérez García',
         fecha_nacimiento: '1980-01-15',
-        sexo_id: 1, // Asumiendo que existe
+        sexo_id: 1,
+        direccion_id: 1, // Dirección creada arriba
         telefono: '+502 1234-5678',
         email: 'juan.perez@example.com',
         activo: true
@@ -244,7 +350,8 @@ async function insertarDatosEjemplo() {
         nombres: 'María Elena',
         apellidos: 'González López',
         fecha_nacimiento: '1975-03-22',
-        sexo_id: 2, // Asumiendo que existe
+        sexo_id: 2,
+        direccion_id: 2, // Dirección creada arriba
         telefono: '+502 8765-4321',
         email: 'maria.gonzalez@example.com',
         activo: true
@@ -257,6 +364,7 @@ async function insertarDatosEjemplo() {
         apellidos: 'Martínez Rodríguez',
         fecha_nacimiento: '1990-07-10',
         sexo_id: 2,
+        direccion_id: 3, // Dirección creada arriba
         telefono: '+502 1111-1111',
         email: 'ana.martinez@example.com',
         activo: true
@@ -265,17 +373,45 @@ async function insertarDatosEjemplo() {
 
     for (const persona of personas) {
       try {
-        await db.Persona.findOrCreate({
+        const [personaCreated, created] = await db.Persona.findOrCreate({
           where: { idPersona: persona.idPersona },
           defaults: persona
         });
+        if (created) {
+          console.log(`✓ Persona ${persona.nombres} creada correctamente`);
+        } else {
+          console.log(`- Persona ${persona.nombres} ya existe`);
+        }
       } catch (error) {
-        console.log(`Persona ${persona.nombres} ya existe o error:`, error.message);
+        console.log(`❌ Error creando persona ${persona.nombres}:`, error.message);
+        // No fallar completamente, continuar con las siguientes
       }
     }
     console.log('✓ Personas de ejemplo insertadas');
 
-    // 2. Crear personal médico de ejemplo
+    // Verificar que las personas se crearon correctamente
+    const personasCreadas = await db.Persona.count();
+    console.log(`👥 Total de personas en BD: ${personasCreadas}`);
+
+    // Verificar direcciones específicas que necesitamos
+    for (let i = 1; i <= 3; i++) {
+      const direccion = await db.Direccion.findByPk(i);
+      if (direccion) {
+        console.log(`✓ Dirección ${i} existe: ${direccion.direccion_completa}`);
+      } else {
+        console.log(`❌ Dirección ${i} NO existe`);
+      }
+    }
+
+    // 3. Crear personal médico de ejemplo
+    // Verificar que existe el centro antes de crear personal médico
+    const centroExiste = await db.ConfiguracionCentro.findByPk(1);
+    if (!centroExiste) {
+      console.log('❌ Centro de salud ID 1 no existe. Ejecutar primero insertarDatosBasicos()');
+      return;
+    }
+    console.log('✓ Centro de salud verificado');
+
     const personalMedico = [
       {
         idPersonalMedico: 1,
@@ -309,12 +445,22 @@ async function insertarDatosEjemplo() {
 
     for (const medico of personalMedico) {
       try {
-        await db.PersonalMedico.findOrCreate({
+        const [medicoCreated, created] = await db.PersonalMedico.findOrCreate({
           where: { idPersonalMedico: medico.idPersonalMedico },
           defaults: medico
         });
+        if (created) {
+          console.log(`✓ Personal médico ${medico.numero_licencia} creado correctamente`);
+        } else {
+          console.log(`- Personal médico ${medico.numero_licencia} ya existe`);
+        }
       } catch (error) {
-        console.log(`Personal médico ${medico.numero_licencia} ya existe o error:`, error.message);
+        console.log(`❌ Error creando personal médico ${medico.numero_licencia}:`, error.message);
+        // Verificar si la persona existe
+        const personaExiste = await db.Persona.findByPk(medico.persona_id);
+        if (!personaExiste) {
+          console.log(`❌ La persona con ID ${medico.persona_id} no existe`);
+        }
       }
     }
     console.log('✓ Personal médico de ejemplo insertado');

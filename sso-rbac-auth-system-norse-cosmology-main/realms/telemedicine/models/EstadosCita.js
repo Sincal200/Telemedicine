@@ -29,11 +29,6 @@ const EstadosCita = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: true,
       defaultValue: 1
-    },
-    creado: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
     }
   }, {
     sequelize,
