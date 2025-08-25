@@ -31,6 +31,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Dashboard.module.css';
+import ResumenCitas from '../components/ResumenCitas';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -94,6 +95,10 @@ function Dashboard() {
 
   const startVideoCall = () => {
     navigate('/video');
+  };
+
+  const irAGestionCitas = () => {
+    navigate('/citas');
   };
 
   const upcomingAppointments = [
@@ -272,8 +277,9 @@ function Dashboard() {
                       block
                       size="large"
                       className={styles.actionButton}
+                      onClick={irAGestionCitas}
                     >
-                      Agendar Cita
+                      {userRole === 'doctor' ? 'Mis Consultas' : 'Gestionar Citas'}
                     </Button>
                   </Col>
                   <Col xs={12} sm={8}>
@@ -290,53 +296,10 @@ function Dashboard() {
               </Card>
 
               {/* Próximas citas */}
-              <Card 
-                title={`Próximas ${userRole === 'doctor' ? 'Consultas' : 'Citas'}`}
-                className={styles.appointmentsCard}
-                extra={<Button type="link">Ver todas</Button>}
-              >
-                <List
-                  dataSource={upcomingAppointments}
-                  renderItem={(item) => (
-                    <List.Item className={styles.appointmentItem}>
-                      <List.Item.Meta
-                        avatar={
-                          <Avatar 
-                            icon={<UserOutlined />} 
-                            className={styles.appointmentAvatar}
-                          />
-                        }
-                        title={
-                          <div className={styles.appointmentHeader}>
-                            <Text strong>{item.patient}</Text>
-                            <Badge 
-                              status={item.status === 'confirmada' ? 'success' : 'warning'}
-                              text={item.status}
-                              className={styles.appointmentBadge}
-                            />
-                          </div>
-                        }
-                        description={
-                          <div>
-                            <Text>{item.type}</Text>
-                            <br />
-                            <Text type="secondary">
-                              <ClockCircleOutlined /> {item.time}
-                            </Text>
-                          </div>
-                        }
-                      />
-                      <Button 
-                        type="primary" 
-                        size="small"
-                        icon={<VideoCameraOutlined />}
-                      >
-                        Iniciar
-                      </Button>
-                    </List.Item>
-                  )}
-                />
-              </Card>
+              <ResumenCitas
+                userRole={userRole}
+                userId={userInfo?.id || 1}
+              />
             </Col>
 
             {/* Panel derecho */}
