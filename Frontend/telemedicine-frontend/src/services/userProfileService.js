@@ -202,17 +202,42 @@ class UserProfileService {
       if (!perfil) {
         // Fallback a información del token
         const tokenInfo = this.getTokenInfo();
+        let fallbackRole = 'patient';
+        
+        if (tokenInfo?.realm_access?.roles?.includes('admin')) {
+          fallbackRole = 'admin';
+        } else if (tokenInfo?.realm_access?.roles?.includes('doctor')) {
+          fallbackRole = 'doctor';
+        }
+        
         return {
           name: tokenInfo?.name || 'Usuario',
           email: tokenInfo?.email || '',
-          role: tokenInfo?.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient'
+          role: fallbackRole,
+          id: null,
+          estado_aprobacion: 'desconocido',
+          aprobado: false
         };
+      }
+
+      // Determinar el rol del usuario
+      let userRole = 'user';
+      if (perfil.esMedico) {
+        userRole = 'doctor';
+      } else if (perfil.esPaciente) {
+        userRole = 'patient';
+      }
+      
+      // Verificar si es admin desde el token
+      const tokenInfo = this.getTokenInfo();
+      if (tokenInfo?.realm_access?.roles?.includes('admin')) {
+        userRole = 'admin';
       }
 
       return {
         name: `${perfil.persona?.nombres} ${perfil.persona?.apellidos}`,
         email: perfil.persona?.email || '',
-        role: perfil.esMedico ? 'doctor' : 'patient',
+        role: userRole,
         id: perfil.esPaciente ? perfil.idPaciente : perfil.idPersonalMedico,
         estado_aprobacion: perfil.estado_aprobacion,
         aprobado: perfil.estado_aprobacion === 'aprobado'
@@ -222,10 +247,18 @@ class UserProfileService {
       
       // Fallback a información del token
       const tokenInfo = this.getTokenInfo();
+      let fallbackRole = 'patient';
+      
+      if (tokenInfo?.realm_access?.roles?.includes('admin')) {
+        fallbackRole = 'admin';
+      } else if (tokenInfo?.realm_access?.roles?.includes('doctor')) {
+        fallbackRole = 'doctor';
+      }
+      
       return {
         name: tokenInfo?.name || 'Usuario',
         email: tokenInfo?.email || '',
-        role: tokenInfo?.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient',
+        role: fallbackRole,
         id: null,
         estado_aprobacion: 'desconocido',
         aprobado: false

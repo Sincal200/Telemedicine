@@ -96,6 +96,12 @@ function Dashboard() {
       icon: <SettingOutlined />,
       label: 'Configuración',
     },
+    ...(userRole === 'admin' ? [{
+      key: 'admin-solicitudes',
+      icon: <TeamOutlined />,
+      label: 'Gestión de Roles',
+      onClick: () => navigate('/admin/solicitudes-rol'),
+    }] : []),
     {
       type: 'divider',
     },
@@ -306,6 +312,21 @@ function Dashboard() {
                       Historial
                     </Button>
                   </Col>
+                  {userRole === 'admin' && (
+                    <Col xs={12} sm={8}>
+                      <Button 
+                        icon={<TeamOutlined />}
+                        block
+                        size="large"
+                        className={styles.actionButton}
+                        onClick={() => navigate('/admin/solicitudes-rol')}
+                        style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}
+                        type="primary"
+                      >
+                        Gestión Roles
+                      </Button>
+                    </Col>
+                  )}
                 </Row>
               </Card>
 
