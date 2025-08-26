@@ -122,14 +122,20 @@ function ProgramarCita({ visible, onClose, onSuccess }) {
       const [fecha, horaCompleta] = horarioSeleccionado.fechaHora.split(' ');
       const horaInicio = horaCompleta.substring(0, 5); // HH:MM
 
+      // Detectar si el tipo de cita es telemedicina (ajusta según tu lógica)
+      const tipoCitaId = form.getFieldValue('tipoCitaId');
+      const tipoCita = tiposCita.find(tc => tc.idTipoCita === tipoCitaId);
+      const esTelemedicina = tipoCita && tipoCita.nombre.toLowerCase().includes('telemedicina');
+
       const datosCita = {
         pacienteId: idPaciente,
         personalMedicoId: horarioSeleccionado.personalMedicoId,
         fecha: fecha,
         horaInicio: horaInicio,
-        tipoCitaId: form.getFieldValue('tipoCitaId'),
+        tipoCitaId,
         motivoConsulta: motivoCita,
-        prioridadId: 1 // Normal por defecto
+        prioridadId: 1, // Normal por defecto
+        esTelemedicina
       };
 
       await citaService.programarCita(datosCita);

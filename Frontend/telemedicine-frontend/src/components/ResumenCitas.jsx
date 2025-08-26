@@ -58,19 +58,27 @@ function ResumenCitas({ userRole = 'patient', userId = 1 }) {
       }
       
       // Filtrar solo las próximas citas (hoy o futuras) y que no estén canceladas
-      const citasProximas = citasData
+      let citasProximas = citasData
         .filter(cita => {
           const fechaCita = dayjs(combinarFechaHora(cita.fecha, cita.hora_inicio));
           return fechaCita.isAfter(dayjs().subtract(1, 'day')) && 
                  ![4, 5, 6].includes(cita.estado_cita_id);
-        })
-        .sort((a, b) => {
-          const fechaA = new Date(combinarFechaHora(a.fecha, a.hora_inicio));
-          const fechaB = new Date(combinarFechaHora(b.fecha, b.hora_inicio));
-          return fechaA - fechaB;
-        })
-        .slice(0, 3); // Solo las próximas 3
-      
+        });
+
+      // Priorizar las que tengan videollamada
+      citasProximas = citasProximas.sort((a, b) => {
+        // Si a tiene room_id y b no, a va primero
+        if (a.room_id && !b.room_id) return -1;
+        if (!a.room_id && b.room_id) return 1;
+        // Si ambos tienen o ninguno, ordenar por fecha
+        const fechaA = new Date(combinarFechaHora(a.fecha, a.hora_inicio));
+        const fechaB = new Date(combinarFechaHora(b.fecha, b.hora_inicio));
+        return fechaA - fechaB;
+      });
+
+      // Limitar a las próximas 3
+      citasProximas = citasProximas.slice(0, 3);
+
       setCitas(citasProximas);
     } catch (error) {
       console.error('Error cargando citas:', error);
@@ -173,6 +181,20 @@ function ResumenCitas({ userRole = 'patient', userId = 1 }) {
                           {formatearHora(cita.hora_inicio)}
                         </Text>
                       </Space>
+                      {/* Botón para videollamada si aplica */}
+                      {cita.room_id && (
+                        <Button
+                          type="primary"
+                          onClick={() => navigate(`/videollamada/${cita.room_id}`, {
+                            state: {
+                              userId,
+                              userRole
+                            }
+                          })}
+                        >
+                          Unirse a videollamada
+                        </Button>
+                      )}
                     </Space>
                   }
                 />

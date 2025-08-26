@@ -176,14 +176,12 @@ function Dashboard() {
               Telemedicine
             </Title>
           </div>
-          
           <div className={styles.headerRight}>
             <Button 
               type="text" 
               icon={<BellOutlined />} 
               className={styles.iconButton}
             />
-            
             <Dropdown 
               menu={{ items: userMenuItems }} 
               placement="bottomRight"
@@ -208,7 +206,6 @@ function Dashboard() {
           </div>
         </div>
       </Header>
-
       <Content className={styles.content}>
         <div className={styles.container}>
           {/* Header de bienvenida */}
@@ -223,7 +220,6 @@ function Dashboard() {
               }
             </Text>
           </div>
-
           {/* Estadísticas rápidas */}
           <Row gutter={[24, 24]} className={styles.statsRow}>
             <Col xs={24} sm={12} lg={6}>
@@ -267,7 +263,6 @@ function Dashboard() {
               </Card>
             </Col>
           </Row>
-
           {/* Contenido principal */}
           <Row gutter={[24, 24]} className={styles.mainContent}>
             {/* Panel izquierdo */}
@@ -329,14 +324,12 @@ function Dashboard() {
                   )}
                 </Row>
               </Card>
-
               {/* Próximas citas */}
               <ResumenCitas
                 userRole={userRole}
                 userId={userInfo?.id || null}
               />
             </Col>
-
             {/* Panel derecho */}
             <Col xs={24} lg={8}>
               {/* Calendario */}
@@ -350,7 +343,6 @@ function Dashboard() {
                   className={styles.miniCalendar}
                 />
               </Card>
-
               {/* Actividad reciente */}
               <Card 
                 title="Actividad Reciente" 

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Video.module.css';
 
 const stunServers = {
@@ -46,6 +47,8 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   const [participants, setParticipants] = useState([]);
   const [roomInfo, setRoomInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   const sendMessage = (message) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -489,9 +492,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
       wsRef.current.onclose = () => {
         console.log('Conexión WebSocket cerrada.');
         setIsConnectedToServer(false);
-        if (!error) {
-          setError('Conexión perdida con el servidor.');
-        }
+       
       };
 
     } catch (err) {
@@ -553,7 +554,9 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     setIceCandidatesQueue({});
     setError('');
 
-    if (onLeaveRoom) onLeaveRoom();
+  if (onLeaveRoom) onLeaveRoom();
+  // Redirigir al Dashboard después de salir
+  navigate('/dashboard');
   };
 
   const toggleCamera = () => {

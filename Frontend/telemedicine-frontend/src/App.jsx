@@ -7,6 +7,17 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard.jsx';
 import GestionCitas from './pages/GestionCitas.jsx';
 import GestionSolicitudesRol from './pages/GestionSolicitudesRol.jsx';
+import { useParams, useLocation } from 'react-router-dom';
+import VideoComponent from './components/VideoComponent';
+
+function VideoComponentWrapper() {
+  const { roomId } = useParams();
+  const location = useLocation();
+  // Si se navega desde ResumenCitas, se pasan por location.state
+  const userRole = location.state?.userRole || 'doctor';
+  const userId = location.state?.userId || 1;
+  return <VideoComponent roomId={roomId} userRole={userRole} userId={userId} />;
+}
 import './App.css';
 
 function App() {
@@ -20,6 +31,7 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/citas" element={<GestionCitas />} />
       <Route path="/admin/solicitudes-rol" element={<GestionSolicitudesRol />} />
+      <Route path="/videollamada/:roomId" element={<VideoComponentWrapper />} />
     </Routes>
   );
 }
