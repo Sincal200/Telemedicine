@@ -86,9 +86,12 @@ const agendaService = {
     while (fechaActual <= fechaFinal) {
       const diaSemana = fechaActual.getDay();
       
+      // Mapeo correcto: 0=domingo→7, 1=lunes→1, 2=martes→2, ..., 6=sábado→6
+      const diaSemanaId = diaSemana === 0 ? 7 : diaSemana;
+      
       // Buscar disponibilidad para este día de la semana
       const disponibilidad = medico.DisponibilidadPersonalMedicos?.find(
-        d => d.dia_semana_id === diaSemana + 1
+        d => d.dia_semana_id === diaSemanaId
       );
 
       if (disponibilidad) {
