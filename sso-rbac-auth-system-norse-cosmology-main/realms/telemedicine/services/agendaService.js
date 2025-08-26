@@ -276,7 +276,11 @@ const agendaService = {
         fecha: fecha,
         hora_inicio: horaInicio,
         hora_fin: horaFin,
-        motivo_consulta: motivoConsulta
+        motivo_consulta: motivoConsulta,
+        // Campos de telemedicina si existen
+        es_telemedicina: typeof datosCita.es_telemedicina !== 'undefined' ? datosCita.es_telemedicina : (typeof datosCita.esTelemedicina !== 'undefined' ? datosCita.esTelemedicina : 0),
+        room_id: datosCita.room_id || null,
+        url_videollamada: datosCita.url_videollamada || null
       };
       
       const nuevaCita = await db.Cita.create(citaData, { transaction });

@@ -1,5 +1,6 @@
 import agendaService from '../services/agendaService.js';
 import db from '../models/index.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const citaController = {
   /**
@@ -70,7 +71,8 @@ const citaController = {
         horaInicio,
         tipoCitaId, 
         motivoConsulta,
-        prioridadId 
+        prioridadId,
+        esTelemedicina // <-- opcional, si lo mandas desde el frontend
       } = req.body;
 
       // Validaciones
@@ -106,6 +108,18 @@ const citaController = {
         });
       }
 
+
+      // Detectar si es telemedicina (puedes ajustar la lógica según tu modelo)
+      let es_telemedicina = typeof esTelemedicina !== 'undefined' ? (esTelemedicina ? 1 : 0) : 0;
+
+      let room_id = null;
+      let url_videollamada = null;
+      if (es_telemedicina === 1) {
+        room_id = uuidv4();
+        const BASE_URL = process.env.FRONTEND_BASE_URL || 'https://tudominio.com';
+        url_videollamada = `${BASE_URL}/videollamada/${room_id}`;
+      }
+
       const datosCita = {
         pacienteId,
         personalMedicoId,
@@ -113,7 +127,10 @@ const citaController = {
         horaInicio,
         tipoCitaId,
         motivoConsulta,
-        prioridadId
+        prioridadId,
+        es_telemedicina,
+        room_id: room_id || null,
+        url_videollamada: url_videollamada || null
       };
 
       const citaCreada = await agendaService.reservarHorario(datosCita);
