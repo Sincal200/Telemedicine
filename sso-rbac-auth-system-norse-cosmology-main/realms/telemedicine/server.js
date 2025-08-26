@@ -33,6 +33,7 @@ import tiposCitaRoutes from "./routes/tiposCitaRoutes.js";
 import tiposDocumentoIdentidadRoutes from "./routes/tiposDocumentoIdentidadRoutes.js";
 import usuarioRoutes from "./routes/usuarioRoutes.js";
 import setupRoutes from "./routes/setupRoutes.js";
+import registroRoutes from "./routes/registroRoutes.js";
 
 dotenv.config();
 
@@ -82,6 +83,7 @@ app.use('/tipos-cita', tiposCitaRoutes)
 app.use('/tipos-documento-identidad', tiposDocumentoIdentidadRoutes)
 app.use('/usuario', usuarioRoutes)
 app.use('/setup', setupRoutes)
+app.use('/registro', registroRoutes)
 
 
 // Rutas heredadas mínimas para compatibilidad

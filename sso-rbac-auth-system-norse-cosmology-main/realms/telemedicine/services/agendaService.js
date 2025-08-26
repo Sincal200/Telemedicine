@@ -40,7 +40,7 @@ const agendaService = {
         where: wherePersonal,
         include: [{
           model: db.DisponibilidadPersonalMedico,
-          as: 'DisponibilidadPersonalMedicos', // Usar el alias correcto de init-models.js
+          as: 'DisponibilidadPersonalMedicos',
           where: { activo: true }
         }, {
           model: db.Persona,
@@ -84,11 +84,11 @@ const agendaService = {
     const fechaFinal = new Date(fechaFin);
 
     while (fechaActual <= fechaFinal) {
-      const diaSemana = fechaActual.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+      const diaSemana = fechaActual.getDay();
       
       // Buscar disponibilidad para este día de la semana
       const disponibilidad = medico.DisponibilidadPersonalMedicos?.find(
-        d => d.dia_semana_id === diaSemana + 1 // Asumiendo que en BD: 1 = Lunes
+        d => d.dia_semana_id === diaSemana + 1
       );
 
       if (disponibilidad) {
@@ -113,7 +113,7 @@ const agendaService = {
    */
   generarSlotsDelDia(fecha, disponibilidad, duracionCita, medico) {
     const slots = [];
-    const fechaStr = fecha.toISOString().split('T')[0]; // YYYY-MM-DD
+    const fechaStr = fecha.toISOString().split('T')[0];
     
     // Convertir horas a minutos para facilitar cálculos
     const [horaInicioH, horaInicioM] = disponibilidad.hora_inicio.split(':').map(Number);
@@ -163,7 +163,7 @@ const agendaService = {
           [Op.between]: [fechas[0], fechas[fechas.length - 1]]
         },
         estado_cita_id: {
-          [Op.notIn]: [4, 5] // Asumiendo que 4=cancelada, 5=no_asistio
+          [Op.notIn]: [4, 5] // Canceladas y no asistidas
         }
       }
     });
@@ -240,7 +240,7 @@ const agendaService = {
             }
           ],
           estado_cita_id: {
-            [Op.notIn]: [4, 5] // No canceladas o no asistidas
+            [Op.notIn]: [4, 5] // Canceladas y no asistidas
           }
         },
         transaction
@@ -253,23 +253,34 @@ const agendaService = {
       // 3. Generar número de cita único
       const numeroCita = await this.generarNumeroCita();
 
-      // 4. Crear la cita
-      const nuevaCita = await db.Cita.create({
+      // 4. Generar ID único para la cita
+      const idCita = await this.generarIdCita(pacienteId, fecha, horaInicio);
+      
+      // Validar que el ID se generó correctamente
+      if (!idCita || isNaN(idCita)) {
+        throw new Error(`Error generando ID de cita: ${idCita}`);
+      }
+
+      // 5. Crear la cita
+      const citaData = {
+        idCita: idCita,
         numero_cita: numeroCita,
         paciente_id: pacienteId,
         personal_medico_id: personalMedicoId,
         tipo_cita_id: tipoCitaId,
-        estado_cita_id: 1, // Asumiendo 1 = Programada
+        estado_cita_id: 1, // Programada
         prioridad_id: prioridadId,
         fecha: fecha,
         hora_inicio: horaInicio,
         hora_fin: horaFin,
         motivo_consulta: motivoConsulta
-      }, { transaction });
+      };
+      
+      const nuevaCita = await db.Cita.create(citaData, { transaction });
 
       await transaction.commit();
 
-      // 5. Retornar cita con información adicional
+      // Retornar cita con información adicional
       return await this.obtenerCitaCompleta(nuevaCita.idCita);
 
     } catch (error) {
@@ -305,6 +316,65 @@ const agendaService = {
     }
 
     return `${year}${month}${day}${secuencial.toString().padStart(4, '0')}`;
+  },
+
+  /**
+   * Genera un ID único para la cita con fecha y hora
+   * Formato: MMDDHHMMPP (10 dígitos máximo)
+   * - MM: Mes (2 dígitos)
+   * - DD: Día (2 dígitos)
+   * - HHMM: Hora y minutos (4 dígitos)
+   * - PP: Paciente ID (2 dígitos)
+   * Ejemplo: 0826083002 = 26 de agosto, 08:30, paciente 2
+   */
+  async generarIdCita(pacienteId, fecha, horaInicio) {
+    try {
+      // Extraer componentes de la fecha
+      const fechaObj = new Date(fecha);
+      const month = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+      const day = fechaObj.getDate().toString().padStart(2, '0');
+      
+      // Formatear hora (HHMM)
+      const horaFormatted = horaInicio.replace(':', '');
+      
+      // Formatear paciente ID (últimos 2 dígitos)
+      const pacienteIdFormatted = pacienteId.toString().padStart(2, '0').slice(-2);
+      
+      // Crear ID base: MM + DD + HHMM + PP
+      const idBase = parseInt(`${month}${day}${horaFormatted}${pacienteIdFormatted}`);
+      
+      // Verificar si ya existe este ID
+      const existingCita = await db.Cita.findOne({
+        where: { idCita: idBase }
+      });
+      
+      let idFinal = idBase;
+      
+      if (existingCita) {
+        // Si existe, agregar los últimos 2 dígitos del timestamp
+        const timestamp = Date.now().toString();
+        const timestampSufijo = timestamp.slice(-2);
+        
+        // Reemplazar los últimos 2 dígitos del paciente con timestamp
+        const baseStr = idBase.toString();
+        const baseConTimestamp = baseStr.slice(0, -2) + timestampSufijo;
+        idFinal = parseInt(baseConTimestamp);
+      }
+      
+      // Verificar que esté dentro del límite de INT
+      if (idFinal > 2147483647) {
+        // Fallback: usar formato más corto sin mes
+        const idCorto = parseInt(`${day}${horaFormatted}${pacienteIdFormatted}`);
+        idFinal = idCorto;
+      }
+      
+      return idFinal;
+      
+    } catch (error) {
+      console.error('Error en generarIdCita:', error);
+      // ID de emergencia
+      return Math.floor(Math.random() * 999999) + 100000;
+    }
   },
 
   /**

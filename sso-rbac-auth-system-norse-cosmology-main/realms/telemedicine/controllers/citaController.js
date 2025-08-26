@@ -127,13 +127,20 @@ const citaController = {
     } catch (error) {
       if (error.message === 'El horario ya no está disponible') {
         return res.status(409).json({
+          success: false,
           error: error.message,
           code: 'HORARIO_NO_DISPONIBLE'
         });
       }
       
       console.error('Error programando cita:', error);
-      next(error);
+      
+      // Asegurar que siempre devolvemos JSON válido
+      return res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor programando la cita',
+        details: error.message || 'Error desconocido'
+      });
     }
   },
 
