@@ -32,6 +32,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Dashboard.module.css';
 import ResumenCitas from '../components/ResumenCitas';
+import userProfileService from '../services/userProfileService';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -46,21 +47,34 @@ function Dashboard() {
     getUserInfo();
   }, []);
 
-  const getUserInfo = () => {
-
-    const token = sessionStorage.getItem('accessToken');
-    if (token) {
-      try {
-        const payload = token.split('.')[1];
-        const decoded = JSON.parse(atob(payload));
-        setUserInfo({
-          name: decoded.name || 'Usuario',
-          email: decoded.email || 'usuario@email.com',
-          role: decoded.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient'
-        });
-        setUserRole(decoded.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient');
-      } catch (error) {
-        console.error('Error decodificando token:', error);
+  const getUserInfo = async () => {
+    try {
+      const userInfo = await userProfileService.obtenerInfoBasica();
+      setUserInfo(userInfo);
+      setUserRole(userInfo.role);
+      
+      // Verificar si el usuario está aprobado
+      if (!userInfo.aprobado && userInfo.estado_aprobacion !== 'desconocido') {
+        message.warning(`Tu cuenta está ${userInfo.estado_aprobacion}. Algunas funcionalidades pueden estar limitadas.`);
+      }
+    } catch (error) {
+      console.error('Error obteniendo información del usuario:', error);
+      
+      // Fallback al método anterior
+      const token = sessionStorage.getItem('accessToken');
+      if (token) {
+        try {
+          const payload = token.split('.')[1];
+          const decoded = JSON.parse(atob(payload));
+          setUserInfo({
+            name: decoded.name || 'Usuario',
+            email: decoded.email || 'usuario@email.com',
+            role: decoded.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient'
+          });
+          setUserRole(decoded.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient');
+        } catch (error) {
+          console.error('Error decodificando token:', error);
+        }
       }
     }
   };
@@ -298,7 +312,7 @@ function Dashboard() {
               {/* Próximas citas */}
               <ResumenCitas
                 userRole={userRole}
-                userId={userInfo?.id || 1}
+                userId={userInfo?.id || null}
               />
             </Col>
 

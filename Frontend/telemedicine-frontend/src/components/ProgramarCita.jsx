@@ -27,6 +27,7 @@ import {
   CheckCircleOutlined
 } from '@ant-design/icons';
 import citaService from '../services/citaService';
+import userProfileService from '../services/userProfileService';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
@@ -110,12 +111,19 @@ function ProgramarCita({ visible, onClose, onSuccess }) {
     setProgramandoCita(true);
     
     try {
+      // Obtener ID del paciente actual
+      const idPaciente = await userProfileService.obtenerIdPaciente();
+      
+      if (!idPaciente) {
+        throw new Error('No se pudo obtener la información del paciente. Asegúrate de estar registrado como paciente.');
+      }
+
       // Extraer fecha y hora del horario seleccionado
       const [fecha, horaCompleta] = horarioSeleccionado.fechaHora.split(' ');
       const horaInicio = horaCompleta.substring(0, 5); // HH:MM
 
       const datosCita = {
-        pacienteId: 1, // Esto debería venir del usuario logueado
+        pacienteId: idPaciente,
         personalMedicoId: horarioSeleccionado.personalMedicoId,
         fecha: fecha,
         horaInicio: horaInicio,

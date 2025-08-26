@@ -53,10 +53,17 @@ function MisCitas({ userRole = 'patient', userId = 1, refreshTrigger = 0 }) {
   const [cancelando, setCancelando] = useState(null);
 
   useEffect(() => {
-    cargarCitas();
-  }, [refreshTrigger]);
+    if (userId) {
+      cargarCitas();
+    }
+  }, [refreshTrigger, userId]);
 
   const cargarCitas = async () => {
+    if (!userId) {
+      console.log('No hay userId disponible, saltando carga de citas');
+      return;
+    }
+
     setLoading(true);
     try {
       let citasData = [];
@@ -274,6 +281,18 @@ function MisCitas({ userRole = 'patient', userId = 1, refreshTrigger = 0 }) {
             <Text>Cargando citas...</Text>
           </div>
         </div>
+      </Card>
+    );
+  }
+
+  // Si no hay userId, mostrar mensaje
+  if (!userId) {
+    return (
+      <Card>
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="No se pudo cargar la información del usuario. Por favor, inicia sesión nuevamente."
+        />
       </Card>
     );
   }

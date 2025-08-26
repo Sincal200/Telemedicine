@@ -54,7 +54,7 @@ class CitaService {
       });
 
       const response = await fetch(
-        this.buildUrl(`/cita/horarios-disponibles&${params.toString()}`), 
+        `${this.buildUrl('/cita/horarios-disponibles')}&${params.toString()}`, 
         {
           method: 'GET',
           headers: this.getHeaders()

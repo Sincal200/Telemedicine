@@ -19,16 +19,16 @@ function Register() {
       name: "doctor",
       description: "",
       composite: false,
-      clientRole: true,
-      containerId: "8da3b139-a4a3-4ff9-b607-43658847a683"
+      clientRole: false,
+      containerId: "8da3b139-a4a3-4ff9-b607-43658847a68"
     },
     patient: {
-      id: "2eec45da-b9c3-4656-90c9-51cb7ba3b313", 
+      id: "11267344-7e42-49bc-83e3-f35b34dc33a9", 
       name: "patient",
       description: "",
       composite: false,
-      clientRole: true,
-      containerId: "a08c20f3-b6d6-472f-9101-89d48ad61895"
+      clientRole: false,
+      containerId: "8da3b139-a4a3-4ff9-b607-43658847a683"
     }
   };
 
@@ -36,7 +36,7 @@ function Register() {
     setLoading(true);
 
     try {
-      // Preparar datos del usuario para Keycloak 
+      // 1. Preparar datos del usuario para Keycloak 
       const userData = {
         firstName: values.firstName,
         lastName: values.lastName,
@@ -52,7 +52,7 @@ function Register() {
         ]
       };
 
-      // 1. Primero obtener un token de cliente para crear usuarios
+      // 2. Obtener un token de cliente para crear usuarios
       const tokenResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/client-credentials-token?tenant=${import.meta.env.VITE_TENANT}`, {
         method: 'POST',
         headers: {
@@ -70,8 +70,9 @@ function Register() {
 
       const tokenData = await tokenResponse.json();
       const adminToken = tokenData.access_token;
+      sessionStorage.setItem('adminAccessToken', tokenData.accessToken || tokenData.access_token || '');
 
-      // 2. Crear el usuario
+      // 3. Crear el usuario en Keycloak
       const createUserResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/create-user?tenant=telemedicine`, {
         method: 'POST',
         headers: {
@@ -83,16 +84,15 @@ function Register() {
 
       if (!createUserResponse.ok) {
         const errorData = await createUserResponse.json();
-        throw new Error(errorData.error || 'Error al crear usuario');
+        throw new Error(errorData.error || 'Error al crear usuario en Keycloak');
       }
 
-      // 3. Obtener la respuesta con el userId
       const createUserResult = await createUserResponse.json();
       const userId = createUserResult.userId;
 
-      console.log('Usuario creado exitosamente con ID:', userId);
+      console.log('Usuario creado exitosamente en Keycloak con ID:', userId);
 
-      // 4. Asignar roles por defecto si tenemos el userId
+      // 4. Asignar roles en Keycloak
       if (userId && values.userType) {
         const selectedRole = ROLES_CONFIG[values.userType];
 
@@ -112,7 +112,7 @@ function Register() {
           });
 
           if (assignRolesResponse.ok) {
-            console.log('Roles asignados exitosamente');
+            console.log('Roles asignados exitosamente en Keycloak');
           } else {
             const errorData = await assignRolesResponse.json();
             console.warn('No se pudieron asignar roles automáticamente:', errorData);
@@ -123,10 +123,54 @@ function Register() {
         }
       }
 
-      message.success('¡Registro exitoso! Puedes iniciar sesión ahora.');
+      // 5. NUEVO: Completar registro en base de datos
+      const completarRegistroData = {
+        keycloak_user_id: userId,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        userType: values.userType,
+        // Campos adicionales que podrían necesitarse después
+        numero_documento: null,
+        fecha_nacimiento: null,
+        telefono: null,
+        justificacion: `Registro automático como ${values.userType === 'doctor' ? 'médico' : 'paciente'}`
+      };
+
+      const completarResponse = await fetch(`${import.meta.env.VITE_API_URL_1 }/registro/completar?tenant=telemedicine`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer 7RkzXMulw5fc8QyP5gxAutgWVQXoOPOY|${adminToken}`
+        },
+        body: JSON.stringify(completarRegistroData)
+      });
+
+      if (!completarResponse.ok) {
+        const errorData = await completarResponse.json();
+        console.error('Error completando registro en BD:', errorData);
+        
+        // Informar al usuario pero no fallar completamente
+        message.warning('Usuario creado en Keycloak, pero hay un problema con el registro en la base de datos. Contacta al administrador.');
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+        return;
+      }
+
+      const registroResult = await completarResponse.json();
+      console.log('Registro completado exitosamente:', registroResult);
+
+      // 6. Mensaje de éxito basado en el tipo de usuario
+      if (values.userType === 'patient') {
+        message.success('¡Registro exitoso! Ya puedes iniciar sesión y usar el sistema.');
+      } else {
+        message.success('¡Registro exitoso! Tu solicitud está pendiente de aprobación por un administrador. Te notificaremos cuando esté lista.');
+      }
+
       setTimeout(() => {
-        navigate('/login');
-      }, 1500);
+        navigate('/');
+      }, 2500);
 
     } catch (error) {
       console.error('Error en registro:', error);

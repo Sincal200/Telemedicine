@@ -20,6 +20,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import ProgramarCita from '../components/ProgramarCita';
 import MisCitas from '../components/MisCitas';
+import userProfileService from '../services/userProfileService';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -36,21 +37,30 @@ function GestionCitas() {
     getUserInfo();
   }, []);
 
-  const getUserInfo = () => {
-    const token = sessionStorage.getItem('accessToken');
-    if (token) {
-      try {
-        const payload = token.split('.')[1];
-        const decoded = JSON.parse(atob(payload));
-        setUserInfo({
-          id: decoded.sub,
-          name: decoded.name || 'Usuario',
-          email: decoded.email || 'usuario@email.com',
-          role: decoded.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient'
-        });
-        setUserRole(decoded.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient');
-      } catch (error) {
-        console.error('Error decodificando token:', error);
+  const getUserInfo = async () => {
+    try {
+      const userInfo = await userProfileService.obtenerInfoBasica();
+      setUserInfo(userInfo);
+      setUserRole(userInfo.role);
+    } catch (error) {
+      console.error('Error obteniendo información del usuario:', error);
+      
+      // Fallback al método anterior
+      const token = sessionStorage.getItem('accessToken');
+      if (token) {
+        try {
+          const payload = token.split('.')[1];
+          const decoded = JSON.parse(atob(payload));
+          setUserInfo({
+            id: decoded.sub,
+            name: decoded.name || 'Usuario',
+            email: decoded.email || 'usuario@email.com',
+            role: decoded.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient'
+          });
+          setUserRole(decoded.realm_access?.roles?.includes('doctor') ? 'doctor' : 'patient');
+        } catch (error) {
+          console.error('Error decodificando token:', error);
+        }
       }
     }
   };
@@ -124,7 +134,7 @@ function GestionCitas() {
                 children: (
                   <MisCitas
                     userRole={userRole}
-                    userId={userInfo?.id || 1}
+                    userId={userInfo?.id || null}
                     refreshTrigger={refreshTrigger}
                   />
                 )
