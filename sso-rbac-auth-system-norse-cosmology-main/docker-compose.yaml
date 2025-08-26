@@ -101,6 +101,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
+      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
     depends_on:
       auth-service: # Assuming auth-service starts relatively quickly or has its own healthcheck
         condition: service_started # Or service_healthy if auth-service has a healthcheck
