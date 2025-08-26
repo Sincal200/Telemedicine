@@ -1,3 +1,29 @@
+/**
+ * Activa o desactiva un usuario en Keycloak
+ * @param {string} userId - ID de usuario en Keycloak
+ * @param {boolean} enabled - true para activar, false para desactivar
+ */
+async function updateUserEnabled(userId, enabled) {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+  const TENANT = import.meta.env.VITE_TENANT || 'telemedicine';
+  // Usa el token admin guardado en sessionStorage
+  const adminToken = sessionStorage.getItem('adminAccessToken');
+  if (!adminToken) throw new Error('No se encontró el token admin en sessionStorage');
+  const authHeader = `Bearer ${adminToken}`;
+  const res = await fetch(`${API_URL}/update-user?tenant=${TENANT}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': authHeader
+    },
+    body: JSON.stringify({ userId, updateData: { enabled } })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Error actualizando usuario en Keycloak');
+  }
+  return res.json();
+}
 // Configuración de la API
 const API_BASE_URL = import.meta.env.VITE_API_URL_1 || 'http://localhost:8081/api/telemedicine';
 const VITE_KEYCLOAK_CLIENT_SECRET = import.meta.env.VITE_KEYCLOAK_CLIENT_SECRET || 'secret';
@@ -6,6 +32,50 @@ const VITE_KEYCLOAK_CLIENT_SECRET = import.meta.env.VITE_KEYCLOAK_CLIENT_SECRET 
  * Servicio para manejar las peticiones de la API de solicitudes de rol
  */
 class SolicitudRolService {
+  /**
+   * Solicita token client-credentials al backend (que reexporta a Keycloak)
+   * @param {{client_id:string, client_secret:string}} body
+   */
+  async getClientCredentialsToken(body) {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+    const TENANT = import.meta.env.VITE_TENANT || 'telemedicine';
+    const res = await fetch(`${API_URL}/api/auth/client-credentials-token?tenant=${TENANT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Error obteniendo token de cliente');
+    }
+    return res.json();
+  }
+  /**
+   * Activa o desactiva un usuario en Keycloak
+   * @param {string} userId - ID de usuario en Keycloak
+   * @param {boolean} enabled - true para activar, false para desactivar
+   */
+  async updateUserEnabled(userId, enabled) {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+    const TENANT = import.meta.env.VITE_TENANT || 'telemedicine';
+    // Usa el token admin guardado en sessionStorage
+    const adminToken = sessionStorage.getItem('adminAccessToken');
+    if (!adminToken) throw new Error('No se encontró el token admin en sessionStorage');
+    const authHeader = `Bearer ${adminToken}`;
+    const res = await fetch(`${API_URL}/api/auth/update-user?tenant=${TENANT}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader
+      },
+      body: JSON.stringify({ userId, updateData: { enabled } })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Error actualizando usuario en Keycloak');
+    }
+    return res.json();
+  }
   constructor() {
     this.tenant = 'telemedicine';
   }

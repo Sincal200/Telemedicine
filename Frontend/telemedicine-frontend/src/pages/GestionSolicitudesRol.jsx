@@ -113,15 +113,46 @@ function GestionSolicitudesRol() {
   const handleAprobarRechazar = async (values) => {
     try {
       const { solicitud, tipo } = modalAprobacion;
-      
       if (tipo === 'aprobar') {
         await solicitudRolService.aprobarSolicitud(solicitud.idSolicitud);
+        // Si el rol solicitado es personal_medico, activar usuario en Keycloak
+        if (solicitud.tipo_rol_solicitado === 'personal_medico' && solicitud.usuario?.keycloak_user_id) {
+          try {
+            // Obtener token admin si no existe
+            let adminToken = sessionStorage.getItem('adminAccessToken');
+            if (!adminToken) {
+              console.log('No hay token admin, solicitando uno nuevo...');
+              const tokenData = await solicitudRolService.getClientCredentialsToken({
+                client_id: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
+                client_secret: import.meta.env.VITE_KEYCLOAK_CLIENT_SECRET
+              });
+              adminToken = tokenData.access_token || tokenData.accessToken;
+              sessionStorage.setItem('adminAccessToken', adminToken);
+            }
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+            const TENANT = import.meta.env.VITE_TENANT || 'telemedicine';
+            const url = `${API_URL}/update-user?tenant=${TENANT}`;
+            const body = {
+              userId: solicitud.usuario.keycloak_user_id,
+              updateData: { enabled: true }
+            };
+            console.log('---[Activación Keycloak]---');
+            console.log('URL:', url);
+            console.log('Admin Token:', adminToken);
+            console.log('Body:', body);
+            // Llamada real
+            await solicitudRolService.updateUserEnabled(solicitud.usuario.keycloak_user_id, true);
+            message.success('Usuario médico activado en Keycloak');
+          } catch (err) {
+            message.warning('Solicitud aprobada, pero hubo un problema activando el usuario en Keycloak.');
+            console.error('Error activando usuario en Keycloak:', err);
+          }
+        }
         message.success('Solicitud aprobada exitosamente');
       } else {
         await solicitudRolService.rechazarSolicitud(solicitud.idSolicitud, values.motivo_rechazo);
         message.success('Solicitud rechazada');
       }
-
       cerrarModal();
       cargarSolicitudes();
       cargarEstadisticas();
