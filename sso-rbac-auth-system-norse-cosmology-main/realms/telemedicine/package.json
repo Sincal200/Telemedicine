@@ -24,7 +24,6 @@
     "express": "^5.1.0",
     "firebase": "^11.7.1",
     "helmet": "^8.1.0",
-    "http": "^0.0.1-security",
     "ioredis": "^5.6.1",
     "mysql2": "^3.14.1",
     "sequelize": "^6.37.7",
