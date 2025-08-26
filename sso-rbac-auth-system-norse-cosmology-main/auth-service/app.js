@@ -1,3 +1,4 @@
+
 import express from "express";
 import axios from "axios";
 import jwt from "jsonwebtoken";
@@ -222,6 +223,48 @@ app.post("/assign-user-roles", async (req, res) => {
     
     res.status(err.response?.status || 500).json({
       error: err.response?.data || err.message || "Error al asignar roles al usuario"
+    });
+  }
+});
+
+// Actualiza datos de usuario en Keycloak
+app.put("/update-user", async (req, res) => {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) return res.status(401).send("Missing authorization header");
+
+  const tenant = req.query.tenant;
+  if (!tenant) return res.status(400).send("Missing tenant parameter");
+
+  const { userId, updateData } = req.body;
+  if (!userId) return res.status(400).send("Missing userId in request body");
+  if (!updateData || typeof updateData !== "object") return res.status(400).send("Missing updateData object in request body");
+
+  try {
+    const response = await axios({
+      method: "put",
+      url: `${process.env.KEYCLOAK_AUTH_SERVER_URL}/admin/realms/${tenant}/users/${userId}`,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authHeader,
+      },
+      data: updateData,
+    });
+    res.status(200).json({
+      message: "Usuario actualizado exitosamente",
+      userId,
+      updateData,
+      data: response.data
+    });
+  } catch (err) {
+    console.error("Error al actualizar usuario:", err.message);
+    if (err.response) {
+      console.error("Respuesta de Keycloak:", err.response.data);
+      console.error("Status de Keycloak:", err.response.status);
+    }
+    console.error(`URL: ${process.env.KEYCLOAK_AUTH_SERVER_URL}/admin/realms/${tenant}/users/${userId}`);
+    console.error("Update data:", JSON.stringify(updateData, null, 2));
+    res.status(err.response?.status || 500).json({
+      error: err.response?.data || err.message || "Error al actualizar usuario"
     });
   }
 });
