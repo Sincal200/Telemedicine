@@ -66,21 +66,22 @@ function ResumenCitas({ userRole = 'patient', userId = 1 }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    cargarCitasProximas();
+    if (userId && userRole) {
+      cargarCitasProximas();
+    }
   }, [userId, userRole]);
 
   const cargarCitasProximas = async () => {
+    if (!userId || !userRole) return;
     setLoading(true);
     try {
       let citasData = [];
-      
       if (userRole === 'doctor') {
         const hoy = dayjs().format('YYYY-MM-DD');
         citasData = await citaService.obtenerCitasMedico(userId, { fecha: hoy });
       } else {
         citasData = await citaService.obtenerCitasPaciente(userId);
       }
-      
       // Filtrar solo las próximas citas (hoy o futuras) y que no estén canceladas
       let citasProximas = citasData
         .filter(cita => {
@@ -88,24 +89,20 @@ function ResumenCitas({ userRole = 'patient', userId = 1 }) {
           return fechaCita.isAfter(dayjs().subtract(1, 'day')) && 
                  ![4, 5, 6].includes(cita.estado_cita_id);
         });
-
       // Priorizar las que tengan videollamada
       citasProximas = citasProximas.sort((a, b) => {
-        // Si a tiene room_id y b no, a va primero
         if (a.room_id && !b.room_id) return -1;
         if (!a.room_id && b.room_id) return 1;
-        // Si ambos tienen o ninguno, ordenar por fecha
         const fechaA = new Date(combinarFechaHora(a.fecha, a.hora_inicio));
         const fechaB = new Date(combinarFechaHora(b.fecha, b.hora_inicio));
         return fechaA - fechaB;
       });
-
       // Limitar a las próximas 3
       citasProximas = citasProximas.slice(0, 3);
-
       setCitas(citasProximas);
     } catch (error) {
       console.error('Error cargando citas:', error);
+      setCitas([]);
     } finally {
       setLoading(false);
     }
@@ -197,13 +194,13 @@ function ResumenCitas({ userRole = 'patient', userId = 1 }) {
                         <Space size="small">
                           <CalendarOutlined style={{ fontSize: '12px' }} />
                           <Text style={{ fontSize: '12px' }}>
-                            {formatearFecha(cita.fecha)}
+                            {formatearFecha(combinarFechaHora(cita.fecha, cita.hora_inicio))}
                           </Text>
                         </Space>
                         <Space size="small">
                           <ClockCircleOutlined style={{ fontSize: '12px' }} />
                           <Text style={{ fontSize: '12px' }}>
-                            {formatearHora(cita.hora_inicio)}
+                            {formatearHora(combinarFechaHora(cita.fecha, cita.hora_inicio))}
                           </Text>
                         </Space>
                         {/* Botón para videollamada si aplica */}
