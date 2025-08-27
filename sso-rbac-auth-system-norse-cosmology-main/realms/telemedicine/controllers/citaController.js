@@ -359,6 +359,46 @@ const citaController = {
       console.error('Error obteniendo cita:', error);
       next(error);
     }
+  },
+
+  /**
+   * Actualizar datos de una cita (pre-checkin, etc.)
+   * PUT /api/cita/:id
+   */
+  async actualizarCitaPublica(req, res, next) {
+    try {
+      const { id } = req.params;
+      const cita = await db.Cita.findByPk(id);
+      if (!cita) {
+        return res.status(404).json({ error: 'Cita no encontrada' });
+      }
+      // Solo permitir actualizar ciertos campos (pre-checkin y médicos)
+      const camposPermitidos = [
+        'motivo_consulta',
+        'sintomas',
+        'notas_paciente',
+        'diagnostico',
+        'tratamiento',
+        'receta',
+        'notas_personal'
+      ];
+      const datosActualizar = {};
+      for (const campo of camposPermitidos) {
+        if (req.body[campo] !== undefined) {
+          datosActualizar[campo] = req.body[campo];
+        }
+      }
+      await cita.update(datosActualizar);
+      const citaActualizada = await db.Cita.findByPk(id);
+      res.json({
+        success: true,
+        data: citaActualizada,
+        message: 'Cita actualizada correctamente'
+      });
+    } catch (error) {
+      console.error('Error actualizando cita:', error);
+      next(error);
+    }
   }
 };
 

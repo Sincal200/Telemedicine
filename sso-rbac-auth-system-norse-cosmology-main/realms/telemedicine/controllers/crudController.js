@@ -14,7 +14,10 @@ const crudController = (Model) => ({
   },
   getById: async (req, res, next) => {
     try {
-      const item = await Model.findByPk(req.params.id);
+      // Usar el campo primario del modelo
+      const pkField = Model.primaryKeyAttribute || 'id';
+      const where = { [pkField]: req.params.id };
+      const item = await Model.findOne({ where });
       if (!item) return res.status(404).json({ 
         success: false, 
         error: 'No encontrado' 
@@ -41,12 +44,14 @@ const crudController = (Model) => ({
   },
   update: async (req, res, next) => {
     try {
-      const [updated] = await Model.update(req.body, { where: { id: req.params.id } });
+      const pkField = Model.primaryKeyAttribute || 'id';
+      const where = { [pkField]: req.params.id };
+      const [updated] = await Model.update(req.body, { where });
       if (!updated) return res.status(404).json({ 
         success: false,
         error: 'No encontrado' 
       });
-      const updatedItem = await Model.findByPk(req.params.id);
+      const updatedItem = await Model.findOne({ where });
       res.json({
         success: true,
         data: updatedItem,
@@ -58,7 +63,9 @@ const crudController = (Model) => ({
   },
   delete: async (req, res, next) => {
     try {
-      const deleted = await Model.destroy({ where: { id: req.params.id } });
+      const pkField = Model.primaryKeyAttribute || 'id';
+      const where = { [pkField]: req.params.id };
+      const deleted = await Model.destroy({ where });
       if (!deleted) return res.status(404).json({ 
         success: false,
         error: 'No encontrado' 

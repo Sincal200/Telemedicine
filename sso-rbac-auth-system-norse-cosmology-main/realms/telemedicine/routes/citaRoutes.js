@@ -7,11 +7,13 @@ import createCrudRoutes from './createCrudRoutes.js';
 const router = express.Router();
 
 // Rutas especializadas para citas (van primero para que no sean capturadas por CRUD)
+
 router.get('/horarios-disponibles', citaController.buscarHorariosDisponibles);
 router.post('/programar', citaController.programarCita);
 router.get('/paciente/:pacienteId', citaController.obtenerCitasPaciente);
 router.get('/medico/:medicoId', citaController.obtenerCitasMedico);
 router.put('/:id/cancelar', citaController.cancelarCita);
+router.put('/:id', citaController.actualizarCitaPublica); // Nuevo endpoint para PUT /cita/:id
 router.get('/:id', citaController.obtenerCita);
 
 // Rutas CRUD básicas (para administración)
