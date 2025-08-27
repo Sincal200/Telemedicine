@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Video.module.css';
+import consultaService from '../services/consultaService';
 
 const stunServers = {
   iceServers: [
@@ -34,18 +35,17 @@ const processIceQueue = async (pc, queue) => {
 const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   // --- Estado para cita y formulario médico ---
   const [cita, setCita] = useState(null);
-  const [formMedico, setFormMedico] = useState({ diagnostico: '', tratamiento: '', receta: '' });
+  const [formMedico, setFormMedico] = useState({ diagnostico_principal: '', tratamiento: '', receta_medica: '' });
   const [medicoLoading, setMedicoLoading] = useState(false);
+  const [consulta, setConsulta] = useState(null);
 
   // Obtener datos de la cita al entrar a la sala
   useEffect(() => {
-    const fetchCita = async () => {
+    const fetchCitaYConsulta = async () => {
       try {
         // Buscar cita por roomId
         const res = await import('../services/citaService');
         const citaService = res.default;
-        // Suponiendo que hay un endpoint para buscar por roomId
-        // Si no existe, se puede buscar todas las citas del médico y filtrar por roomId
         let citaData = null;
         if (userRole === 'doctor') {
           const citas = await citaService.obtenerCitasMedico(userId);
@@ -56,32 +56,55 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         }
         setCita(citaData || null);
         if (citaData) {
-          setFormMedico({
-            diagnostico: citaData.diagnostico || '',
-            tratamiento: citaData.tratamiento || '',
-            receta: citaData.receta || ''
-          });
+          // Buscar consulta asociada a la cita
+          try {
+            const consultaData = await consultaService.obtenerConsultaPorCitaId(citaData.idCita);
+            setConsulta(consultaData || null);
+            if (consultaData) {
+              setFormMedico({
+                diagnostico_principal: consultaData.diagnostico_principal || '',
+                tratamiento: consultaData.tratamiento || '',
+                receta_medica: consultaData.receta_medica || ''
+              });
+            } else {
+              setFormMedico({ diagnostico_principal: '', tratamiento: '', receta_medica: '' });
+            }
+          } catch (e) {
+            setConsulta(null);
+            setFormMedico({ diagnostico_principal: '', tratamiento: '', receta_medica: '' });
+          }
         }
       } catch (err) {
         setCita(null);
+        setConsulta(null);
       }
     };
-    fetchCita();
+    fetchCitaYConsulta();
   }, [roomId, userId, userRole]);
 
-  // Guardar información médica
+  // Guardar información médica en Consulta
   const guardarInfoMedica = async () => {
     if (!cita) return;
     setMedicoLoading(true);
     try {
-      const res = await import('../services/citaService');
-      const citaService = res.default;
-      await citaService.actualizarCita(cita.idCita, {
-        diagnostico: formMedico.diagnostico,
-        tratamiento: formMedico.tratamiento,
-        receta: formMedico.receta
-      });
-      // Opcional: mostrar mensaje de éxito
+      let consultaGuardada = null;
+      if (consulta && consulta.idConsulta) {
+        // Actualizar consulta existente
+        consultaGuardada = await consultaService.actualizarConsulta(consulta.idConsulta, {
+          diagnostico_principal: formMedico.diagnostico_principal,
+          tratamiento: formMedico.tratamiento,
+          receta_medica: formMedico.receta_medica
+        });
+      } else {
+        // Crear nueva consulta
+        consultaGuardada = await consultaService.crearConsulta({
+          cita_id: cita.idCita,
+          diagnostico_principal: formMedico.diagnostico_principal,
+          tratamiento: formMedico.tratamiento,
+          receta_medica: formMedico.receta_medica
+        });
+      }
+      setConsulta(consultaGuardada);
       alert('Información médica guardada');
     } catch (err) {
       alert('Error guardando información médica');
@@ -702,8 +725,8 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
           <div style={{ marginTop: 8 }}>
             <label>Diagnóstico:</label>
             <textarea
-              value={formMedico.diagnostico}
-              onChange={e => setFormMedico(f => ({ ...f, diagnostico: e.target.value }))}
+              value={formMedico.diagnostico_principal}
+              onChange={e => setFormMedico(f => ({ ...f, diagnostico_principal: e.target.value }))}
               rows={2}
               style={{ width: '100%', marginBottom: 8 }}
             />
@@ -716,8 +739,8 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
             />
             <label>Receta:</label>
             <textarea
-              value={formMedico.receta}
-              onChange={e => setFormMedico(f => ({ ...f, receta: e.target.value }))}
+              value={formMedico.receta_medica}
+              onChange={e => setFormMedico(f => ({ ...f, receta_medica: e.target.value }))}
               rows={2}
               style={{ width: '100%', marginBottom: 8 }}
             />
