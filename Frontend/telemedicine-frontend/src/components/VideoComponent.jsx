@@ -44,7 +44,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     receta_medica: '',
     examenes_solicitados: '',
     proxima_cita_recomendada: '',
-    duracion_minutos: '',
+  // duracion_minutos eliminado, ahora se calcula automáticamente
     requiere_seguimiento: false,
     fecha_seguimiento: ''
   });
@@ -83,7 +83,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                 receta_medica: consultaData.receta_medica || '',
                 examenes_solicitados: consultaData.examenes_solicitados || '',
                 proxima_cita_recomendada: consultaData.proxima_cita_recomendada || '',
-                duracion_minutos: consultaData.duracion_minutos || '',
+                // duracion_minutos eliminado, ahora se calcula automáticamente
                 requiere_seguimiento: consultaData.requiere_seguimiento || false,
                 fecha_seguimiento: consultaData.fecha_seguimiento || ''
               });
@@ -96,7 +96,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                 receta_medica: '',
                 examenes_solicitados: '',
                 proxima_cita_recomendada: '',
-                duracion_minutos: '',
+                // duracion_minutos eliminado, ahora se calcula automáticamente
                 requiere_seguimiento: false,
                 fecha_seguimiento: ''
               });
@@ -128,7 +128,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         receta_medica: formMedico.receta_medica,
         examenes_solicitados: formMedico.examenes_solicitados,
         proxima_cita_recomendada: formMedico.proxima_cita_recomendada,
-        duracion_minutos: formMedico.duracion_minutos,
+  // duracion_minutos eliminado, ahora se calcula automáticamente
         requiere_seguimiento: formMedico.requiere_seguimiento,
         fecha_seguimiento: formMedico.fecha_seguimiento
       };
@@ -750,15 +750,33 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
 
   // Función para finalizar la sesión y marcar la cita como COMPLETADA
   const [finalizando, setFinalizando] = useState(false);
+  const [horaInicioLlamada, setHoraInicioLlamada] = useState(null);
+  // Guardar hora de inicio cuando el doctor entra y se conecta
+  useEffect(() => {
+    if (userRole === 'doctor' && isConnectedToServer && !horaInicioLlamada) {
+      setHoraInicioLlamada(Date.now());
+    }
+  }, [userRole, isConnectedToServer, horaInicioLlamada]);
   const finalizarSesion = async () => {
     if (!cita) return;
     setFinalizando(true);
     try {
-  await (await import('../services/citaService')).default.actualizarCitaAdmin(cita.idCita, { estado_cita_id: 6 });
+      const horaFin = Date.now();
+      let duracion_minutos = null;
+      if (horaInicioLlamada) {
+        duracion_minutos = Math.max(1, Math.round((horaFin - horaInicioLlamada) / 60000));
+      }
+      // Actualizar estado de la cita a COMPLETADA
+      await (await import('../services/citaService')).default.actualizarCitaAdmin(cita.idCita, {
+        estado_cita_id: 6
+      });
+      // Si hay consulta asociada, actualizar la duración en la consulta
+      if (consulta && consulta.idConsulta && duracion_minutos) {
+        await consultaService.actualizarConsulta(consulta.idConsulta, { duracion_minutos });
+      }
       if (window && window.message && typeof window.message.success === 'function') {
         window.message.success('La sesión ha sido finalizada y la cita marcada como COMPLETADA.');
       } else {
-        // fallback si no está message de AntD
         alert('La sesión ha sido finalizada y la cita marcada como COMPLETADA.');
       }
       leaveRoom();
@@ -877,15 +895,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                       value={formMedico.proxima_cita_recomendada}
                       onChange={e => setFormMedico(f => ({ ...f, proxima_cita_recomendada: e.target.value }))}
                     />
-                    <label className={styles.formLabel}>Duración (minutos)</label>
-                    <input
-                      className={styles.formInput}
-                      type="number"
-                      min="0"
-                      value={formMedico.duracion_minutos}
-                      onChange={e => setFormMedico(f => ({ ...f, duracion_minutos: e.target.value }))}
-                      placeholder="Duración de la consulta"
-                    />
+                    {/* Campo de duración eliminado, ahora se calcula automáticamente */}
                     <label className={styles.formLabel}>¿Requiere seguimiento?</label>
                     <input
                       className={styles.formCheckbox}
