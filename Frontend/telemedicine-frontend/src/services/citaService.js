@@ -10,6 +10,31 @@ class CitaService {
   }
 
   /**
+   * Actualiza una cita como admin
+   * @param {number} citaId - ID de la cita
+   * @param {Object} datos - Datos a actualizar
+   * @returns {Promise<Object>} Cita actualizada
+   */
+  async actualizarCitaAdmin(citaId, datos) {
+    try {
+      const response = await fetch(this.buildUrl(`/cita/admin/${citaId}`), {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(datos)
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error actualizando cita (admin)');
+      }
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error actualizando cita (admin):', error);
+      throw error;
+    }
+  }
+
+  /**
    * Obtiene el token de autenticación
    */
   getAuthToken() {

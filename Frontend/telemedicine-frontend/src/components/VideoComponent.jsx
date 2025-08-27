@@ -748,6 +748,31 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     };
   }, [roomId, userId, userRole]);
 
+  // Función para finalizar la sesión y marcar la cita como COMPLETADA
+  const [finalizando, setFinalizando] = useState(false);
+  const finalizarSesion = async () => {
+    if (!cita) return;
+    setFinalizando(true);
+    try {
+  await (await import('../services/citaService')).default.actualizarCitaAdmin(cita.idCita, { estado_cita_id: 6 });
+      if (window && window.message && typeof window.message.success === 'function') {
+        window.message.success('La sesión ha sido finalizada y la cita marcada como COMPLETADA.');
+      } else {
+        // fallback si no está message de AntD
+        alert('La sesión ha sido finalizada y la cita marcada como COMPLETADA.');
+      }
+      leaveRoom();
+    } catch (err) {
+      if (window && window.message && typeof window.message.error === 'function') {
+        window.message.error('Error al finalizar la sesión.');
+      } else {
+        alert('Error al finalizar la sesión.');
+      }
+    } finally {
+      setFinalizando(false);
+    }
+  };
+
   return (
     <div className={styles.videoContainer}>
       <h2>Sala de Consulta: {roomId}</h2>
@@ -903,6 +928,17 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         <button onClick={leaveRoom}>
           📞 Salir de la Sala
         </button>
+        {/* Botón para finalizar sesión, solo visible para el doctor y si hay cita */}
+        {userRole === 'doctor' && cita && (
+          <button
+            onClick={finalizarSesion}
+            className={styles.saveButton}
+            style={{background:'#52c41a',marginLeft:'8px'}}
+            disabled={finalizando}
+          >
+            {finalizando ? 'Finalizando...' : 'Finalizar sesión'}
+          </button>
+        )}
       </div>
     </div>
   );
