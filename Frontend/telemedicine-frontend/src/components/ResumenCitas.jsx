@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Modal, Form, Input, message } from 'antd';
 import {
   Card,
   List,
@@ -37,6 +38,29 @@ const formatearHora = (horaInicio) => {
 };
 
 function ResumenCitas({ userRole = 'patient', userId = 1 }) {
+  const [preCheckinVisible, setPreCheckinVisible] = useState(false);
+  const [preCheckinCita, setPreCheckinCita] = useState(null);
+  const [preCheckinLoading, setPreCheckinLoading] = useState(false);
+  const [form] = Form.useForm();
+  // Guardar pre-checkin en backend
+  const guardarPreCheckin = async (values) => {
+    setPreCheckinLoading(true);
+    try {
+      await citaService.actualizarCita(preCheckinCita.idCita, {
+        motivo_consulta: values.motivo_consulta,
+        sintomas: values.sintomas,
+        notas_paciente: values.notas_paciente
+      });
+      message.success('Pre-check-in guardado correctamente');
+      setPreCheckinVisible(false);
+      setPreCheckinCita(null);
+      form.resetFields();
+    } catch (error) {
+      message.error('Error guardando pre-check-in');
+    } finally {
+      setPreCheckinLoading(false);
+    }
+  };
   const [citas, setCitas] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -168,38 +192,103 @@ function ResumenCitas({ userRole = 'patient', userId = 1 }) {
                     </Space>
                   }
                   description={
-                    <Space size="large">
-                      <Space size="small">
-                        <CalendarOutlined style={{ fontSize: '12px' }} />
-                        <Text style={{ fontSize: '12px' }}>
-                          {formatearFecha(cita.fecha)}
-                        </Text>
+                    <>
+                      <Space size="large">
+                        <Space size="small">
+                          <CalendarOutlined style={{ fontSize: '12px' }} />
+                          <Text style={{ fontSize: '12px' }}>
+                            {formatearFecha(cita.fecha)}
+                          </Text>
+                        </Space>
+                        <Space size="small">
+                          <ClockCircleOutlined style={{ fontSize: '12px' }} />
+                          <Text style={{ fontSize: '12px' }}>
+                            {formatearHora(cita.hora_inicio)}
+                          </Text>
+                        </Space>
+                        {/* Botón para videollamada si aplica */}
+                        {cita.room_id && (
+                          <Button
+                            type="primary"
+                            onClick={() => navigate(`/videollamada/${cita.room_id}`, {
+                              state: {
+                                userId,
+                                userRole
+                              }
+                            })}
+                          >
+                            Unirse a videollamada
+                          </Button>
+                        )}
+                        {/* Botón Pre-check-in solo para paciente y si la cita es futura */}
+                        {userRole === 'patient' && dayjs(combinarFechaHora(cita.fecha, cita.hora_inicio)).isAfter(dayjs()) && (
+                          <Button
+                            style={{ marginLeft: 8 }}
+                            onClick={() => {
+                              setPreCheckinVisible(true);
+                              setPreCheckinCita(cita);
+                              form.setFieldsValue({
+                                motivo_consulta: cita.motivo_consulta || '',
+                                sintomas: cita.sintomas || '',
+                                notas_paciente: cita.notas_paciente || ''
+                              });
+                            }}
+                          >
+                            Pre-check-in
+                          </Button>
+                        )}
                       </Space>
-                      <Space size="small">
-                        <ClockCircleOutlined style={{ fontSize: '12px' }} />
-                        <Text style={{ fontSize: '12px' }}>
-                          {formatearHora(cita.hora_inicio)}
-                        </Text>
-                      </Space>
-                      {/* Botón para videollamada si aplica */}
-                      {cita.room_id && (
-                        <Button
-                          type="primary"
-                          onClick={() => navigate(`/videollamada/${cita.room_id}`, {
-                            state: {
-                              userId,
-                              userRole
-                            }
-                          })}
-                        >
-                          Unirse a videollamada
-                        </Button>
+                      {/* Bloque informativo para doctor si existen datos de pre-check-in */}
+                      {userRole === 'doctor' && (
+                        (cita.motivo_consulta || cita.sintomas || cita.notas_paciente) && (
+                          <div style={{ marginTop: 12, background: '#f6ffed', padding: 10, borderRadius: 6 }}>
+                            <strong>Pre-check-in del paciente:</strong>
+                            {cita.motivo_consulta && <div><b>Motivo:</b> {cita.motivo_consulta}</div>}
+                            {cita.sintomas && <div><b>Síntomas:</b> {cita.sintomas}</div>}
+                            {cita.notas_paciente && <div><b>Notas:</b> {cita.notas_paciente}</div>}
+                          </div>
+                        )
                       )}
-                    </Space>
+                    </>
                   }
                 />
               </List.Item>
             );
+      {/* Modal de Pre-check-in */}
+      <Modal
+        title="Pre-check-in de cita"
+        open={preCheckinVisible}
+        onCancel={() => { setPreCheckinVisible(false); setPreCheckinCita(null); form.resetFields(); }}
+        onOk={() => form.submit()}
+        confirmLoading={preCheckinLoading}
+        okText="Guardar"
+        cancelText="Cancelar"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={guardarPreCheckin}
+        >
+          <Form.Item label="Motivo de consulta" name="motivo_consulta" rules={[{ required: true, message: 'Ingrese el motivo' }]}> 
+            <Input.TextArea rows={2} placeholder="Motivo de consulta" />
+          </Form.Item>
+          <Form.Item label="Síntomas" name="sintomas"> 
+            <Input.TextArea rows={2} placeholder="Síntomas" />
+          </Form.Item>
+          <Form.Item label="Notas adicionales" name="notas_paciente"> 
+            <Input.TextArea rows={2} placeholder="Notas adicionales" />
+          </Form.Item>
+        </Form>
+        {/* Mostrar datos existentes si ya hay pre-check-in guardado */}
+        {preCheckinCita && (
+          <div style={{ marginTop: 16, background: '#f6ffed', padding: 12, borderRadius: 6 }}>
+            <strong>Datos guardados:</strong>
+            <div><b>Motivo:</b> {preCheckinCita.motivo_consulta || <i>No registrado</i>}</div>
+            <div><b>Síntomas:</b> {preCheckinCita.sintomas || <i>No registrado</i>}</div>
+            <div><b>Notas:</b> {preCheckinCita.notas_paciente || <i>No registrado</i>}</div>
+          </div>
+        )}
+      </Modal>
           }}
         />
       ) : (
@@ -215,6 +304,32 @@ function ResumenCitas({ userRole = 'patient', userId = 1 }) {
           )}
         </Empty>
       )}
+      {/* Modal de Pre-check-in */}
+      <Modal
+        title="Pre-check-in de cita"
+        open={preCheckinVisible}
+        onCancel={() => { setPreCheckinVisible(false); setPreCheckinCita(null); form.resetFields(); }}
+        onOk={() => form.submit()}
+        confirmLoading={preCheckinLoading}
+        okText="Guardar"
+        cancelText="Cancelar"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={guardarPreCheckin}
+        >
+          <Form.Item label="Motivo de consulta" name="motivo_consulta" rules={[{ required: true, message: 'Ingrese el motivo' }]}> 
+            <Input.TextArea rows={2} />
+          </Form.Item>
+          <Form.Item label="Síntomas" name="sintomas"> 
+            <Input.TextArea rows={2} />
+          </Form.Item>
+          <Form.Item label="Notas adicionales" name="notas_paciente"> 
+            <Input.TextArea rows={2} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Card>
   );
 }

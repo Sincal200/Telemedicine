@@ -269,6 +269,31 @@ class CitaService {
       throw error;
     }
   }
+
+  /**
+   * Actualiza una cita
+   * @param {number} citaId - ID de la cita
+   * @param {Object} datos - Datos a actualizar
+   * @returns {Promise<Object>} Cita actualizada
+   */
+  async actualizarCita(citaId, datos) {
+    try {
+      const response = await fetch(this.buildUrl(`/cita/${citaId}`), {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(datos)
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error actualizando cita');
+      }
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error actualizando cita:', error);
+      throw error;
+    }
+  }
 }
 
 // Exportar instancia singleton

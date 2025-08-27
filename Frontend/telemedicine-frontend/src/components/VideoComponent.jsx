@@ -32,6 +32,63 @@ const processIceQueue = async (pc, queue) => {
 };
 
 const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
+  // --- Estado para cita y formulario médico ---
+  const [cita, setCita] = useState(null);
+  const [formMedico, setFormMedico] = useState({ diagnostico: '', tratamiento: '', receta: '' });
+  const [medicoLoading, setMedicoLoading] = useState(false);
+
+  // Obtener datos de la cita al entrar a la sala
+  useEffect(() => {
+    const fetchCita = async () => {
+      try {
+        // Buscar cita por roomId
+        const res = await import('../services/citaService');
+        const citaService = res.default;
+        // Suponiendo que hay un endpoint para buscar por roomId
+        // Si no existe, se puede buscar todas las citas del médico y filtrar por roomId
+        let citaData = null;
+        if (userRole === 'doctor') {
+          const citas = await citaService.obtenerCitasMedico(userId);
+          citaData = citas.find(c => c.room_id === roomId);
+        } else {
+          const citas = await citaService.obtenerCitasPaciente(userId);
+          citaData = citas.find(c => c.room_id === roomId);
+        }
+        setCita(citaData || null);
+        if (citaData) {
+          setFormMedico({
+            diagnostico: citaData.diagnostico || '',
+            tratamiento: citaData.tratamiento || '',
+            receta: citaData.receta || ''
+          });
+        }
+      } catch (err) {
+        setCita(null);
+      }
+    };
+    fetchCita();
+  }, [roomId, userId, userRole]);
+
+  // Guardar información médica
+  const guardarInfoMedica = async () => {
+    if (!cita) return;
+    setMedicoLoading(true);
+    try {
+      const res = await import('../services/citaService');
+      const citaService = res.default;
+      await citaService.actualizarCita(cita.idCita, {
+        diagnostico: formMedico.diagnostico,
+        tratamiento: formMedico.tratamiento,
+        receta: formMedico.receta
+      });
+      // Opcional: mostrar mensaje de éxito
+      alert('Información médica guardada');
+    } catch (err) {
+      alert('Error guardando información médica');
+    } finally {
+      setMedicoLoading(false);
+    }
+  };
   const localVideoRef = useRef(null);
   const remoteVideosRef = useRef({});
   const peerConnectionsRef = useRef({});
@@ -620,14 +677,54 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
       <h2>Sala de Consulta: {roomId}</h2>
 
       {error && (
-        <div className={styles.errorMessage}>
-          {error}
-        </div>
+        <div className={styles.errorMessage}>{error}</div>
+      )}
+      {isLoading && (
+        <div className={styles.loadingMessage}>Conectando a la sala...</div>
       )}
 
-      {isLoading && (
-        <div className={styles.loadingMessage}>
-          Conectando a la sala...
+      {/* Bloque informativo de pre-check-in para el doctor */}
+      {userRole === 'doctor' && cita && (
+        (cita.motivo_consulta || cita.sintomas || cita.notas_paciente) && (
+          <div style={{ margin: '16px 0', background: '#f6ffed', padding: 12, borderRadius: 6 }}>
+            <strong>Pre-check-in del paciente:</strong>
+            {cita.motivo_consulta && <div><b>Motivo:</b> {cita.motivo_consulta}</div>}
+            {cita.sintomas && <div><b>Síntomas:</b> {cita.sintomas}</div>}
+            {cita.notas_paciente && <div><b>Notas:</b> {cita.notas_paciente}</div>}
+          </div>
+        )
+      )}
+
+      {/* Formulario para ingresar información médica (solo doctor) */}
+      {userRole === 'doctor' && cita && (
+        <div style={{ margin: '16px 0', background: '#e6f7ff', padding: 12, borderRadius: 6 }}>
+          <strong>Registrar información médica:</strong>
+          <div style={{ marginTop: 8 }}>
+            <label>Diagnóstico:</label>
+            <textarea
+              value={formMedico.diagnostico}
+              onChange={e => setFormMedico(f => ({ ...f, diagnostico: e.target.value }))}
+              rows={2}
+              style={{ width: '100%', marginBottom: 8 }}
+            />
+            <label>Tratamiento:</label>
+            <textarea
+              value={formMedico.tratamiento}
+              onChange={e => setFormMedico(f => ({ ...f, tratamiento: e.target.value }))}
+              rows={2}
+              style={{ width: '100%', marginBottom: 8 }}
+            />
+            <label>Receta:</label>
+            <textarea
+              value={formMedico.receta}
+              onChange={e => setFormMedico(f => ({ ...f, receta: e.target.value }))}
+              rows={2}
+              style={{ width: '100%', marginBottom: 8 }}
+            />
+            <button onClick={guardarInfoMedica} disabled={medicoLoading} style={{ marginTop: 8 }}>
+              {medicoLoading ? 'Guardando...' : 'Guardar información'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -653,7 +750,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         </div>
 
         <div id="remote-videos-container" className={styles.remoteVideosContainer}>
-          {}
+          {/* Videos remotos */}
         </div>
       </div>
     </div>
