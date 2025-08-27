@@ -34,6 +34,7 @@ import tiposDocumentoIdentidadRoutes from "./routes/tiposDocumentoIdentidadRoute
 import usuarioRoutes from "./routes/usuarioRoutes.js";
 import setupRoutes from "./routes/setupRoutes.js";
 import registroRoutes from "./routes/registroRoutes.js";
+import expedienteRoutes from './routes/expedienteRoutes.js';
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ signalingServer.initialize(server);
 app.locals.signalingServer = signalingServer;
 
 // Rutas de telemedicina
+
 app.use('/telemedicine', telemedicineRoutes);
 app.use('/aldea', aldeaRoutes);
 app.use('/archivo', archivoRoutes);
@@ -84,6 +86,8 @@ app.use('/tipos-documento-identidad', tiposDocumentoIdentidadRoutes)
 app.use('/usuario', usuarioRoutes)
 app.use('/setup', setupRoutes)
 app.use('/registro', registroRoutes)
+// Nuevo endpoint expediente
+app.use('/expediente', expedienteRoutes);
 
 
 // Rutas heredadas mínimas para compatibilidad
