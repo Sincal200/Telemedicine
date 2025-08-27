@@ -1,387 +1,529 @@
-.videoContainer {
+/* ================= Drawer lateral y PiP ================= */
+.drawerOverlay {
+  background: rgba(0,0,0,0.32);
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  animation: fadeIn .3s cubic-bezier(.4,0,.2,1);
+}
+
+.drawerContent {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(100vw, 400px);
+  background: var(--c-card);
+  box-shadow: -8px 0 32px rgba(102,126,234,0.18);
+  border-radius: 24px 0 0 24px;
+  z-index: 2100;
+  padding: 32px 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  animation: fadeIn .4s cubic-bezier(.4,0,.2,1);
+}
+
+.drawerTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--c-primary-2);
+  margin-bottom: var(--space-2);
+  text-align: left;
+}
+
+.openDrawerButton {
+  background: linear-gradient(90deg, var(--c-primary) 60%, var(--c-primary-2) 100%);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-m);
+  padding: 12px 0;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: var(--space-2);
+  transition: background .2s, transform .2s;
+}
+.openDrawerButton:hover {
+  background: linear-gradient(90deg, var(--c-primary-2) 60%, var(--c-primary) 100%);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.closeDrawerButton {
+  margin-top: var(--space-2);
+  background: #fff;
+  color: var(--c-primary-2);
+  border: 1.5px solid var(--c-primary-2);
+  border-radius: var(--radius-m);
+  padding: 10px 0;
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 1px 4px rgba(102,126,234,0.08);
+  cursor: pointer;
+  width: 100%;
+  transition: background .2s, color .2s;
+}
+.closeDrawerButton:hover {
+  background: var(--c-primary-2);
+  color: #fff;
+}
+
+.miniVideoPiP {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  width: 180px;
+  height: 110px;
+  background: #222;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(102,126,234,0.18);
+  z-index: 2200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  overflow: hidden;
+  pointer-events: none;
+}
+.miniVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+  background: #111;
+}
+/* =========================================================
+   Telemed – Layout Responsive (mobile-first, unificado)
+   ========================================================= */
+
+/* Reset y variables de escala */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+:root{
+  /* Espaciados y radio fluidos */
+  --space-1: clamp(6px, 0.8vw, 10px);
+  --space-2: clamp(10px, 1.2vw, 14px);
+  --space-3: clamp(12px, 1.6vw, 18px);
+  --space-4: clamp(16px, 2vw, 24px);
+  --radius-s: clamp(7px, 1vw, 10px);
+  --radius-m: clamp(10px, 1.2vw, 14px);
+  --radius-l: clamp(12px, 1.6vw, 18px);
+
+  /* Anchos y sombras */
+  --content-pad-x: clamp(8px, 2vw, 32px);
+  --panel-max: 340px;
+  --card-max: 640px;
+  --shadow-1: 0 2px 12px rgba(102,126,234,0.10);
+  --shadow-2: 0 6px 32px rgba(102,126,234,0.10), 0 1.5px 8px rgba(118,75,162,0.08);
+
+  /* Colores */
+  --c-primary: #667eea;
+  --c-primary-2: #764ba2;
+  --c-ok: #52c41a;
+  --c-danger: #ff4d4f;
+  --c-ink: #333;
+  --c-card: rgba(255,255,255,0.95);
+  --c-stroke: #e6e6fa;
+  --c-field-stroke: #d6d6f7;
+  --c-field-bg: #f9f9ff;
+}
+
+/* ------------------ Contenedor general ------------------ */
+.videoContainer{
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-2) 100%);
+  padding: var(--space-3);
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
 }
 
-.videoContainer h2 {
-  color: white;
-  text-align: center;
-  margin-bottom: 24px;
+.videoContainer h2{
+  color:#fff;
+  text-align:center;
+  margin-bottom: var(--space-3);
+  font-weight:700;
+  font-size: clamp(18px, 3.2vw, 28px);
+  text-shadow: 0 2px 4px rgba(0,0,0,.3);
+}
+
+/* ------------------ Layout principal ------------------ */
+.mainLayout{
+  display:flex;
+  flex-direction: column;              /* mobile-first */
+  align-items: stretch;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 1200px;                   /* evita 100vw + scroll */
+  gap: var(--space-3);
+  margin: 0 auto;
+  padding-left: var(--content-pad-x);
+  padding-right: var(--content-pad-x);
+}
+
+/* Panel lateral */
+.sidePanel{
+  display:flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  align-self: stretch;
+  overflow: visible;
+}
+
+/* ------------------ Tarjetas e inputs ------------------ */
+.infoCard{
+  width: 100%;
+  max-width: var(--card-max);
+  margin: 0 auto var(--space-3) auto;
+  background: var(--c-card);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-2);
+  padding: clamp(16px, 3vw, 32px);
+  display:flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  animation: fadeIn .6s cubic-bezier(.4,0,.2,1);
+  border: 1.5px solid var(--c-stroke);
+}
+
+.infoCardTitle{
+  font-size: clamp(18px, 1.8vw, 20px);
   font-weight: 700;
-  font-size: 28px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: var(--c-primary);
+  margin-bottom: var(--space-1);
+  letter-spacing: .5px;
 }
 
-.callControls {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-  justify-content: center;
-  z-index: 10;
+.infoCardContent{
+  color: var(--c-ink);
+  font-size: clamp(14px, 1.4vw, 15px);
+  line-height: 1.6;
 }
 
-.callControls button {
-  padding: 12px 24px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 140px;
+.preCheckinCard{
+  background: linear-gradient(120deg, #f6ffed 80%, #e6f7ff 100%);
+  border-left: 5px solid var(--c-ok);
+}
+
+.medicalFormCard{
+  background: linear-gradient(120deg, #e6f7ff 80%, #f6ffed 100%);
+  border-left: 5px solid var(--c-primary);
+}
+
+.medicalForm{
+  display:flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: 4px;
+}
+
+.formLabel{
+  font-weight:600;
+  color: var(--c-primary-2);
+  margin-bottom: 2px;
   font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(10px);
 }
 
-.callControls button:first-child,
-.callControls button:nth-child(2) {
-  background: rgba(255, 255, 255, 0.9);
-  color: #667eea;
+.formTextarea{
+  border-radius: var(--radius-m);
+  border: 1.5px solid var(--c-field-stroke);
+  padding: 10px 12px;
+  font-size: 15px;
+  background: var(--c-field-bg);
+  resize: vertical;
+  min-height: 38px;
+  margin-bottom: 2px;
+  transition: border .2s, background .2s;
+}
+.formTextarea:focus{
+  outline: none;
+  border-color: var(--c-primary);
+  background: #fff;
 }
 
-.callControls button:first-child:hover,
-.callControls button:nth-child(2):hover {
-  background: rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+.saveButton{
+  margin-top: var(--space-1);
+  background: linear-gradient(90deg, var(--c-primary) 60%, var(--c-primary-2) 100%);
+  color:#fff;
+  border:none;
+  border-radius: var(--radius-m);
+  padding: 12px 0;
+  font-weight:700;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+  cursor:pointer;
+  transition: background .2s, transform .2s;
+}
+.saveButton:disabled{
+  background:#b3b3cc; cursor:not-allowed;
+}
+.saveButton:not(:disabled):hover{
+  background: linear-gradient(90deg, var(--c-primary-2) 60%, var(--c-primary) 100%);
+  transform: translateY(-2px) scale(1.03);
 }
 
-.callControls button:last-child {
-  background: #ff4d4f;
-  color: white;
-}
-
-.callControls button:last-child:hover {
-  background: #ff3333;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.4);
-}
-
-.videoGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-  width: 100%;
-  max-width: 1200px;
+/* ------------------ Videos ------------------ */
+.videoGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* 1..n columnas fluidas */
   justify-content: center;
+  align-items: end;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  min-height: 260px;
 }
 
-.localVideo {
+.localVideo,
+.remoteVideoWrapper{
   position: relative;
-  width: 100%;
-  aspect-ratio: 16/9;
-  border-radius: 16px;
+  width: 100%;                         /* grid maneja el ancho */
+  aspect-ratio: 1 / 1;                  /* móvil por defecto */
+  border-radius: var(--radius-l);
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 24px rgba(102,126,234,0.10);
+  border:none;
+  background:#fff;
+  min-width: 0;                         /* evita overflow en grid */
+  min-height: 140px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation: fadeIn .5s ease-out;
 }
 
-.localVideo video {
-  width: 100%;
-  height: 100%;
+.localVideo video,
+.remoteVideoWrapper video{
+  width:100%;
+  height:100%;
   object-fit: cover;
-  background: #1a1a1a;
+  background:#1a1a1a;
 }
 
-.remoteVideosContainer {
-  display: contents;
-}
+.remoteVideosContainer{ display: contents; }
 
-.remoteVideoWrapper {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16/9;
+/* Badges y estados */
+.roleLabel{
+  position:absolute;
+  top: 10px; left: 10px;
+  background:#fff;
+  color: var(--c-primary);
+  padding: 2px 12px;
   border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-}
-
-.remoteVideoWrapper video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  background: #1a1a1a;
-}
-
-.roleLabel {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 8px;
   font-size: 12px;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight:700;
+  box-shadow: 0 1px 4px rgba(102,126,234,0.10);
+  border:none;
+  letter-spacing:.1px;
 }
 
-.statusIndicator {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #52c41a;
-  border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+.statusIndicator{
+  position:absolute;
+  top: 7px; right: 7px;
+  width: 10px; height: 10px;
+  border-radius:50%;
+  background: var(--c-ok);
+  border: 1.5px solid #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.18);
+}
+.statusIndicator.disconnected{ background: var(--c-danger); }
+
+/* Mensajes */
+.errorMessage{
+  background: rgba(255,77,79,.9);
+  color:#fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  text-align:center;
+  font-weight:600;
+  font-size: 13px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.12);
+}
+.loadingMessage{
+  background: rgba(255,255,255,.9);
+  color: var(--c-primary);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  text-align:center;
+  font-weight:600;
+  font-size: 13px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.12);
 }
 
-.statusIndicator.disconnected {
-  background: #ff4d4f;
+/* ------------------ Controles de llamada ------------------ */
+.callControls{
+  display:flex;
+  gap: var(--space-2);
+  margin: 0 auto var(--space-2) auto;
+  padding: 8px 18px;
+  background:#fff;
+  border-radius: 24px;
+  box-shadow: var(--shadow-1);
+  position: fixed;                      /* visible siempre */
+  left: 50%;
+  bottom: clamp(8px, 3vh, 32px);
+  transform: translateX(-50%);
+  z-index: 100;
+  align-items:center;
+  max-width: 92vw;                      /* evita desbordes */
+  flex-wrap: wrap;
 }
 
-.errorMessage {
-  background: rgba(255, 77, 79, 0.9);
-  color: white;
-  padding: 16px 24px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  text-align: center;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.callControls button{
+  padding: 10px 18px;
+  border-radius: 20px; border:none;
+  font-weight:600; cursor:pointer;
+  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+  min-width: 90px;
+  font-size: 15px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  background:#f4f6fa;
+  color: var(--c-primary);
+}
+.callControls button:first-child,
+.callControls button:nth-child(2){
+  background: rgba(255,255,255,.9);
+  color: var(--c-primary);
+}
+.callControls button:first-child:hover,
+.callControls button:nth-child(2):hover{
+  background:#fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.2);
+}
+.callControls button:last-child{
+  background: var(--c-danger);
+  color:#fff;
+  font-weight:700;
+  box-shadow: 0 2px 8px rgba(255,77,79,.10);
+}
+.callControls button:last-child:hover{
+  background:#ff3333;
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(255,77,79,.18);
 }
 
-.loadingMessage {
-  background: rgba(255, 255, 255, 0.9);
-  color: #667eea;
-  padding: 16px 24px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  text-align: center;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+/* ------------------ Estados de micro/cámara ------------------ */
+.cameraOff::after{
+  content:'📷';
+  position:absolute; inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px; opacity:.7;
+}
+.micOff::before{
+  content:'🔇';
+  position:absolute; bottom:12px; right:12px;
+  font-size:20px; z-index:10;
 }
 
-
-@media (max-width: 1024px) {
-  .videoContainer {
-    padding: 16px;
-  }
-  
-  .videoGrid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-    max-width: 100%;
-  }
-  
-  .videoContainer h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
+/* ------------------ Animaciones / Accesibilidad ------------------ */
+@keyframes fadeIn{
+  from{ opacity:0; transform: translateY(20px); }
+  to{ opacity:1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce){
+  .localVideo, .remoteVideoWrapper, .infoCard{ animation: none; }
+  .callControls button{ transition: none; }
 }
 
-@media (max-width: 768px) {
-  .videoContainer {
-    padding: 12px;
+/* =========================================================
+   Breakpoints unificados (mobile-first)
+   ========================================================= */
+
+/* >= 480px: mejora densidad, 4:3 en video */
+@media (min-width: 480px){
+  .videoGrid{
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-2);
   }
-  
-  .videoContainer h2 {
-    font-size: 20px;
-    margin-bottom: 16px;
-  }
-  
-  .callControls {
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-  
-  .callControls button {
-    padding: 10px 16px;
-    min-width: 120px;
-    font-size: 13px;
-  }
-  
-  .videoGrid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .localVideo,
-  .remoteVideoWrapper {
-    aspect-ratio: 4/3;
-  }
-  
-  .roleLabel {
-    font-size: 11px;
-    padding: 4px 8px;
-    top: 8px;
-    left: 8px;
-  }
-  
-  .statusIndicator {
-    width: 10px;
-    height: 10px;
-    top: 8px;
-    right: 8px;
-  }
+  .localVideo, .remoteVideoWrapper{ aspect-ratio: 4 / 3; }
+  .callControls{ gap: var(--space-2); }
+  .callControls button{ min-width: 120px; font-size: 14px; }
 }
 
-@media (max-width: 480px) {
-  .videoContainer {
-    padding: 8px;
-    min-height: 100vh;
+/* >= 768px: rejilla más cómoda, paddings */
+@media (min-width: 768px){
+  .videoContainer{ padding: var(--space-2); }
+  .videoGrid{
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-2);
   }
-  
-  .videoContainer h2 {
-    font-size: 18px;
-    margin-bottom: 12px;
-  }
-  
-  .callControls {
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    max-width: 300px;
-    margin-bottom: 20px;
-  }
-  
-  .callControls button {
-    width: 100%;
-    min-width: unset;
-    padding: 12px 16px;
-    font-size: 14px;
-  }
-  
-  .videoGrid {
-    gap: 12px;
-    width: 100%;
-  }
-  
-  .localVideo,
-  .remoteVideoWrapper {
-    aspect-ratio: 1/1;
-    border-radius: 12px;
-  }
-  
-  .errorMessage,
-  .loadingMessage {
-    padding: 12px 16px;
-    font-size: 14px;
+  .videoContainer h2{
+    font-size: clamp(20px, 2.2vw, 24px);
+    margin-bottom: var(--space-2);
   }
 }
 
-
-@media (max-height: 500px) and (orientation: landscape) {
-  .videoContainer {
-    padding: 8px;
-  }
-  
-  .videoContainer h2 {
-    font-size: 16px;
-    margin-bottom: 8px;
-  }
-  
-  .callControls {
+/* >= 1024px: layout en dos columnas (videos izquierda, panel derecha) y 16:9 */
+@media (min-width: 1024px){
+  .mainLayout{
     flex-direction: row;
-    gap: 8px;
-    margin-bottom: 12px;
+    align-items: flex-start;
+    gap: 32px;
   }
-  
-  .callControls button {
-    padding: 8px 12px;
-    font-size: 12px;
-    min-width: 100px;
+  .sidePanel{
+    max-width: var(--panel-max);
+    align-self: flex-start;
   }
-  
-  .videoGrid {
+  .videoGrid{
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    min-height: 320px;
+  }
+  .localVideo, .remoteVideoWrapper{ aspect-ratio: 16 / 9; }
+}
+
+/* >= 1280px: aire extra */
+@media (min-width: 1280px){
+  .mainLayout{ gap: 36px; }
+  .videoGrid{ gap: 24px; }
+}
+
+/* Altura baja en landscape: evita superposición de controles */
+@media (max-height: 500px) and (orientation: landscape){
+  .videoContainer{ padding: var(--space-1); }
+  .videoContainer h2{ font-size: 16px; margin-bottom: var(--space-1); }
+  .callControls{
+    position: static;                   /* deja de ser fijo para que no tape */
+    transform: none;
+    margin: 0 auto var(--space-1) auto;
+  }
+  .videoGrid{
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 8px;
+    gap: var(--space-1);
     max-height: 60vh;
   }
-  
-  .localVideo,
-  .remoteVideoWrapper {
-    aspect-ratio: 16/9;
-  }
-  
-  .roleLabel {
-    font-size: 10px;
-    padding: 2px 6px;
-  }
+  .localVideo, .remoteVideoWrapper{ aspect-ratio: 16 / 9; }
 }
 
-
-@media (max-width: 320px) {
-  .videoContainer {
-    padding: 4px;
-  }
-  
-  .videoContainer h2 {
-    font-size: 16px;
-  }
-  
-  .callControls button {
-    padding: 10px 12px;
-    font-size: 12px;
-  }
-  
-  .videoGrid {
-    gap: 8px;
-  }
-  
-  .localVideo,
-  .remoteVideoWrapper {
-    border-radius: 8px;
+/* Muy pequeño (<=320px): refuerza radios y densidad */
+@media (max-width: 320px){
+  .videoContainer{ padding: 4px; }
+  .videoContainer h2{ font-size: 16px; }
+  .videoGrid{ gap: var(--space-1); }
+  .localVideo, .remoteVideoWrapper{
+    border-radius: var(--radius-s);
     border-width: 2px;
   }
 }
 
-/* Animaciones */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.localVideo,
-.remoteVideoWrapper {
-  animation: fadeIn 0.5s ease-out;
-}
-
-
-.cameraOff::after {
-  content: '📷';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 48px;
-  opacity: 0.7;
-}
-
-.micOff::before {
-  content: '🔇';
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  font-size: 20px;
-  z-index: 10;
-}
-
-
-@media (hover: hover) {
-  .localVideo:hover,
-  .remoteVideoWrapper:hover {
+/* Hover sólo en dispositivos con puntero preciso */
+@media (hover: hover){
+  .localVideo:hover, .remoteVideoWrapper:hover{
     transform: scale(1.02);
-    transition: transform 0.3s ease;
+    transition: transform .3s ease;
   }
 }

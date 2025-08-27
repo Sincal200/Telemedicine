@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Video.module.css';
 import consultaService from '../services/consultaService';
@@ -35,9 +36,22 @@ const processIceQueue = async (pc, queue) => {
 const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   // --- Estado para cita y formulario médico ---
   const [cita, setCita] = useState(null);
-  const [formMedico, setFormMedico] = useState({ diagnostico_principal: '', tratamiento: '', receta_medica: '' });
+  const [formMedico, setFormMedico] = useState({
+    diagnostico_principal: '',
+    diagnosticos_secundarios: '',
+    tratamiento: '',
+    observaciones: '',
+    receta_medica: '',
+    examenes_solicitados: '',
+    proxima_cita_recomendada: '',
+    duracion_minutos: '',
+    requiere_seguimiento: false,
+    fecha_seguimiento: ''
+  });
   const [medicoLoading, setMedicoLoading] = useState(false);
   const [consulta, setConsulta] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [pacienteStream, setPacienteStream] = useState(null);
 
   // Obtener datos de la cita al entrar a la sala
   useEffect(() => {
@@ -63,11 +77,29 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
             if (consultaData) {
               setFormMedico({
                 diagnostico_principal: consultaData.diagnostico_principal || '',
+                diagnosticos_secundarios: consultaData.diagnosticos_secundarios || '',
                 tratamiento: consultaData.tratamiento || '',
-                receta_medica: consultaData.receta_medica || ''
+                observaciones: consultaData.observaciones || '',
+                receta_medica: consultaData.receta_medica || '',
+                examenes_solicitados: consultaData.examenes_solicitados || '',
+                proxima_cita_recomendada: consultaData.proxima_cita_recomendada || '',
+                duracion_minutos: consultaData.duracion_minutos || '',
+                requiere_seguimiento: consultaData.requiere_seguimiento || false,
+                fecha_seguimiento: consultaData.fecha_seguimiento || ''
               });
             } else {
-              setFormMedico({ diagnostico_principal: '', tratamiento: '', receta_medica: '' });
+              setFormMedico({
+                diagnostico_principal: '',
+                diagnosticos_secundarios: '',
+                tratamiento: '',
+                observaciones: '',
+                receta_medica: '',
+                examenes_solicitados: '',
+                proxima_cita_recomendada: '',
+                duracion_minutos: '',
+                requiere_seguimiento: false,
+                fecha_seguimiento: ''
+              });
             }
           } catch (e) {
             setConsulta(null);
@@ -88,20 +120,26 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     setMedicoLoading(true);
     try {
       let consultaGuardada = null;
+      const payload = {
+        diagnostico_principal: formMedico.diagnostico_principal,
+        diagnosticos_secundarios: formMedico.diagnosticos_secundarios,
+        tratamiento: formMedico.tratamiento,
+        observaciones: formMedico.observaciones,
+        receta_medica: formMedico.receta_medica,
+        examenes_solicitados: formMedico.examenes_solicitados,
+        proxima_cita_recomendada: formMedico.proxima_cita_recomendada,
+        duracion_minutos: formMedico.duracion_minutos,
+        requiere_seguimiento: formMedico.requiere_seguimiento,
+        fecha_seguimiento: formMedico.fecha_seguimiento
+      };
       if (consulta && consulta.idConsulta) {
         // Actualizar consulta existente
-        consultaGuardada = await consultaService.actualizarConsulta(consulta.idConsulta, {
-          diagnostico_principal: formMedico.diagnostico_principal,
-          tratamiento: formMedico.tratamiento,
-          receta_medica: formMedico.receta_medica
-        });
+        consultaGuardada = await consultaService.actualizarConsulta(consulta.idConsulta, payload);
       } else {
         // Crear nueva consulta
         consultaGuardada = await consultaService.crearConsulta({
           cita_id: cita.idCita,
-          diagnostico_principal: formMedico.diagnostico_principal,
-          tratamiento: formMedico.tratamiento,
-          receta_medica: formMedico.receta_medica
+          ...payload
         });
       }
       setConsulta(consultaGuardada);
@@ -233,6 +271,14 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         remoteVideosRef.current[remoteUserId].srcObject = event.streams[0];
         setIsCallInProgress(true);
         setIsLoading(false);
+      }
+
+      // Si el usuario remoto es paciente, guardar su stream para PiP
+      const paciente = participants.find(
+        p => p.userId === remoteUserId && p.userRole !== 'doctor'
+      );
+      if (paciente) {
+        setPacienteStream(event.streams[0]);
       }
     };
 
@@ -659,19 +705,26 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
 
   const toggleAudio = () => {
     if (localStreamRef.current) {
-      const audioTrack = localStreamRef.current.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsAudioEnabled(audioTrack.enabled);
+      const audioTracks = localStreamRef.current.getAudioTracks();
+      if (audioTracks.length === 0) {
+        setError('No se detectó micrófono o no se otorgaron permisos de audio.');
+        setIsAudioEnabled(false);
+        return;
+      }
+      const audioTrack = audioTracks[0];
+      audioTrack.enabled = !audioTrack.enabled;
+      setIsAudioEnabled(audioTrack.enabled);
 
-        if (localVideoRef.current) {
-          if (audioTrack.enabled) {
-            localVideoRef.current.parentElement.classList.remove(styles.micOff);
-          } else {
-            localVideoRef.current.parentElement.classList.add(styles.micOff);
-          }
+      if (localVideoRef.current) {
+        if (audioTrack.enabled) {
+          localVideoRef.current.parentElement.classList.remove(styles.micOff);
+        } else {
+          localVideoRef.current.parentElement.classList.add(styles.micOff);
         }
       }
+    } else {
+      setError('No se detectó micrófono.');
+      setIsAudioEnabled(false);
     }
   };
 
@@ -706,50 +759,139 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         <div className={styles.loadingMessage}>Conectando a la sala...</div>
       )}
 
-      {/* Bloque informativo de pre-check-in para el doctor */}
-      {userRole === 'doctor' && cita && (
-        (cita.motivo_consulta || cita.sintomas || cita.notas_paciente) && (
-          <div style={{ margin: '16px 0', background: '#f6ffed', padding: 12, borderRadius: 6 }}>
-            <strong>Pre-check-in del paciente:</strong>
-            {cita.motivo_consulta && <div><b>Motivo:</b> {cita.motivo_consulta}</div>}
-            {cita.sintomas && <div><b>Síntomas:</b> {cita.sintomas}</div>}
-            {cita.notas_paciente && <div><b>Notas:</b> {cita.notas_paciente}</div>}
+      <div className={userRole === 'doctor' ? styles.mainLayout : ''}>
+        <div className={styles.videoGrid}>
+          <div className={`${styles.localVideo} ${!isCameraEnabled ? styles.cameraOff : ''} ${!isAudioEnabled ? styles.micOff : ''}`}>
+            <video ref={localVideoRef} autoPlay muted playsInline />
+            <div className={styles.roleLabel}>
+              {userRole === 'doctor' ? 'Doctor' : 'Paciente'} (Tú)
+            </div>
+            <div className={`${styles.statusIndicator} ${isConnectedToServer ? '' : styles.disconnected}`}></div>
           </div>
-        )
-      )}
-
-      {/* Formulario para ingresar información médica (solo doctor) */}
-      {userRole === 'doctor' && cita && (
-        <div style={{ margin: '16px 0', background: '#e6f7ff', padding: 12, borderRadius: 6 }}>
-          <strong>Registrar información médica:</strong>
-          <div style={{ marginTop: 8 }}>
-            <label>Diagnóstico:</label>
-            <textarea
-              value={formMedico.diagnostico_principal}
-              onChange={e => setFormMedico(f => ({ ...f, diagnostico_principal: e.target.value }))}
-              rows={2}
-              style={{ width: '100%', marginBottom: 8 }}
-            />
-            <label>Tratamiento:</label>
-            <textarea
-              value={formMedico.tratamiento}
-              onChange={e => setFormMedico(f => ({ ...f, tratamiento: e.target.value }))}
-              rows={2}
-              style={{ width: '100%', marginBottom: 8 }}
-            />
-            <label>Receta:</label>
-            <textarea
-              value={formMedico.receta_medica}
-              onChange={e => setFormMedico(f => ({ ...f, receta_medica: e.target.value }))}
-              rows={2}
-              style={{ width: '100%', marginBottom: 8 }}
-            />
-            <button onClick={guardarInfoMedica} disabled={medicoLoading} style={{ marginTop: 8 }}>
-              {medicoLoading ? 'Guardando...' : 'Guardar información'}
-            </button>
+          <div id="remote-videos-container" className={styles.remoteVideosContainer}>
+            {/* Videos remotos */}
           </div>
         </div>
-      )}
+
+        {/* Solo el doctor ve el botón para abrir el drawer y el pre-checkin */}
+        {userRole === 'doctor' && (
+          <>
+            {cita && (cita.motivo_consulta || cita.sintomas || cita.notas_paciente) && (
+              <div className={styles.infoCard + ' ' + styles.preCheckinCard}>
+                <div className={styles.infoCardTitle}>Pre-check-in del paciente</div>
+                <div className={styles.infoCardContent}>
+                  {cita.motivo_consulta && <div><b>Motivo:</b> {cita.motivo_consulta}</div>}
+                  {cita.sintomas && <div><b>Síntomas:</b> {cita.sintomas}</div>}
+                  {cita.notas_paciente && <div><b>Notas:</b> {cita.notas_paciente}</div>}
+                </div>
+              </div>
+            )}
+            <Dialog.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
+              <Dialog.Trigger asChild>
+                <button className={styles.openDrawerButton} type="button">
+                  Registrar información médica
+                </button>
+              </Dialog.Trigger>
+              <Dialog.Portal>
+                <Dialog.Overlay className={styles.drawerOverlay} />
+                <Dialog.Content className={styles.drawerContent}>
+                  <Dialog.Title className={styles.drawerTitle}>Registrar información médica</Dialog.Title>
+                  <form className={styles.medicalForm} onSubmit={e => { e.preventDefault(); guardarInfoMedica(); }}>
+                    <label className={styles.formLabel}>Diagnóstico principal</label>
+                    <textarea
+                      className={styles.formTextarea}
+                      value={formMedico.diagnostico_principal}
+                      onChange={e => setFormMedico(f => ({ ...f, diagnostico_principal: e.target.value }))}
+                      rows={2}
+                      placeholder="Escribe el diagnóstico principal..."
+                    />
+                    <label className={styles.formLabel}>Diagnósticos secundarios</label>
+                    <textarea
+                      className={styles.formTextarea}
+                      value={formMedico.diagnosticos_secundarios}
+                      onChange={e => setFormMedico(f => ({ ...f, diagnosticos_secundarios: e.target.value }))}
+                      rows={2}
+                      placeholder="Diagnósticos adicionales..."
+                    />
+                    <label className={styles.formLabel}>Tratamiento</label>
+                    <textarea
+                      className={styles.formTextarea}
+                      value={formMedico.tratamiento}
+                      onChange={e => setFormMedico(f => ({ ...f, tratamiento: e.target.value }))}
+                      rows={2}
+                      placeholder="Describe el tratamiento..."
+                    />
+                    <label className={styles.formLabel}>Observaciones</label>
+                    <textarea
+                      className={styles.formTextarea}
+                      value={formMedico.observaciones}
+                      onChange={e => setFormMedico(f => ({ ...f, observaciones: e.target.value }))}
+                      rows={2}
+                      placeholder="Observaciones adicionales..."
+                    />
+                    <label className={styles.formLabel}>Receta médica</label>
+                    <textarea
+                      className={styles.formTextarea}
+                      value={formMedico.receta_medica}
+                      onChange={e => setFormMedico(f => ({ ...f, receta_medica: e.target.value }))}
+                      rows={2}
+                      placeholder="Indica la receta médica..."
+                    />
+                    <label className={styles.formLabel}>Exámenes solicitados</label>
+                    <textarea
+                      className={styles.formTextarea}
+                      value={formMedico.examenes_solicitados}
+                      onChange={e => setFormMedico(f => ({ ...f, examenes_solicitados: e.target.value }))}
+                      rows={2}
+                      placeholder="Exámenes o estudios a solicitar..."
+                    />
+                    <label className={styles.formLabel}>Próxima cita recomendada</label>
+                    <input
+                      className={styles.formInput}
+                      type="date"
+                      value={formMedico.proxima_cita_recomendada}
+                      onChange={e => setFormMedico(f => ({ ...f, proxima_cita_recomendada: e.target.value }))}
+                    />
+                    <label className={styles.formLabel}>Duración (minutos)</label>
+                    <input
+                      className={styles.formInput}
+                      type="number"
+                      min="0"
+                      value={formMedico.duracion_minutos}
+                      onChange={e => setFormMedico(f => ({ ...f, duracion_minutos: e.target.value }))}
+                      placeholder="Duración de la consulta"
+                    />
+                    <label className={styles.formLabel}>¿Requiere seguimiento?</label>
+                    <input
+                      className={styles.formCheckbox}
+                      type="checkbox"
+                      checked={formMedico.requiere_seguimiento}
+                      onChange={e => setFormMedico(f => ({ ...f, requiere_seguimiento: e.target.checked }))}
+                    />
+                    <label className={styles.formLabel}>Fecha de seguimiento</label>
+                    <input
+                      className={styles.formInput}
+                      type="date"
+                      value={formMedico.fecha_seguimiento}
+                      onChange={e => setFormMedico(f => ({ ...f, fecha_seguimiento: e.target.value }))}
+                    />
+                    <button type="submit" className={styles.saveButton} disabled={medicoLoading}>
+                      {medicoLoading ? 'Guardando...' : 'Guardar información'}
+                    </button>
+                  </form>
+                  <Dialog.Close asChild>
+                    <button className={styles.closeDrawerButton} type="button">Cerrar</button>
+                  </Dialog.Close>
+                  {/**
+                   * Mini video PiP deshabilitado temporalmente por problemas de transferencia de stream remoto.
+                   * Aquí solo se muestra el formulario médico en el drawer.
+                   */}
+                </Dialog.Content>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </>
+        )}
+      </div>
 
       <div className={styles.callControls}>
         <button onClick={toggleCamera}>
@@ -761,20 +903,6 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         <button onClick={leaveRoom}>
           📞 Salir de la Sala
         </button>
-      </div>
-
-      <div className={styles.videoGrid}>
-        <div className={`${styles.localVideo} ${!isCameraEnabled ? styles.cameraOff : ''} ${!isAudioEnabled ? styles.micOff : ''}`}>
-          <video ref={localVideoRef} autoPlay muted playsInline />
-          <div className={styles.roleLabel}>
-            {userRole === 'doctor' ? 'Doctor' : 'Paciente'} (Tú)
-          </div>
-          <div className={`${styles.statusIndicator} ${isConnectedToServer ? '' : styles.disconnected}`}></div>
-        </div>
-
-        <div id="remote-videos-container" className={styles.remoteVideosContainer}>
-          {/* Videos remotos */}
-        </div>
       </div>
     </div>
   );
