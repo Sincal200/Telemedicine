@@ -32,7 +32,39 @@ const crudController = (Model) => ({
   },
   create: async (req, res, next) => {
     try {
-      const newItem = await Model.create(req.body);
+      let body = { ...req.body };
+      const pkField = Model.primaryKeyAttribute || 'id';
+      // Si el campo primario no viene en el body, generarlo automáticamente
+      if ((body[pkField] === undefined || body[pkField] === null)) {
+        // Detectar tipo INTEGER (solo para modelos con clave primaria numérica)
+        const attr = Model.rawAttributes[pkField];
+        if (attr && (attr.type.key === 'INTEGER' || attr.type.key === 'BIGINT')) {
+          // Generar un número único de máximo 10 dígitos
+          // Ejemplo: 1XXXXXXX (timestamp en segundos + random de 3 dígitos)
+          const base = Math.floor(Date.now() / 1000); // timestamp en segundos (10 dígitos en 2025)
+          const rand = Math.floor(Math.random() * 1000); // 3 dígitos
+          // Si base ya tiene 10 dígitos, úsalo tal cual, si no, concatena
+          let idNum = base;
+          if (String(base).length < 10) {
+            idNum = Number(String(base) + String(rand).padStart(3, '0')).toString().slice(0, 10);
+          }
+          body[pkField] = Number(idNum);
+        } else {
+          // Si no es numérico, fallback a UUID string
+          import('uuid').then(({ v4 }) => {
+            body[pkField] = v4();
+            Model.create(body).then(newItem => {
+              res.status(201).json({
+                success: true,
+                data: newItem,
+                message: 'Creado exitosamente'
+              });
+            }).catch(error => next(error));
+          });
+          return;
+        }
+      }
+      const newItem = await Model.create(body);
       res.status(201).json({
         success: true,
         data: newItem,

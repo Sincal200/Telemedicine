@@ -128,7 +128,8 @@ const agendaService = {
     // Usar duración específica del médico si está configurada
     const duracion = disponibilidad.duracion_consulta || duracionCita;
 
-    for (let minutos = minutosInicio; minutos + duracion <= minutosFin; minutos += duracion) {
+  const bufferMinutos = 5; // Buffer entre citas
+  for (let minutos = minutosInicio; minutos + duracion <= minutosFin; minutos += (duracion + bufferMinutos)) {
       const horas = Math.floor(minutos / 60);
       const mins = minutos % 60;
       const horaSlot = `${horas.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
