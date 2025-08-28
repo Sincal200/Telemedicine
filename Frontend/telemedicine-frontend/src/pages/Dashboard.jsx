@@ -90,6 +90,7 @@ function Dashboard() {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Mi Perfil',
+      onClick: () => navigate('/perfil'),
     },
     {
       key: 'settings',
