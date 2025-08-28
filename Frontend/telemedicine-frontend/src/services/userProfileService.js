@@ -12,6 +12,29 @@ class UserProfileService {
   }
 
   /**
+   * Actualiza los datos de la persona
+   * @param {number} idPersona
+   * @param {object} data
+   * @returns {Promise<object>}
+   */
+
+  async actualizarPersona(idPersona, data) {
+    const response = await fetch(this.buildUrl(`/persona/${idPersona}`), {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error actualizando persona');
+    }
+    const resData = await response.json();
+    // Actualizar cache local si es necesario
+    this.limpiarCache();
+    return resData.data;
+  }
+
+  /**
    * Obtiene el token de autenticación
    */
   getAuthToken() {
