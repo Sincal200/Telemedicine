@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Video.module.css';
 import consultaService from '../services/consultaService';
+import expedienteService from '../services/expedienteService';
 
 const stunServers = {
   iceServers: [
@@ -51,11 +52,13 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   const [medicoLoading, setMedicoLoading] = useState(false);
   const [consulta, setConsulta] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [expediente, setExpediente] = useState(null);
+  const [expedienteLoading, setExpedienteLoading] = useState(false);
   const [pacienteStream, setPacienteStream] = useState(null);
 
   // Obtener datos de la cita al entrar a la sala
   useEffect(() => {
-    const fetchCitaYConsulta = async () => {
+    const fetchCitaYConsultaYExpediente = async () => {
       try {
         // Buscar cita por roomId
         const res = await import('../services/citaService');
@@ -83,7 +86,6 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                 receta_medica: consultaData.receta_medica || '',
                 examenes_solicitados: consultaData.examenes_solicitados || '',
                 proxima_cita_recomendada: consultaData.proxima_cita_recomendada || '',
-                // duracion_minutos eliminado, ahora se calcula automáticamente
                 requiere_seguimiento: consultaData.requiere_seguimiento || false,
                 fecha_seguimiento: consultaData.fecha_seguimiento || ''
               });
@@ -96,7 +98,6 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                 receta_medica: '',
                 examenes_solicitados: '',
                 proxima_cita_recomendada: '',
-                // duracion_minutos eliminado, ahora se calcula automáticamente
                 requiere_seguimiento: false,
                 fecha_seguimiento: ''
               });
@@ -105,13 +106,26 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
             setConsulta(null);
             setFormMedico({ diagnostico_principal: '', tratamiento: '', receta_medica: '' });
           }
+          // Obtener expediente clínico completo del paciente
+          if (citaData.paciente_id) {
+            setExpedienteLoading(true);
+            try {
+              const expedienteData = await expedienteService.obtenerExpedientePorPacienteId(citaData.paciente_id);
+              setExpediente(expedienteData);
+            } catch (e) {
+              setExpediente(null);
+            } finally {
+              setExpedienteLoading(false);
+            }
+          }
         }
       } catch (err) {
         setCita(null);
         setConsulta(null);
+        setExpediente(null);
       }
     };
-    fetchCitaYConsulta();
+    fetchCitaYConsultaYExpediente();
   }, [roomId, userId, userRole]);
 
   // Guardar información médica en Consulta
@@ -829,6 +843,40 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                 </div>
               </div>
             )}
+            {/* Expediente clínico del paciente */}
+            <div className={styles.infoCard + ' ' + styles.expedienteCard}>
+              <div className={styles.infoCardTitle}>Expediente Clínico</div>
+              <div className={styles.infoCardContent}>
+                {expedienteLoading && <div>Cargando expediente...</div>}
+                {!expedienteLoading && expediente && (
+                  <>
+                    <div><b>Paciente:</b> {expediente.paciente?.persona?.nombres} {expediente.paciente?.persona?.apellidos}</div>
+                    <div><b>Número de expediente:</b> {expediente.paciente?.numero_expediente}</div>
+                    <div><b>Tipo de sangre:</b> {expediente.paciente?.tipo_sangre}</div>
+                    <div><b>Alergias:</b> {expediente.paciente?.alergias}</div>
+                    <div><b>Enfermedades crónicas:</b> {expediente.paciente?.enfermedades_cronicas}</div>
+                    <div><b>Medicamentos actuales:</b> {expediente.paciente?.medicamentos_actuales}</div>
+                    <div style={{marginTop:'8px'}}><b>Consultas previas:</b></div>
+                    {expediente.citas && expediente.citas.length > 0 ? (
+                      <ul style={{maxHeight:'120px',overflowY:'auto',fontSize:'13px'}}>
+                        {expediente.citas.map((cita, idx) => (
+                          <li key={cita.idCita}>
+                            <b>{cita.fecha}</b> - {cita.Consultum?.diagnostico_principal || 'Sin diagnóstico'}
+                            {cita.Consultum?.SignosVitales && cita.Consultum.SignosVitales.length > 0 && (
+                              <>
+                                <br/>
+                                <span style={{fontSize:'12px'}}>Signos: {cita.Consultum.SignosVitales.map(sv => `T: ${sv.temperatura}°C, FC: ${sv.frecuencia_cardiaca}, PA: ${sv.presion_sistolica}/${sv.presion_diastolica}`).join(' | ')}</span>
+                              </>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : <div>No hay consultas previas.</div>}
+                  </>
+                )}
+                {!expedienteLoading && !expediente && <div>No se pudo cargar el expediente.</div>}
+              </div>
+            </div>
             <Dialog.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
               <Dialog.Trigger asChild>
                 <button className={styles.openDrawerButton} type="button">
@@ -895,7 +943,6 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                       value={formMedico.proxima_cita_recomendada}
                       onChange={e => setFormMedico(f => ({ ...f, proxima_cita_recomendada: e.target.value }))}
                     />
-                    {/* Campo de duración eliminado, ahora se calcula automáticamente */}
                     <label className={styles.formLabel}>¿Requiere seguimiento?</label>
                     <input
                       className={styles.formCheckbox}
@@ -917,10 +964,6 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                   <Dialog.Close asChild>
                     <button className={styles.closeDrawerButton} type="button">Cerrar</button>
                   </Dialog.Close>
-                  {/**
-                   * Mini video PiP deshabilitado temporalmente por problemas de transferencia de stream remoto.
-                   * Aquí solo se muestra el formulario médico en el drawer.
-                   */}
                 </Dialog.Content>
               </Dialog.Portal>
             </Dialog.Root>
