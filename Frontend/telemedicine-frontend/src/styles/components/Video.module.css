@@ -1,4 +1,4 @@
-/* ================= Drawer lateral y PiP ================= */
+/* ================= Drawer lateral y PiP (puedes dejarlo para futuro bottom sheet) ================= */
 .drawerOverlay {
   background: rgba(0,0,0,0.32);
   position: fixed;
@@ -6,7 +6,6 @@
   z-index: 2000;
   animation: fadeIn .3s cubic-bezier(.4,0,.2,1);
 }
-
 .drawerContent {
   position: fixed;
   top: 0;
@@ -24,7 +23,6 @@
   overflow-y: auto;
   animation: fadeIn .4s cubic-bezier(.4,0,.2,1);
 }
-
 .drawerTitle {
   font-size: 1.3rem;
   font-weight: 700;
@@ -32,7 +30,6 @@
   margin-bottom: var(--space-2);
   text-align: left;
 }
-
 .openDrawerButton {
   background: linear-gradient(90deg, var(--c-primary) 60%, var(--c-primary-2) 100%);
   color: #fff;
@@ -47,11 +44,7 @@
   margin-bottom: var(--space-2);
   transition: background .2s, transform .2s;
 }
-.openDrawerButton:hover {
-  background: linear-gradient(90deg, var(--c-primary-2) 60%, var(--c-primary) 100%);
-  transform: translateY(-2px) scale(1.03);
-}
-
+.openDrawerButton:hover { background: linear-gradient(90deg, var(--c-primary-2) 60%, var(--c-primary) 100%); transform: translateY(-2px) scale(1.03); }
 .closeDrawerButton {
   margin-top: var(--space-2);
   background: #fff;
@@ -66,46 +59,24 @@
   width: 100%;
   transition: background .2s, color .2s;
 }
-.closeDrawerButton:hover {
-  background: var(--c-primary-2);
-  color: #fff;
-}
+.closeDrawerButton:hover { background: var(--c-primary-2); color: #fff; }
 
 .miniVideoPiP {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 1.5rem;
-  width: 180px;
-  height: 110px;
-  background: #222;
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(102,126,234,0.18);
-  z-index: 2200;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
-  overflow: hidden;
-  pointer-events: none;
+  position: fixed; right: 1.5rem; bottom: 1.5rem; width: 180px; height: 110px;
+  background: #222; border-radius: 16px; box-shadow: 0 4px 24px rgba(102,126,234,0.18);
+  z-index: 2200; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;
+  overflow: hidden; pointer-events: none;
 }
-.miniVideo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 16px;
-  background: #111;
-}
+.miniVideo { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; background: #111; }
+
 /* =========================================================
    Telemed – Layout Responsive (mobile-first, unificado)
    ========================================================= */
-
-/* Reset y variables de escala */
 *,
 *::before,
 *::after { box-sizing: border-box; }
 
 :root{
-  /* Espaciados y radio fluidos */
   --space-1: clamp(6px, 0.8vw, 10px);
   --space-2: clamp(10px, 1.2vw, 14px);
   --space-3: clamp(12px, 1.6vw, 18px);
@@ -114,14 +85,12 @@
   --radius-m: clamp(10px, 1.2vw, 14px);
   --radius-l: clamp(12px, 1.6vw, 18px);
 
-  /* Anchos y sombras */
   --content-pad-x: clamp(8px, 2vw, 32px);
   --panel-max: 340px;
   --card-max: 640px;
   --shadow-1: 0 2px 12px rgba(102,126,234,0.10);
   --shadow-2: 0 6px 32px rgba(102,126,234,0.10), 0 1.5px 8px rgba(118,75,162,0.08);
 
-  /* Colores */
   --c-primary: #667eea;
   --c-primary-2: #764ba2;
   --c-ok: #52c41a;
@@ -131,399 +100,259 @@
   --c-stroke: #e6e6fa;
   --c-field-stroke: #d6d6f7;
   --c-field-bg: #f9f9ff;
+
+  /* Reserva vertical para que el dock no tape contenido */
+  --dock-reserved: 0px;
 }
 
-/* ------------------ Contenedor general ------------------ */
+/* ---------- Contenedor general ---------- */
 .videoContainer{
   min-height: 100vh;
   background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-2) 100%);
   padding: var(--space-3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
+  padding-bottom: max(var(--space-3), var(--dock-reserved));
+  display: flex; flex-direction: column; align-items: center; position: relative;
 }
-
 .videoContainer h2{
-  color:#fff;
-  text-align:center;
-  margin-bottom: var(--space-3);
-  font-weight:700;
-  font-size: clamp(18px, 3.2vw, 28px);
-  text-shadow: 0 2px 4px rgba(0,0,0,.3);
+  color:#fff; text-align:center; margin-bottom: var(--space-3);
+  font-weight:700; font-size: clamp(18px, 3.2vw, 28px); text-shadow: 0 2px 4px rgba(0,0,0,.3);
 }
 
-/* ------------------ Layout principal ------------------ */
+/* ---------- Layout principal ---------- */
 .mainLayout{
-  display:flex;
-  flex-direction: column;              /* mobile-first */
-  align-items: stretch;
-  justify-content: flex-start;
-  width: 100%;
-  max-width: 1200px;                   /* evita 100vw + scroll */
-  gap: var(--space-3);
-  margin: 0 auto;
-  padding-left: var(--content-pad-x);
-  padding-right: var(--content-pad-x);
+  display:flex; flex-direction: column;
+  align-items: stretch; justify-content: flex-start;
+  width: 100%; max-width: 1200px;
+  gap: var(--space-3); margin: 0 auto;
+  padding-left: var(--content-pad-x); padding-right: var(--content-pad-x);
 }
 
-/* Panel lateral */
+/* Panel lateral (rail) */
 .sidePanel{
-  display:flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  align-self: stretch;
-  overflow: visible;
+  display:flex; flex-direction: column; gap: var(--space-2);
+  width: 100%; max-width: 100%; margin: 0 auto;
+  align-self: stretch; overflow: visible;
 }
 
-/* ------------------ Tarjetas e inputs ------------------ */
+/* ---------- Tabs del rail ---------- */
+.tabs { display:flex; gap:8px; border-bottom:1px solid #e5e7eb; margin-bottom:10px; }
+.tab {
+  padding:8px 12px; border-radius:12px 12px 0 0; background:transparent; border:none; cursor:pointer;
+  font-weight:700; color: var(--c-primary-2); opacity:.6;
+}
+.tabActive { background: var(--c-field-bg); color:#111; opacity:1; }
+
+/* ---------- Tarjetas e inputs ---------- */
 .infoCard{
-  width: 100%;
-  max-width: var(--card-max);
-  margin: 0 auto var(--space-3) auto;
-  background: var(--c-card);
-  border-radius: var(--radius-l);
-  box-shadow: var(--shadow-2);
+  width: 100%; max-width: var(--card-max); margin: 0 auto var(--space-3) auto;
+  background: var(--c-card); border-radius: var(--radius-l); box-shadow: var(--shadow-2);
   padding: clamp(16px, 3vw, 32px);
-  display:flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  animation: fadeIn .6s cubic-bezier(.4,0,.2,1);
-  border: 1.5px solid var(--c-stroke);
+  display:flex; flex-direction: column; gap: var(--space-1);
+  animation: fadeIn .6s cubic-bezier(.4,0,.2,1); border: 1.5px solid var(--c-stroke);
 }
+.infoCardTitle{ font-size: clamp(18px, 1.8vw, 20px); font-weight: 700; color: var(--c-primary); margin-bottom: var(--space-1); letter-spacing: .5px; }
+.infoCardContent{ color: var(--c-ink); font-size: clamp(14px, 1.4vw, 15px); line-height: 1.6; }
 
-.infoCardTitle{
-  font-size: clamp(18px, 1.8vw, 20px);
-  font-weight: 700;
-  color: var(--c-primary);
-  margin-bottom: var(--space-1);
-  letter-spacing: .5px;
-}
+.preCheckinCard{ background: linear-gradient(120deg, #f6ffed 80%, #e6f7ff 100%); border-left: 5px solid var(--c-ok); }
+.medicalFormCard{ background: linear-gradient(120deg, #e6f7ff 80%, #f6ffed 100%); border-left: 5px solid var(--c-primary); }
 
-.infoCardContent{
-  color: var(--c-ink);
-  font-size: clamp(14px, 1.4vw, 15px);
-  line-height: 1.6;
-}
-
-.preCheckinCard{
-  background: linear-gradient(120deg, #f6ffed 80%, #e6f7ff 100%);
-  border-left: 5px solid var(--c-ok);
-}
-
-.medicalFormCard{
-  background: linear-gradient(120deg, #e6f7ff 80%, #f6ffed 100%);
-  border-left: 5px solid var(--c-primary);
-}
-
-.medicalForm{
-  display:flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-top: 4px;
-}
-
-.formLabel{
-  font-weight:600;
-  color: var(--c-primary-2);
-  margin-bottom: 2px;
-  font-size: 14px;
-}
-
+/* Form base */
+.medicalForm{ display:flex; flex-direction: column; gap: var(--space-1); margin-top: 4px; }
+.formLabel{ font-weight:600; color: var(--c-primary-2); margin-bottom: 2px; font-size: 14px; }
 .formTextarea{
-  border-radius: var(--radius-m);
-  border: 1.5px solid var(--c-field-stroke);
-  padding: 10px 12px;
-  font-size: 15px;
-  background: var(--c-field-bg);
-  resize: vertical;
-  min-height: 38px;
-  margin-bottom: 2px;
-  transition: border .2s, background .2s;
+  border-radius: var(--radius-m); border: 1.5px solid var(--c-field-stroke);
+  padding: 10px 12px; font-size: 15px; background: var(--c-field-bg);
+  resize: vertical; min-height: 38px; margin-bottom: 2px; transition: border .2s, background .2s;
 }
-.formTextarea:focus{
-  outline: none;
-  border-color: var(--c-primary);
-  background: #fff;
+.formTextarea:focus{ outline: none; border-color: var(--c-primary); background: #fff; }
+.formInput{
+  width:100%; border-radius: var(--radius-m); border: 1.5px solid var(--c-field-stroke);
+  padding: 10px 12px; font-size: 15px; background: var(--c-field-bg);
 }
-
+.formCheckbox{ transform: scale(1.1); }
 .saveButton{
   margin-top: var(--space-1);
   background: linear-gradient(90deg, var(--c-primary) 60%, var(--c-primary-2) 100%);
-  color:#fff;
-  border:none;
+  color:#fff; border:none; border-radius: var(--radius-m);
+  padding: 12px 0; font-weight:700; font-size: 16px;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.10); cursor:pointer; transition: background .2s, transform .2s;
+}
+.saveButton:disabled{ background:#b3b3cc; cursor:not-allowed; }
+.saveButton:not(:disabled):hover{ background: linear-gradient(90deg, var(--c-primary-2) 60%, var(--c-primary) 100%); transform: translateY(-2px) scale(1.03); }
+
+/* --- Acordeones para compactar el formulario --- */
+.collapseGroup {
+  border: 1.5px solid var(--c-field-stroke);
   border-radius: var(--radius-m);
-  padding: 12px 0;
-  font-weight:700;
-  font-size: 16px;
-  box-shadow: 0 2px 8px rgba(102,126,234,0.10);
-  cursor:pointer;
-  transition: background .2s, transform .2s;
-}
-.saveButton:disabled{
-  background:#b3b3cc; cursor:not-allowed;
-}
-.saveButton:not(:disabled):hover{
-  background: linear-gradient(90deg, var(--c-primary-2) 60%, var(--c-primary) 100%);
-  transform: translateY(-2px) scale(1.03);
-}
-
-/* ------------------ Videos ------------------ */
-.videoGrid{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* 1..n columnas fluidas */
-  justify-content: center;
-  align-items: end;
-  gap: var(--space-2);
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  min-height: 260px;
-}
-
-.localVideo,
-.remoteVideoWrapper{
-  position: relative;
-  width: 100%;                         /* grid maneja el ancho */
-  aspect-ratio: 1 / 1;                  /* móvil por defecto */
-  border-radius: var(--radius-l);
+  background: #fff;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(102,126,234,0.10);
-  border:none;
-  background:#fff;
-  min-width: 0;                         /* evita overflow en grid */
-  min-height: 140px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  animation: fadeIn .5s ease-out;
+}
+.collapseSummary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  font-weight: 700;
+  color: var(--c-primary-2);
+  background: var(--c-field-bg);
+  border-bottom: 1px solid var(--c-field-stroke);
+}
+.collapseSummary::-webkit-details-marker { display: none; }
+.collapseBody { padding: 10px 12px; display: grid; gap: var(--space-1); }
+
+/* En desktop: grid a 2 columnas para entradas cortas */
+@media (min-width: 1024px){
+  .medicalForm { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+  .fullRow { grid-column: 1 / -1; }
 }
 
-.localVideo video,
-.remoteVideoWrapper video{
-  width:100%;
-  height:100%;
-  object-fit: cover;
-  background:#1a1a1a;
+/* ---------- Videos ---------- */
+.videoGrid{
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  justify-content: center; align-items: end;
+  gap: var(--space-2); width: 100%; max-width: 100%; margin: 0 auto; min-height: 260px;
 }
-
+.localVideo, .remoteVideoWrapper{
+  position: relative; width: 100%; aspect-ratio: 1 / 1;
+  border-radius: var(--radius-l); overflow: hidden; box-shadow: 0 4px 24px rgba(102,126,234,0.10);
+  border:none; background:#fff; min-width: 0; min-height: 140px;
+  display:flex; align-items:center; justify-content:center; animation: fadeIn .5s ease-out;
+}
+.localVideo video, .remoteVideoWrapper video{ width:100%; height:100%; object-fit: cover; background:#1a1a1a; }
 .remoteVideosContainer{ display: contents; }
 
-/* Badges y estados */
+/* Badges / estados */
 .roleLabel{
-  position:absolute;
-  top: 10px; left: 10px;
-  background:#fff;
-  color: var(--c-primary);
-  padding: 2px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight:700;
-  box-shadow: 0 1px 4px rgba(102,126,234,0.10);
-  border:none;
-  letter-spacing:.1px;
+  position:absolute; top: 10px; left: 10px;
+  background:#fff; color: var(--c-primary); padding: 2px 12px; border-radius: 16px;
+  font-size: 12px; font-weight:700; box-shadow: 0 1px 4px rgba(102,126,234,0.10); border:none; letter-spacing:.1px;
 }
-
 .statusIndicator{
-  position:absolute;
-  top: 7px; right: 7px;
-  width: 10px; height: 10px;
-  border-radius:50%;
-  background: var(--c-ok);
-  border: 1.5px solid #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,.18);
+  position:absolute; top: 7px; right: 7px; width: 10px; height: 10px; border-radius:50%;
+  background: var(--c-ok); border: 1.5px solid #fff; box-shadow: 0 1px 2px rgba(0,0,0,.18);
 }
 .statusIndicator.disconnected{ background: var(--c-danger); }
 
 /* Mensajes */
 .errorMessage{
-  background: rgba(255,77,79,.9);
-  color:#fff;
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  text-align:center;
-  font-weight:600;
-  font-size: 13px;
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,77,79,.9); color:#fff; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px;
+  text-align:center; font-weight:600; font-size: 13px; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.12);
 }
 .loadingMessage{
-  background: rgba(255,255,255,.9);
-  color: var(--c-primary);
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  text-align:center;
-  font-weight:600;
-  font-size: 13px;
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.9); color: var(--c-primary); padding: 8px 12px; border-radius: 8px; margin-bottom: 8px;
+  text-align:center; font-weight:600; font-size: 13px; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.12);
 }
 
-/* ------------------ Controles de llamada ------------------ */
+/* ---------- Dock ---------- */
 .callControls{
-  display:flex;
-  gap: var(--space-2);
-  margin: 0 auto var(--space-2) auto;
-  padding: 8px 18px;
-  background:#fff;
-  border-radius: 24px;
-  box-shadow: var(--shadow-1);
-  position: fixed;                      /* visible siempre */
-  left: 50%;
-  bottom: clamp(8px, 3vh, 32px);
+  display:flex; gap: var(--space-2); margin: 0 auto var(--space-2) auto; padding: 8px 18px;
+  background:#fff; border-radius: 24px; box-shadow: var(--shadow-1);
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 8px));
   transform: translateX(-50%);
-  z-index: 100;
-  align-items:center;
-  max-width: 92vw;                      /* evita desbordes */
-  flex-wrap: wrap;
+  z-index: 100; align-items:center; max-width: 92vw; flex-wrap: wrap;
+}
+.callControls button{
+  padding: 10px 18px; border-radius: 20px; border:none; font-weight:600; cursor:pointer;
+  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+  min-width: 90px; font-size: 15px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  background:#f4f6fa; color: var(--c-primary);
 }
 
-.callControls button{
-  padding: 10px 18px;
-  border-radius: 20px; border:none;
-  font-weight:600; cursor:pointer;
-  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
-  min-width: 90px;
-  font-size: 15px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.08);
-  background:#f4f6fa;
-  color: var(--c-primary);
-}
-.callControls button:first-child,
-.callControls button:nth-child(2){
-  background: rgba(255,255,255,.9);
-  color: var(--c-primary);
-}
-.callControls button:first-child:hover,
-.callControls button:nth-child(2):hover{
-  background:#fff;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,.2);
-}
-.callControls button:last-child{
-  background: var(--c-danger);
-  color:#fff;
-  font-weight:700;
+/* Icono y etiqueta dentro de cada botón */
+.btnIcon{ font-size:18px; line-height: 0; }
+.btnLabel{ margin-left: 6px; }
+
+/* Botón rojo (Salir) y verde (Finalizar) */
+.leaveBtn{
+  background: var(--c-danger) !important; color:#fff; font-weight:700;
   box-shadow: 0 2px 8px rgba(255,77,79,.10);
 }
-.callControls button:last-child:hover{
-  background:#ff3333;
-  transform: translateY(-1px) scale(1.04);
-  box-shadow: 0 4px 16px rgba(255,77,79,.18);
-}
+.leaveBtn:hover{ background:#ff3333; transform: translateY(-1px) scale(1.04); box-shadow: 0 4px 16px rgba(255,77,79,.18); }
 
-/* ------------------ Estados de micro/cámara ------------------ */
+.callControls .saveButton{
+  background: var(--c-ok) !important; color:#fff; font-weight:700; padding: 10px 16px;
+}
+.callControls .saveButton:hover{ background:#3ab012 !important; }
+
+/* Modo compacto para móviles: botones icon-only y dock más pequeño */
+.compact{ gap: 8px; padding: 6px 10px; border-radius: 16px; }
+.compact button{ min-width: 44px; padding: 10px; font-size: 16px; }
+.compact .btnLabel{ display:none; }
+
+/* ---------- Estados mic/cámara ---------- */
 .cameraOff::after{
-  content:'📷';
-  position:absolute; inset: 50% auto auto 50%;
-  transform: translate(-50%, -50%);
-  font-size: 48px; opacity:.7;
+  content:'📷'; position:absolute; inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%); font-size: 48px; opacity:.7;
 }
 .micOff::before{
-  content:'🔇';
-  position:absolute; bottom:12px; right:12px;
-  font-size:20px; z-index:10;
+  content:'🔇'; position:absolute; bottom:12px; right:12px; font-size:20px; z-index:10;
 }
 
-/* ------------------ Animaciones / Accesibilidad ------------------ */
-@keyframes fadeIn{
-  from{ opacity:0; transform: translateY(20px); }
-  to{ opacity:1; transform: translateY(0); }
-}
+/* ---------- Animaciones / Accesibilidad ---------- */
+@keyframes fadeIn{ from{ opacity:0; transform: translateY(20px); } to{ opacity:1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce){
   .localVideo, .remoteVideoWrapper, .infoCard{ animation: none; }
   .callControls button{ transition: none; }
 }
 
-/* =========================================================
-   Breakpoints unificados (mobile-first)
-   ========================================================= */
-
-/* >= 480px: mejora densidad, 4:3 en video */
+/* ---------- Breakpoints ---------- */
+/* >= 480px */
 @media (min-width: 480px){
-  .videoGrid{
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--space-2);
-  }
+  .videoGrid{ grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-2); }
   .localVideo, .remoteVideoWrapper{ aspect-ratio: 4 / 3; }
   .callControls{ gap: var(--space-2); }
   .callControls button{ min-width: 120px; font-size: 14px; }
 }
-
-/* >= 768px: rejilla más cómoda, paddings */
+/* >= 768px */
 @media (min-width: 768px){
   .videoContainer{ padding: var(--space-2); }
-  .videoGrid{
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--space-2);
-  }
-  .videoContainer h2{
-    font-size: clamp(20px, 2.2vw, 24px);
-    margin-bottom: var(--space-2);
-  }
+  .videoGrid{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-2); }
+  .videoContainer h2{ font-size: clamp(20px, 2.2vw, 24px); margin-bottom: var(--space-2); }
 }
-
-/* >= 1024px: layout en dos columnas (videos izquierda, panel derecha) y 16:9 */
+/* >= 1024px: rail a la derecha, sticky; videos 16:9 */
 @media (min-width: 1024px){
-  .mainLayout{
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 32px;
-  }
-  .sidePanel{
-    max-width: var(--panel-max);
-    align-self: flex-start;
-  }
-  .videoGrid{
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    min-height: 320px;
-  }
+  .mainLayout{ flex-direction: row; align-items: flex-start; gap: 32px; }
+  .sidePanel{ max-width: var(--panel-max); align-self: flex-start; position: sticky; top: 16px; }
+  .videoGrid{ grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); min-height: 320px; }
   .localVideo, .remoteVideoWrapper{ aspect-ratio: 16 / 9; }
+  .videoContainer{ --dock-reserved: 0px; }
 }
 
-/* >= 1280px: aire extra */
-@media (min-width: 1280px){
-  .mainLayout{ gap: 36px; }
-  .videoGrid{ gap: 24px; }
+/* Reserva de espacio debajo del contenido para el dock en anchos chicos */
+@media (max-width: 1024px){
+  .videoContainer{ --dock-reserved: 120px; }
 }
-
-/* Altura baja en landscape: evita superposición de controles */
-@media (max-height: 500px) and (orientation: landscape){
-  .videoContainer{ padding: var(--space-1); }
-  .videoContainer h2{ font-size: 16px; margin-bottom: var(--space-1); }
+@media (max-width: 640px){
+  .videoContainer{ --dock-reserved: 108px; }
+  /* En móviles el dock deja de ser 'fixed' para NO tapar contenido */
   .callControls{
-    position: static;                   /* deja de ser fijo para que no tape */
+    position: sticky;
+    bottom: 8px;
+    left: auto;
     transform: none;
-    margin: 0 auto var(--space-1) auto;
+    margin-left: var(--content-pad-x);
+    margin-right: var(--content-pad-x);
+    width: calc(100% - (var(--content-pad-x) * 2));
   }
-  .videoGrid{
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--space-1);
-    max-height: 60vh;
-  }
+}
+
+/* Altura baja */
+@media (max-height: 500px) and (orientation: landscape){
+  .videoContainer{ padding: var(--space-1); --dock-reserved: 0px; }
+  .videoContainer h2{ font-size: 16px; margin-bottom: var(--space-1); }
+  .callControls{ position: static; transform: none; margin: 0 auto var(--space-1) auto; }
+  .videoGrid{ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-1); max-height: 60vh; }
   .localVideo, .remoteVideoWrapper{ aspect-ratio: 16 / 9; }
 }
 
-/* Muy pequeño (<=320px): refuerza radios y densidad */
+/* <=320px */
 @media (max-width: 320px){
   .videoContainer{ padding: 4px; }
   .videoContainer h2{ font-size: 16px; }
   .videoGrid{ gap: var(--space-1); }
-  .localVideo, .remoteVideoWrapper{
-    border-radius: var(--radius-s);
-    border-width: 2px;
-  }
+  .localVideo, .remoteVideoWrapper{ border-radius: var(--radius-s); border-width: 2px; }
 }
 
-/* Hover sólo en dispositivos con puntero preciso */
+/* Hover sólo con puntero preciso */
 @media (hover: hover){
-  .localVideo:hover, .remoteVideoWrapper:hover{
-    transform: scale(1.02);
-    transition: transform .3s ease;
-  }
+  .localVideo:hover, .remoteVideoWrapper:hover{ transform: scale(1.02); transition: transform .3s ease; }
 }
