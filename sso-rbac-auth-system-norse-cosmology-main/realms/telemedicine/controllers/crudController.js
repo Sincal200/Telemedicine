@@ -86,11 +86,41 @@ const crudController = (Model) => ({
     try {
       const pkField = Model.primaryKeyAttribute || 'id';
       const where = { [pkField]: req.params.id };
-      const [updated] = await Model.update(req.body, { where });
-      if (!updated) return res.status(404).json({ 
-        success: false,
-        error: 'No encontrado' 
-      });
+      console.log('UPDATE request for', Model.tableName, 'where:', where, 'body:', req.body);
+      let body = { ...req.body };
+      // Generar número de expediente si aplica (solo para Paciente)
+      if (Model.tableName === 'Paciente' && (!body.numero_expediente || body.numero_expediente === '')) {
+        const today = new Date();
+        const ymd = today.toISOString().slice(0,10).replace(/-/g, '');
+        body.numero_expediente = `P-${ymd}-${req.params.id}`;
+      }
+      const exists = await Model.findOne({ where });
+      console.log('Record found:', exists);
+      if (!exists) {
+        console.log('No record found for', where);
+        return res.status(404).json({ 
+          success: false,
+          error: 'No encontrado' 
+        });
+      }
+      const [updated] = await Model.update(body, { where });
+        if (!updated) {
+          // Si no se actualizó nada pero existe, devolver éxito con el registro actual
+          const currentItem = await Model.findOne({ where });
+          if (currentItem) {
+            return res.json({
+              success: true,
+              data: currentItem,
+              message: 'Actualizado exitosamente (sin cambios)'
+            });
+          } else {
+            console.log('No record updated for', where);
+            return res.status(404).json({ 
+              success: false,
+              error: 'No encontrado' 
+            });
+          }
+        }
       const updatedItem = await Model.findOne({ where });
       res.json({
         success: true,

@@ -261,6 +261,10 @@ class RegistroController {
             as: 'persona',
             include: [
               {
+                model: db.Direccion,
+                as: 'direccion',
+              },
+              {
                 model: db.Paciente,
                 as: 'Paciente',
                 required: false
