@@ -2,7 +2,7 @@ import Sequelize from 'sequelize';
 
 const SignosVitales = (sequelize, DataTypes) => {
   return sequelize.define('SignosVitales', {
-    idSignoVital: {
+    idSignosVitales: {
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
@@ -15,6 +15,54 @@ const SignosVitales = (sequelize, DataTypes) => {
         key: 'idConsulta'
       }
     },
+    presion_sistolica: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    presion_diastolica: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    frecuencia_cardiaca: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    temperatura: {
+      type: DataTypes.DECIMAL(4,2),
+      allowNull: true
+    },
+    peso: {
+      type: DataTypes.DECIMAL(5,2),
+      allowNull: true
+    },
+    altura: {
+      type: DataTypes.DECIMAL(5,2),
+      allowNull: true
+    },
+    imc: {
+      type: DataTypes.DECIMAL(5,2),
+      allowNull: true
+    },
+    oximetria: {
+      type: DataTypes.DECIMAL(5,2),
+      allowNull: true
+    },
+    glucosa: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    frecuencia_respiratoria: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    circunferencia_abdominal: {
+      type: DataTypes.DECIMAL(5,2),
+      allowNull: true
+    },
+    notas: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
     tomado_por: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -22,23 +70,6 @@ const SignosVitales = (sequelize, DataTypes) => {
         model: 'Usuario',
         key: 'idUsuario'
       }
-    },
-    tipo_signo: {
-      type: DataTypes.STRING(50),
-      allowNull: false
-    },
-    valor: {
-      type: DataTypes.STRING(50),
-      allowNull: false
-    },
-    unidad: {
-      type: DataTypes.STRING(20),
-      allowNull: true
-    },
-    fecha_toma: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
     },
     creado: {
       type: DataTypes.DATE,
@@ -55,7 +86,7 @@ const SignosVitales = (sequelize, DataTypes) => {
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "idSignoVital" },
+          { name: "idSignosVitales" },
         ]
       },
       {
