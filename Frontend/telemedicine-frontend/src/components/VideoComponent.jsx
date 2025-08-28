@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Drawer, Button, Form, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Video.module.css';
 import consultaService from '../services/consultaService';
@@ -33,6 +34,8 @@ const processIceQueue = async (pc, queue) => {
 };
 
 const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
+  // Estado para el menú Drawer en móvil
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
   // ---------- Estado de cita/expediente/notas ----------
   const [cita, setCita] = useState(null);
   const [consulta, setConsulta] = useState(null);
@@ -55,6 +58,37 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   // Tabs del rail
   const [tab, setTab] = useState('pre'); // 'pre' | 'exp' | 'notas'
   const railRef = useRef(null);
+
+
+  // Drawer Receta
+  const [drawerRecetaOpen, setDrawerRecetaOpen] = useState(false);
+  const openDrawerReceta = () => setDrawerRecetaOpen(true);
+  const closeDrawerReceta = () => setDrawerRecetaOpen(false);
+
+  // Drawer Notas/Registro
+  const [drawerNotasOpen, setDrawerNotasOpen] = useState(false);
+  const openDrawerNotas = () => setDrawerNotasOpen(true);
+  const closeDrawerNotas = () => setDrawerNotasOpen(false);
+
+  // Handler para guardar receta desde Drawer
+  const [recetaDraft, setRecetaDraft] = useState('');
+  const handleRecetaChange = e => setRecetaDraft(e.target.value);
+  // Guardar solo receta médica
+  const handleGuardarReceta = async () => {
+    if (!consulta?.idConsulta) {
+      alert('No hay consulta activa para asociar la receta.');
+      return;
+    }
+    try {
+      await consultaService.actualizarConsulta(consulta.idConsulta, { receta_medica: recetaDraft });
+      setFormMedico(prev => ({ ...prev, receta_medica: recetaDraft }));
+      setConsulta(prev => ({ ...prev, receta_medica: recetaDraft }));
+      closeDrawerReceta();
+      alert('Receta guardada correctamente');
+    } catch {
+      alert('Error guardando la receta');
+    }
+  };
 
   // ---------- WebRTC / WS ----------
   const localVideoRef = useRef(null);
@@ -161,16 +195,26 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     setMedicoLoading(true);
     try {
       const normalizeDate = (val) => (!val || val === 'Invalid date') ? null : val;
+      // Excluir receta_medica del payload
+      const {
+        diagnostico_principal,
+        diagnosticos_secundarios,
+        tratamiento,
+        observaciones,
+        examenes_solicitados,
+        proxima_cita_recomendada,
+        requiere_seguimiento,
+        fecha_seguimiento
+      } = formMedico;
       const payload = {
-        diagnostico_principal: formMedico.diagnostico_principal,
-        diagnosticos_secundarios: formMedico.diagnosticos_secundarios,
-        tratamiento: formMedico.tratamiento,
-        observaciones: formMedico.observaciones,
-        receta_medica: formMedico.receta_medica,
-        examenes_solicitados: formMedico.examenes_solicitados,
-        proxima_cita_recomendada: normalizeDate(formMedico.proxima_cita_recomendada),
-        requiere_seguimiento: formMedico.requiere_seguimiento,
-        fecha_seguimiento: normalizeDate(formMedico.fecha_seguimiento)
+        diagnostico_principal,
+        diagnosticos_secundarios,
+        tratamiento,
+        observaciones,
+        examenes_solicitados,
+        proxima_cita_recomendada: normalizeDate(proxima_cita_recomendada),
+        requiere_seguimiento,
+        fecha_seguimiento: normalizeDate(fecha_seguimiento)
       };
 
       let consultaGuardada = null;
@@ -530,12 +574,219 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
 
   return (
     <div className={styles.videoContainer}>
+
+      {/* Botones flotantes o menú para abrir Drawers (solo doctor) */}
+      {userRole === 'doctor' && (
+        <>
+          {/* Pantallas grandes: dos botones flotantes */}
+          {!compactControls && (
+            <>
+              <Button
+                type="primary"
+                shape="circle"
+                icon={<span role="img" aria-label="Notas">📝</span>}
+                size="large"
+                style={{
+                  position: 'fixed',
+                  bottom: 100,
+                  right: 32,
+                  zIndex: 1001
+                }}
+                onClick={openDrawerNotas}
+              />
+              <Button
+                type="primary"
+                shape="circle"
+                icon={<span role="img" aria-label="Receta">💊</span>}
+                size="large"
+                style={{
+                  position: 'fixed',
+                  bottom: 32,
+                  right: 32,
+                  zIndex: 1001
+                }}
+                onClick={openDrawerReceta}
+              />
+            </>
+          )}
+          {/* Pantallas pequeñas: un botón menú flotante */}
+          {compactControls && (
+            <>
+              <Button
+                type="primary"
+                shape="circle"
+                icon={<span role="img" aria-label="Menú">☰</span>}
+                size="large"
+                style={{
+                  position: 'fixed',
+                  bottom: 32,
+                  right: 32,
+                  zIndex: 1001
+                }}
+                onClick={() => setMenuDrawerOpen(true)}
+              />
+              <Drawer
+                title="Opciones"
+                placement="bottom"
+                onClose={() => setMenuDrawerOpen(false)}
+                open={menuDrawerOpen}
+                height={180}
+                bodyStyle={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}
+                style={{ borderRadius: '16px 16px 0 0' }}
+                closable={true}
+                maskClosable={true}
+              >
+                <Button
+                  type="default"
+                  icon={<span role="img" aria-label="Notas">📝</span>}
+                  block
+                  size="large"
+                  style={{ marginBottom: 12 }}
+                  onClick={() => {
+                    setMenuDrawerOpen(false);
+                    openDrawerNotas();
+                  }}
+                >Notas / Registro</Button>
+                <Button
+                  type="default"
+                  icon={<span role="img" aria-label="Receta">💊</span>}
+                  block
+                  size="large"
+                  onClick={() => {
+                    setMenuDrawerOpen(false);
+                    openDrawerReceta();
+                  }}
+                >Receta Médica</Button>
+              </Drawer>
+            </>
+          )}
+        </>
+      )}
+
+      {/* Drawer de Notas/Registro */}
+      <Drawer
+        title="Notas de evolución / Registro médico"
+        placement="right"
+        onClose={closeDrawerNotas}
+        open={drawerNotasOpen}
+        width={window.innerWidth < 600 ? '100%' : 420}
+        bodyStyle={{ paddingBottom: 80 }}
+      >
+        <form
+          className={styles.medicalForm}
+          onSubmit={(e) => { e.preventDefault(); guardarInfoMedica(); }}
+        >
+          <details className={`${styles.collapseGroup} ${styles.fullRow}`} open>
+            <summary className={styles.collapseSummary}>Diagnóstico</summary>
+            <div className={styles.collapseBody}>
+              <label className={styles.formLabel}>Diagnóstico principal</label>
+              <textarea
+                className={styles.formTextarea}
+                rows={2}
+                value={formMedico.diagnostico_principal}
+                onChange={e => setFormMedico(f => ({ ...f, diagnostico_principal: e.target.value }))}
+                placeholder="Escribe el diagnóstico principal..."
+              />
+              <label className={styles.formLabel}>Diagnósticos secundarios</label>
+              <textarea
+                className={styles.formTextarea}
+                rows={2}
+                value={formMedico.diagnosticos_secundarios}
+                onChange={e => setFormMedico(f => ({ ...f, diagnosticos_secundarios: e.target.value }))}
+                placeholder="Diagnósticos adicionales..."
+              />
+            </div>
+          </details>
+          <details className={`${styles.collapseGroup} ${styles.fullRow}`}>
+            <summary className={styles.collapseSummary}>Plan de tratamiento</summary>
+            <div className={styles.collapseBody}>
+              <label className={styles.formLabel}>Tratamiento</label>
+              <textarea
+                className={styles.formTextarea}
+                rows={2}
+                value={formMedico.tratamiento}
+                onChange={e => setFormMedico(f => ({ ...f, tratamiento: e.target.value }))}
+                placeholder="Describe el tratamiento..."
+              />
+              <label className={styles.formLabel}>Observaciones</label>
+              <textarea
+                className={styles.formTextarea}
+                rows={2}
+                value={formMedico.observaciones}
+                onChange={e => setFormMedico(f => ({ ...f, observaciones: e.target.value }))}
+                placeholder="Observaciones adicionales..."
+              />
+            </div>
+          </details>
+          <details className={`${styles.collapseGroup} ${styles.fullRow}`}>
+            <summary className={styles.collapseSummary}>Estudios y seguimiento</summary>
+            <div className={styles.collapseBody}>
+              <label className={styles.formLabel}>Exámenes solicitados</label>
+              <textarea
+                className={styles.formTextarea}
+                rows={2}
+                value={formMedico.examenes_solicitados}
+                onChange={e => setFormMedico(f => ({ ...f, examenes_solicitados: e.target.value }))}
+                placeholder="Estudios de laboratorio o imagen…"
+              />
+              <label className={styles.formLabel}>Próxima cita recomendada</label>
+              <input
+                className={styles.formInput}
+                type="date"
+                value={formMedico.proxima_cita_recomendada}
+                onChange={e => setFormMedico(f => ({ ...f, proxima_cita_recomendada: e.target.value }))}
+              />
+              <label className={styles.formLabel}>¿Requiere seguimiento?</label>
+              <input
+                className={styles.formCheckbox}
+                type="checkbox"
+                checked={formMedico.requiere_seguimiento}
+                onChange={e => setFormMedico(f => ({ ...f, requiere_seguimiento: e.target.checked }))}
+              />
+              <label className={styles.formLabel}>Fecha de seguimiento</label>
+              <input
+                className={styles.formInput}
+                type="date"
+                value={formMedico.fecha_seguimiento}
+                onChange={e => setFormMedico(f => ({ ...f, fecha_seguimiento: e.target.value }))}
+              />
+            </div>
+          </details>
+          <Button type="primary" htmlType="submit" className={styles.saveButton} block disabled={medicoLoading} style={{marginTop: 16}}>
+            {medicoLoading ? 'Guardando...' : 'Guardar información'}
+          </Button>
+        </form>
+      </Drawer>
+
+      {/* Drawer de receta */}
+      <Drawer
+        title="Receta Médica"
+        placement="right"
+        onClose={closeDrawerReceta}
+        open={drawerRecetaOpen}
+        width={window.innerWidth < 600 ? '100%' : 400}
+        bodyStyle={{ paddingBottom: 80 }}
+      >
+        <Form layout="vertical">
+          <Form.Item label="Receta médica (medicamentos, dosis, indicaciones)">
+            <Input.TextArea
+              rows={8}
+              value={recetaDraft}
+              onChange={handleRecetaChange}
+              placeholder="Ej: Paracetamol 500mg cada 8h por 5 días..."
+            />
+          </Form.Item>
+          <Button type="primary" onClick={handleGuardarReceta} block>
+            Guardar receta
+          </Button>
+        </Form>
+      </Drawer>
       <h2>Sala de Consulta: {roomId}</h2>
 
       {error && <div className={styles.errorMessage}>{error}</div>}
       {isLoading && <div className={styles.loadingMessage}>Conectando a la sala...</div>}
 
-      <div className={userRole === 'doctor' ? styles.mainLayout : ''}>
+  <div className={userRole === 'doctor' ? styles.mainLayout : ''}>
         {/* STAGE (videos) */}
         <section className={styles.videoGrid}>
           <div
@@ -566,12 +817,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
               >
                 Expediente
               </button>
-              <button
-                className={`${styles.tab} ${tab === 'notas' ? styles.tabActive : ''}`}
-                onClick={() => setTab('notas')}
-              >
-                Notas / Registro
-              </button>
+              {/* El tab de Notas/Registro solo está en el Drawer flotante */}
             </div>
 
             {/* Panels */}
@@ -627,126 +873,14 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
               </div>
             )}
 
-            {tab === 'notas' && (
-              <div className={`${styles.infoCard} ${styles.medicalFormCard}`}>
-                <div className={styles.infoCardTitle}>Notas de evolución / Registro médico</div>
-
-                {/* Acordeones compactos */}
-                <form
-                  className={styles.medicalForm}
-                  onSubmit={(e) => { e.preventDefault(); guardarInfoMedica(); }}
-                >
-                  <details className={`${styles.collapseGroup} ${styles.fullRow}`} open>
-                    <summary className={styles.collapseSummary}>Diagnóstico</summary>
-                    <div className={styles.collapseBody}>
-                      <label className={styles.formLabel}>Diagnóstico principal</label>
-                      <textarea
-                        className={styles.formTextarea}
-                        rows={2}
-                        value={formMedico.diagnostico_principal}
-                        onChange={e => setFormMedico(f => ({ ...f, diagnostico_principal: e.target.value }))}
-                        placeholder="Escribe el diagnóstico principal..."
-                      />
-
-                      <label className={styles.formLabel}>Diagnósticos secundarios</label>
-                      <textarea
-                        className={styles.formTextarea}
-                        rows={2}
-                        value={formMedico.diagnosticos_secundarios}
-                        onChange={e => setFormMedico(f => ({ ...f, diagnosticos_secundarios: e.target.value }))}
-                        placeholder="Diagnósticos adicionales..."
-                      />
-                    </div>
-                  </details>
-
-                  <details className={`${styles.collapseGroup} ${styles.fullRow}`}>
-                    <summary className={styles.collapseSummary}>Plan de tratamiento</summary>
-                    <div className={styles.collapseBody}>
-                      <label className={styles.formLabel}>Tratamiento</label>
-                      <textarea
-                        className={styles.formTextarea}
-                        rows={2}
-                        value={formMedico.tratamiento}
-                        onChange={e => setFormMedico(f => ({ ...f, tratamiento: e.target.value }))}
-                        placeholder="Describe el tratamiento..."
-                      />
-
-                      <label className={styles.formLabel}>Receta médica</label>
-                      <textarea
-                        className={styles.formTextarea}
-                        rows={2}
-                        value={formMedico.receta_medica}
-                        onChange={e => setFormMedico(f => ({ ...f, receta_medica: e.target.value }))}
-                        placeholder="Medicamentos y dosis…"
-                      />
-
-                      <label className={styles.formLabel}>Observaciones</label>
-                      <textarea
-                        className={styles.formTextarea}
-                        rows={2}
-                        value={formMedico.observaciones}
-                        onChange={e => setFormMedico(f => ({ ...f, observaciones: e.target.value }))}
-                        placeholder="Observaciones adicionales..."
-                      />
-                    </div>
-                  </details>
-
-                  <details className={`${styles.collapseGroup} ${styles.fullRow}`}>
-                    <summary className={styles.collapseSummary}>Estudios y seguimiento</summary>
-                    <div className={styles.collapseBody}>
-                      <label className={styles.formLabel}>Exámenes solicitados</label>
-                      <textarea
-                        className={styles.formTextarea}
-                        rows={2}
-                        value={formMedico.examenes_solicitados}
-                        onChange={e => setFormMedico(f => ({ ...f, examenes_solicitados: e.target.value }))}
-                        placeholder="Estudios de laboratorio o imagen…"
-                      />
-
-                      <label className={styles.formLabel}>Próxima cita recomendada</label>
-                      <input
-                        className={styles.formInput}
-                        type="date"
-                        value={formMedico.proxima_cita_recomendada}
-                        onChange={e => setFormMedico(f => ({ ...f, proxima_cita_recomendada: e.target.value }))}
-                      />
-
-                      <label className={styles.formLabel}>¿Requiere seguimiento?</label>
-                      <input
-                        className={styles.formCheckbox}
-                        type="checkbox"
-                        checked={formMedico.requiere_seguimiento}
-                        onChange={e => setFormMedico(f => ({ ...f, requiere_seguimiento: e.target.checked }))}
-                      />
-
-                      <label className={styles.formLabel}>Fecha de seguimiento</label>
-                      <input
-                        className={styles.formInput}
-                        type="date"
-                        value={formMedico.fecha_seguimiento}
-                        onChange={e => setFormMedico(f => ({ ...f, fecha_seguimiento: e.target.value }))}
-                      />
-                    </div>
-                  </details>
-
-                  <button type="submit" className={`${styles.saveButton} ${styles.fullRow}`} disabled={medicoLoading}>
-                    {medicoLoading ? 'Guardando...' : 'Guardar información'}
-                  </button>
-                </form>
-              </div>
-            )}
+            {/* El formulario de notas/registro ahora está en el Drawer */}
           </aside>
         )}
       </div>
 
       {/* DOCK */}
       <div className={`${styles.callControls} ${compactControls ? styles.compact : ''}`}>
-        {userRole === 'doctor' && (
-          <button onClick={scrollToRail}>
-            <span className={styles.btnIcon}>📋</span>
-            <span className={styles.btnLabel}>Ver ficha</span>
-          </button>
-        )}
+        
 
         <button onClick={toggleCamera}>
           <span className={styles.btnIcon}>📷</span>
