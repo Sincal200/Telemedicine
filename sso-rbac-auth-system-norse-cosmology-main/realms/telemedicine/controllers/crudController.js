@@ -2,7 +2,15 @@
 const crudController = (Model) => ({
   getAll: async (req, res, next) => {
     try {
-      const items = await Model.findAll();
+      // Permite filtrar solo por campos válidos del modelo (ignora params extra como tenant)
+      const where = {};
+      const validFields = Object.keys(Model.rawAttributes);
+      Object.keys(req.query).forEach(key => {
+        if (validFields.includes(key) && req.query[key] !== undefined && req.query[key] !== '') {
+          where[key] = req.query[key];
+        }
+      });
+      const items = await Model.findAll(Object.keys(where).length ? { where } : undefined);
       res.json({
         success: true,
         data: items,
