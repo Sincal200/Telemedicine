@@ -1,3 +1,5 @@
+import generarRecetaRoutes from './routes/generarRecetaRoutes.js';
+import recetaDescargaRoutes from './routes/recetaDescargaRoutes.js';
 import express from 'express';
 import dotenv from 'dotenv';
 import http from 'http';
@@ -43,11 +45,24 @@ const PORT = process.env.PORT || 3002;
 
 app.use(express.json());
 
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`=== REQUEST DEBUG ===`);
+  console.log(`${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  console.log('User:', req.user ? 'authenticated' : 'not authenticated');
+  console.log('====================');
+  next();
+});
+
 // Documentación Swagger pública
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Autenticación centralizada (usa Redis internamente)
 app.use(authenticate);
+
+// Endpoint seguro para descarga de recetas (después de autenticación)
+app.use('/recetas', recetaDescargaRoutes);
 
 // Exponer el signaling server por app.locals para accederlo desde rutas
 const server = http.createServer(app);
@@ -88,7 +103,7 @@ app.use('/setup', setupRoutes)
 app.use('/registro', registroRoutes)
 // Nuevo endpoint expediente
 app.use('/expediente', expedienteRoutes);
-
+app.use('/consultas', generarRecetaRoutes);
 
 // Rutas heredadas mínimas para compatibilidad
 app.get('/authenticate', (req, res) => {
