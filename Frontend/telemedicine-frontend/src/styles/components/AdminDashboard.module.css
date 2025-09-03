@@ -1,0 +1,223 @@
+/* AdminDashboard.module.css */
+
+.adminContainer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 24px;
+}
+
+.headerSection {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.headerTitle {
+  margin: 0 !important;
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.headerSubtitle {
+  margin: 8px 0 0 0 !important;
+  color: #666;
+}
+
+.contentSection {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.tabsContainer {
+  padding: 0;
+}
+
+.tabPane {
+  padding: 24px;
+}
+
+.overviewGrid {
+  margin-bottom: 24px;
+}
+
+.statCard {
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.statCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.statIcon {
+  font-size: 24px;
+  margin-right: 8px;
+}
+
+.chartContainer {
+  margin-top: 24px;
+}
+
+.chartCard {
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.chartTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.progressContainer {
+  margin-bottom: 16px;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.quickActions {
+  margin-top: 24px;
+}
+
+.actionButton {
+  height: 48px;
+  border-radius: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.actionButton.secondary {
+  background: #f6f6f6;
+  border-color: #d9d9d9;
+  color: #666;
+}
+
+.actionButton.secondary:hover {
+  background: #e6f7ff;
+  border-color: #91d5ff;
+  color: #1890ff;
+  box-shadow: 0 4px 12px rgba(145, 213, 255, 0.3);
+}
+
+.recentActivity {
+  margin-top: 24px;
+}
+
+.activityItem {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.activityItem:last-child {
+  border-bottom: none;
+}
+
+.activityIcon {
+  font-size: 16px;
+  margin-right: 12px;
+  color: #1890ff;
+}
+
+.activityText {
+  font-size: 14px;
+  color: #333;
+}
+
+.activityTime {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.placeholderContent {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.placeholderIcon {
+  font-size: 48px;
+  color: #d9d9d9;
+  margin-bottom: 16px;
+}
+
+.placeholderTitle {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.placeholderText {
+  font-size: 14px;
+  color: #999;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .adminContainer {
+    padding: 16px;
+  }
+  
+  .headerSection {
+    padding: 16px;
+  }
+  
+  .tabPane {
+    padding: 16px;
+  }
+  
+  .actionButton {
+    height: 40px;
+    font-size: 14px;
+  }
+}
+
+/* Custom tab styles */
+.tabsContainer :global(.ant-tabs-tab) {
+  font-weight: 500;
+  padding: 12px 16px;
+}
+
+.tabsContainer :global(.ant-tabs-tab-active) {
+  background: rgba(24, 144, 255, 0.1);
+  border-radius: 8px 8px 0 0;
+}
+
+.tabsContainer :global(.ant-tabs-content-holder) {
+  background: #fff;
+}
+
+/* Statistic card improvements */
+.statCard :global(.ant-statistic-title) {
+  font-weight: 500;
+  color: #666;
+  font-size: 14px;
+}
+
+.statCard :global(.ant-statistic-content) {
+  font-size: 24px;
+  font-weight: 600;
+}

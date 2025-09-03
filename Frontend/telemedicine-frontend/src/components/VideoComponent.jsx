@@ -80,11 +80,35 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
       return;
     }
     try {
+      // 1. Guardar la receta como texto en la consulta
       await consultaService.actualizarConsulta(consulta.idConsulta, { receta_medica: recetaDraft });
       setFormMedico(prev => ({ ...prev, receta_medica: recetaDraft }));
       setConsulta(prev => ({ ...prev, receta_medica: recetaDraft }));
+      
+      // 2. Generar el PDF de la receta
+      try {
+        const response = await fetch(`http://localhost:8081/api/telemedicine/consultas/${consulta.idConsulta}/generar-receta?tenant=telemedicine`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_KEYCLOAK_CLIENT_SECRET || 'secret'}|${sessionStorage.getItem('accessToken')}`
+          }
+        });
+        
+        if (response.ok) {
+          const pdfData = await response.json();
+          console.log('PDF generado exitosamente:', pdfData);
+          alert('Receta guardada y PDF generado correctamente');
+        } else {
+          console.error('Error generando PDF:', response.status);
+          alert('Receta guardada como texto, pero hubo un error generando el PDF');
+        }
+      } catch (pdfError) {
+        console.error('Error generando PDF:', pdfError);
+        alert('Receta guardada como texto, pero hubo un error generando el PDF');
+      }
+      
       closeDrawerReceta();
-      alert('Receta guardada correctamente');
     } catch {
       alert('Error guardando la receta');
     }

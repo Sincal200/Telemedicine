@@ -1,15 +1,19 @@
+/* Dashboard.module.css - Diseño moderno para dashboard principal */
+
 .layout {
   min-height: 100vh;
-  background: #f5f7fa;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  padding: 0 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0 20px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
   position: sticky;
   top: 0;
   z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
 }
 
 .headerContent {
@@ -17,7 +21,7 @@
   justify-content: space-between;
   align-items: center;
   height: 100%;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -28,55 +32,70 @@
 }
 
 .logo {
-  font-size: 32px;
+  font-size: 28px;
   color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .headerTitle {
   color: white !important;
   margin: 0 !important;
   font-weight: 700;
+  font-size: 20px !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .iconButton {
   color: white !important;
-  font-size: 18px;
+  font-size: 16px;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .iconButton:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .userProfile {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
-  padding: 8px 12px;
+  padding: 6px 12px;
   border-radius: 12px;
   transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .userProfile:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .avatar {
   background: rgba(255, 255, 255, 0.2) !important;
   border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 32px !important;
+  height: 32px !important;
 }
 
 .userInfo {
@@ -88,126 +107,222 @@
 .userName {
   color: white !important;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.2;
 }
 
 .userRole {
   color: rgba(255, 255, 255, 0.8) !important;
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .content {
-  padding: 24px;
-  background: #f5f7fa;
+  padding: 20px;
+  background: transparent;
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .welcomeSection {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   text-align: center;
-  padding: 24px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
   border-radius: 16px;
-  border: 1px solid rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcomeSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
 }
 
 .welcomeTitle {
-  color: #2c3e50 !important;
+  color: #2d3748 !important;
   margin-bottom: 8px !important;
   font-weight: 700;
+  font-size: 24px !important;
+  position: relative;
+  z-index: 2;
 }
 
 .welcomeSubtitle {
-  color: #7f8c8d;
-  font-size: 16px;
+  color: #4a5568;
+  font-size: 14px;
+  position: relative;
+  z-index: 2;
 }
 
 .statsRow {
-  margin-bottom: 32px;
-}
-
-.statCard {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
-}
-
-.statCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.statIcon {
-  font-size: 24px;
-}
-
-.mainContent {
-  gap: 24px;
-}
-
-.actionCard {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.06);
   margin-bottom: 24px;
 }
 
+.statCard {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.statCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.statCard .ant-statistic-title {
+  color: #4a5568 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.statCard .ant-statistic-content {
+  color: #2d3748 !important;
+}
+
+.statIcon {
+  font-size: 20px;
+}
+
+.mainContent {
+  gap: 20px;
+}
+
+.actionCard {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.actionCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
+}
+
+.actionCard .ant-card-head {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1) !important;
+}
+
 .actionCard .ant-card-head-title {
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 16px;
 }
 
 .actionButton {
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   font-weight: 600 !important;
-  height: 48px !important;
+  height: 42px !important;
   transition: all 0.3s ease !important;
+  border: 2px solid transparent !important;
+  backdrop-filter: blur(10px);
+  font-size: 13px !important;
 }
 
 .actionButton.ant-btn-primary {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border: none !important;
+  border: 2px solid transparent !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .actionButton.ant-btn-primary:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
 }
 
 .actionButton:not(.ant-btn-primary) {
-  border: 2px solid #e1e8ed !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 2px solid rgba(102, 126, 234, 0.2) !important;
   color: #667eea !important;
+  backdrop-filter: blur(10px);
 }
 
 .actionButton:not(.ant-btn-primary):hover {
   border-color: #667eea !important;
+  background: rgba(102, 126, 234, 0.1) !important;
   color: #667eea !important;
-  transform: translateY(-1px) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2) !important;
 }
 
 .appointmentsCard {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+}
+
+.appointmentsCard .ant-card-head {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1) !important;
 }
 
 .appointmentsCard .ant-card-head-title {
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 16px;
 }
 
 .appointmentItem {
-  padding: 16px 0 !important;
-  border-bottom: 1px solid #f0f2f5 !important;
+  padding: 14px 0 !important;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1) !important;
+  transition: all 0.3s ease;
 }
 
 .appointmentItem:last-child {
   border-bottom: none !important;
+}
+
+.appointmentItem:hover {
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 8px;
+  margin: 0 -12px;
+  padding: 14px 12px !important;
 }
 
 .appointmentHeader {
@@ -226,15 +341,23 @@
 }
 
 .calendarCard {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  margin-bottom: 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+  margin-bottom: 20px;
+}
+
+.calendarCard .ant-card-head {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1) !important;
 }
 
 .calendarCard .ant-card-head-title {
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 16px;
 }
 
 .miniCalendar .ant-picker-calendar-header {
@@ -242,51 +365,80 @@
 }
 
 .miniCalendar .ant-picker-content {
-  height: 250px;
+  height: 220px;
   overflow: hidden;
 }
 
+.miniCalendar .ant-picker-cell-selected .ant-picker-cell-inner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
 .activityCard {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+}
+
+.activityCard .ant-card-head {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1) !important;
 }
 
 .activityCard .ant-card-head-title {
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 16px;
 }
 
 .activityItem {
   padding: 12px 0 !important;
-  border-bottom: 1px solid #f0f2f5 !important;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1) !important;
+  transition: all 0.3s ease;
 }
 
 .activityItem:last-child {
   border-bottom: none !important;
 }
 
-.activityTime {
-  font-size: 12px;
+.activityItem:hover {
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 8px;
+  margin: 0 -12px;
+  padding: 12px 12px !important;
 }
 
+.activityTime {
+  font-size: 11px;
+  color: #718096;
+}
 
+/* Responsive Design */
 @media (max-width: 768px) {
   .header {
     padding: 0 16px;
   }
   
   .content {
-    padding: 16px;
+    padding: 16px 12px;
+  }
+  
+  .container {
+    max-width: 100%;
   }
   
   .welcomeSection {
-    padding: 16px;
-    margin-bottom: 24px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
   }
   
   .welcomeTitle {
     font-size: 20px !important;
+  }
+  
+  .welcomeSubtitle {
+    font-size: 13px;
   }
   
   .userInfo {
@@ -304,21 +456,57 @@
   .logo {
     font-size: 24px;
   }
+  
+  .statsRow {
+    margin-bottom: 20px;
+  }
+  
+  .mainContent {
+    gap: 16px;
+  }
+  
+  .actionCard,
+  .calendarCard,
+  .activityCard {
+    margin-bottom: 16px;
+  }
 }
 
 @media (max-width: 480px) {
-  .statsRow {
-    margin-bottom: 24px;
+  .content {
+    padding: 12px 8px;
+  }
+  
+  .welcomeSection {
+    padding: 14px 16px;
+  }
+  
+  .welcomeTitle {
+    font-size: 18px !important;
   }
   
   .actionButton {
-    height: 44px !important;
-    font-size: 14px !important;
+    height: 38px !important;
+    font-size: 12px !important;
   }
   
   .appointmentHeader {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+  }
+  
+  .headerContent {
+    padding: 0 8px;
+  }
+  
+  .userProfile {
+    padding: 4px 8px;
+  }
+  
+  .iconButton {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
   }
 }

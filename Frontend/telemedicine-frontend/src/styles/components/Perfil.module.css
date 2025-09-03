@@ -1,0 +1,432 @@
+/* Perfil.module.css - Diseño moderno para perfil de usuario */
+
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px 16px;
+}
+
+.contentWrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header del perfil */
+.profileHeader {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.25);
+}
+
+.profileHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="%23ffffff10" points="0,1000 1000,600 1000,1000"/></svg>');
+  opacity: 0.3;
+}
+
+.profileHeaderContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.avatarSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-size: 32px;
+  color: white;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.profileInfo h1 {
+  margin: 0 0 6px 0;
+  font-size: 26px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profileInfo p {
+  margin: 3px 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.profileBadge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 6px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Layout de cards */
+.cardsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+/* Estilos de cards mejorados */
+.profileCard {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profileCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.cardHeader {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 16px 24px;
+  border-bottom: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.cardHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -50px;
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.cardTitle {
+  color: white !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardIcon {
+  font-size: 22px;
+  opacity: 0.9;
+}
+
+.cardContent {
+  padding: 20px 24px;
+}
+
+/* Estilos de formulario mejorados */
+.modernForm {
+  position: relative;
+}
+
+.formSection {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+  position: relative;
+}
+
+.sectionTitle::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Inputs mejorados */
+.modernInput {
+  border-radius: 10px !important;
+  border: 2px solid #e2e8f0 !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  transition: all 0.3s ease !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  height: 40px !important;
+}
+
+.modernInput:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  transform: translateY(-1px);
+}
+
+.modernInput:hover:not(:focus) {
+  border-color: #cbd5e0 !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.modernTextarea {
+  border-radius: 10px !important;
+  border: 2px solid #e2e8f0 !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  transition: all 0.3s ease !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  resize: none !important;
+}
+
+.modernTextarea:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.modernSelect {
+  border-radius: 10px !important;
+}
+
+.modernDatePicker {
+  border-radius: 10px !important;
+  border: 2px solid #e2e8f0 !important;
+  height: 40px !important;
+  width: 100% !important;
+}
+
+.modernDatePicker:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15) !important;
+}
+
+/* Labels mejorados */
+.formLabel {
+  font-weight: 600 !important;
+  color: #2d3748 !important;
+  font-size: 14px !important;
+  margin-bottom: 6px !important;
+}
+
+/* Botones mejorados */
+.primaryButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  height: 42px !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3) !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.primaryButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.primaryButton:hover::before {
+  left: 100%;
+}
+
+.primaryButton:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4) !important;
+}
+
+.primaryButton:active {
+  transform: translateY(0) !important;
+}
+
+/* Estados especiales */
+.disabledInput {
+  background: #f7fafc !important;
+  color: #4a5568 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+
+/* Grid responsivo para campos */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.formGridFull {
+  grid-column: 1 / -1;
+}
+
+/* Separadores elegantes */
+.divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+  margin: 20px 0;
+}
+
+/* Loading states */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loadingText {
+  font-size: 18px;
+  color: #667eea;
+  font-weight: 500;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .cardsContainer {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .profileHeader {
+    padding: 24px;
+    text-align: center;
+  }
+  
+  .profileHeaderContent {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .profileInfo h1 {
+    font-size: 24px;
+  }
+  
+  .cardContent {
+    padding: 16px 20px;
+  }
+  
+  .cardHeader {
+    padding: 14px 20px;
+  }
+  
+  .cardTitle {
+    font-size: 18px !important;
+  }
+  
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px 8px;
+  }
+  
+  .profileHeader {
+    padding: 16px;
+  }
+  
+  .cardContent {
+    padding: 16px;
+  }
+  
+  .cardHeader {
+    padding: 12px 16px;
+  }
+  
+  .avatarSection {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+  
+  .profileInfo h1 {
+    font-size: 18px;
+  }
+  
+  .modernInput,
+  .primaryButton {
+    height: 36px !important;
+    font-size: 14px !important;
+  }
+}

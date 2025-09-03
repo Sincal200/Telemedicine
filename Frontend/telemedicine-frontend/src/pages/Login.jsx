@@ -90,7 +90,7 @@ function Login() {
           style={{ position: 'relative', zIndex: 2 }}
         >
           <Form.Item
-            label={<span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>Correo Electrónico</span>}
+            label={<span className={styles.formLabel}>Correo Electrónico</span>}
             name="email"
             rules={[
               { required: true, message: 'Por favor ingresa tu correo electrónico' },
@@ -98,7 +98,7 @@ function Login() {
             ]}
           >
             <Input
-              prefix={<UserOutlined style={{ color: 'var(--text-muted)' }} />}
+              prefix={<UserOutlined style={{ color: '#a0aec0', fontSize: '16px' }} />}
               placeholder="usuario@telemed.com"
               size="large"
               autoComplete="email"
@@ -107,12 +107,12 @@ function Login() {
           </Form.Item>
 
           <Form.Item
-            label={<span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>Contraseña</span>}
+            label={<span className={styles.formLabel}>Contraseña</span>}
             name="password"
             rules={[{ required: true, message: 'Por favor ingresa tu contraseña' }]}
           >
             <Input.Password
-              prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />}
+              prefix={<LockOutlined style={{ color: '#a0aec0', fontSize: '16px' }} />}
               placeholder="••••••••"
               size="large"
               autoComplete="current-password"
@@ -140,7 +140,7 @@ function Login() {
           </Form.Item>
 
           <div style={{ textAlign: 'center' }}>
-            <Text style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+            <Text style={{ color: '#718096', fontSize: 14 }}>
               ¿No tienes una cuenta?{' '}
               <Link to="/register" className={styles.registerLink}>
                 Regístrate aquí

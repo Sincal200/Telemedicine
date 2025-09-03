@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Card, Typography, message, Spin, DatePicker, Select, Row, Col, Divider } from 'antd';
+import { Form, Input, Button, Card, Typography, message, Spin, DatePicker, Select, Row, Col, Avatar } from 'antd';
+import { 
+  UserOutlined, 
+  MedicineBoxOutlined, 
+  PhoneOutlined, 
+  CalendarOutlined,
+  EnvironmentOutlined,
+  HeartOutlined,
+  ContactsOutlined
+} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import userProfileService from '../services/userProfileService';
 import catalogoDireccionService from '../services/catalogoDireccionService';
 import direccionService from '../services/direccionService';
 import pacienteService from '../services/pacienteService';
+import styles from '../styles/components/Perfil.module.css';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const Perfil = () => {
   const [form] = Form.useForm();
@@ -189,157 +199,341 @@ const Perfil = () => {
     }
   };
 
-  if (loading) return <Spin tip="Cargando perfil..." />;
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loadingContainer}>
+          <Spin size="large" />
+          <Text className={styles.loadingText}>Cargando perfil...</Text>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', marginTop: 32, display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-      <div style={{ flex: 1, minWidth: 350, maxWidth: 500 }}>
-        <Card>
-          <Title level={3}>Información Personal</Title>
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            initialValues={perfil}
-          >
-            {/* ...existing code... */}
-            <Form.Item label="Nombres" name="nombres">
-              <Input disabled />
-            </Form.Item>
-            <Form.Item label="Apellidos" name="apellidos">
-              <Input disabled />
-            </Form.Item>
-            <Form.Item label="Correo electrónico" name="email">
-              <Input disabled />
-            </Form.Item>
-            <Form.Item label="Teléfono" name="telefono" rules={[{ required: true, message: 'Ingrese su teléfono' }]}> 
-              <Input type="tel" maxLength={20} />
-            </Form.Item>
-            <Form.Item label="Teléfono de emergencia" name="telefono_emergencia" rules={[{ required: true, message: 'Ingrese un teléfono de emergencia' }]}> 
-              <Input type="tel" maxLength={20} />
-            </Form.Item>
-            <Form.Item label="Fecha de nacimiento" name="fecha_nacimiento" rules={[{ required: true, message: 'Seleccione su fecha de nacimiento' }]}> 
-              <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" disabledDate={current => current && current > dayjs().endOf('day')} />
-            </Form.Item>
-            <Row gutter={8}>
-              <Col span={24}>
-                <Form.Item label="Departamento" name="departamento_id" rules={[{ required: true, message: 'Seleccione un departamento' }]}> 
-                  <Select
-                    placeholder="Seleccione un departamento"
-                    onChange={handleDepartamentoChange}
-                    onDropdownVisibleChange={handleDepartamentoDropdown}
-                    options={departamentos.map(dep => ({ label: dep.nombre, value: dep.idDepartamento }))}
-                    showSearch
-                    optionFilterProp="label"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={24}>
-                <Form.Item label="Municipio" name="municipio_id" rules={[{ required: true, message: 'Seleccione un municipio' }]}> 
-                  <Select
-                    placeholder="Seleccione un municipio"
-                    onChange={handleMunicipioChange}
-                    options={municipios.map(mun => ({ label: mun.nombre, value: mun.idMunicipio }))}
-                    showSearch
-                    optionFilterProp="label"
-                    disabled={!form.getFieldValue('departamento_id')}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={24}>
-                <Form.Item label="Aldea" name="aldea_id"> 
-                  <Select
-                    placeholder="Seleccione una aldea"
-                    options={aldeas.map(ald => ({ label: ald.nombre, value: ald.idAldea }))}
-                    showSearch
-                    optionFilterProp="label"
-                    disabled={!form.getFieldValue('municipio_id')}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item label="Dirección completa" name="direccion_completa">
-              <Input.TextArea rows={2} maxLength={255} />
-            </Form.Item>
-            <Form.Item label="Zona" name="zona">
-              <Input maxLength={50} />
-            </Form.Item>
-            <Form.Item label="Referencia" name="referencia">
-              <Input.TextArea rows={2} maxLength={255} />
-            </Form.Item>
-            <Form.Item>
-              <Button type="primary" htmlType="submit" loading={saving} block>
-                Guardar Cambios
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
-      </div>
-      {/* Apartado médico solo si es paciente */}
-      {perfil?.esPaciente && (
-        <div style={{ flex: 1, minWidth: 350, maxWidth: 500 }}>
-          <Card>
-            <Title level={3} style={{ color: '#1890ff' }}>Información Médica</Title>
-            <Form
-              form={formMedico}
-              layout="vertical"
-              onFinish={async (values) => {
-                setSavingMedico(true);
-                try {
-                  let payload = { ...values };
-                  // Siempre generar el número de expediente si está vacío o null
-                  if (!payload.numero_expediente) {
-                    const today = new Date();
-                    const ymd = today.toISOString().slice(0,10).replace(/-/g, '');
-                    payload.numero_expediente = `P-${ymd}-${perfil.idPaciente}`;
-                  }
-                  await pacienteService.updatePaciente(perfil.idPaciente, payload);
-                  formMedico.setFieldsValue({ ...payload });
-                  message.success('Datos médicos actualizados correctamente');
-                } catch (e) {
-                  if (e.message && e.message.includes('No encontrado')) {
-                    message.error('El paciente no existe o fue eliminado.');
-                  } else {
-                    message.error(e.message || 'Error al actualizar datos médicos');
-                  }
-                } finally {
-                  setSavingMedico(false);
-                }
-              }}
-            >
-                <Form.Item label="Número de expediente" name="numero_expediente">
-                  <Input maxLength={50} disabled placeholder="Se generará automáticamente al guardar" value={formMedico.getFieldValue('numero_expediente') || ''} />
-                </Form.Item>
-                <Form.Item label="Tipo de sangre" name="tipo_sangre">
-                  <Input maxLength={5} placeholder="Ej: O+, A-, etc." />
-                </Form.Item>
-                <Form.Item label="Alergias" name="alergias">
-                  <Input.TextArea rows={2} maxLength={255} />
-                </Form.Item>
-                <Form.Item label="Enfermedades crónicas" name="enfermedades_cronicas">
-                  <Input.TextArea rows={2} maxLength={255} />
-                </Form.Item>
-                <Form.Item label="Medicamentos actuales" name="medicamentos_actuales">
-                  <Input.TextArea rows={2} maxLength={255} />
-                </Form.Item>
-                <Form.Item label="Nombre de contacto de emergencia" name="contacto_emergencia_nombre">
-                  <Input maxLength={100} />
-                </Form.Item>
-                <Form.Item label="Teléfono de contacto de emergencia" name="contacto_emergencia_telefono">
-                  <Input maxLength={20} />
-                </Form.Item>
-                <Form.Item label="Parentesco de contacto de emergencia" name="contacto_emergencia_parentesco">
-                  <Input maxLength={50} />
-                </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit" loading={savingMedico} block>
-                  Guardar Información Médica
-                </Button>
-              </Form.Item>
-            </Form>
-          </Card>
+    <div className={styles.container}>
+      <div className={styles.contentWrapper}>
+        {/* Header del perfil */}
+        <div className={styles.profileHeader}>
+          <div className={styles.profileHeaderContent}>
+            <div className={styles.avatarSection}>
+              <UserOutlined />
+            </div>
+            <div className={styles.profileInfo}>
+              <h1>{perfil?.persona?.nombres} {perfil?.persona?.apellidos}</h1>
+              <p><strong>Email:</strong> {perfil?.persona?.email}</p>
+              <p><strong>Teléfono:</strong> {perfil?.persona?.telefono || 'No especificado'}</p>
+              <div className={styles.profileBadge}>
+                {perfil?.esPaciente ? '👤 Paciente' : '👨‍⚕️ Personal Médico'}
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Cards container */}
+        <div className={styles.cardsContainer}>
+          {/* Card de información personal */}
+          <Card className={styles.profileCard}>
+            <div className={styles.cardHeader}>
+              <Title level={3} className={styles.cardTitle}>
+                <UserOutlined className={styles.cardIcon} />
+                Información Personal
+              </Title>
+            </div>
+            <div className={styles.cardContent}>
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={onFinish}
+                className={styles.modernForm}
+              >
+                <div className={styles.formSection}>
+                  <div className={styles.sectionTitle}>Datos Básicos</div>
+                  
+                  <div className={styles.formGrid}>
+                    <Form.Item label={<span className={styles.formLabel}>Nombres</span>} name="nombres">
+                      <Input className={`${styles.modernInput} ${styles.disabledInput}`} disabled />
+                    </Form.Item>
+                    <Form.Item label={<span className={styles.formLabel}>Apellidos</span>} name="apellidos">
+                      <Input className={`${styles.modernInput} ${styles.disabledInput}`} disabled />
+                    </Form.Item>
+                  </div>
+
+                  <Form.Item label={<span className={styles.formLabel}>Correo electrónico</span>} name="email" className={styles.formGridFull}>
+                    <Input 
+                      className={`${styles.modernInput} ${styles.disabledInput}`} 
+                      disabled 
+                      prefix={<UserOutlined style={{ color: '#a0aec0' }} />}
+                    />
+                  </Form.Item>
+
+                  <div className={styles.formGrid}>
+                    <Form.Item 
+                      label={<span className={styles.formLabel}>Teléfono</span>} 
+                      name="telefono" 
+                      rules={[{ required: true, message: 'Ingrese su teléfono' }]}
+                    > 
+                      <Input 
+                        type="tel" 
+                        maxLength={20} 
+                        className={styles.modernInput}
+                        prefix={<PhoneOutlined style={{ color: '#a0aec0' }} />}
+                      />
+                    </Form.Item>
+                    <Form.Item 
+                      label={<span className={styles.formLabel}>Teléfono de emergencia</span>} 
+                      name="telefono_emergencia" 
+                      rules={[{ required: true, message: 'Ingrese un teléfono de emergencia' }]}
+                    > 
+                      <Input 
+                        type="tel" 
+                        maxLength={20} 
+                        className={styles.modernInput}
+                        prefix={<PhoneOutlined style={{ color: '#a0aec0' }} />}
+                      />
+                    </Form.Item>
+                  </div>
+
+                  <Form.Item 
+                    label={<span className={styles.formLabel}>Fecha de nacimiento</span>} 
+                    name="fecha_nacimiento" 
+                    rules={[{ required: true, message: 'Seleccione su fecha de nacimiento' }]}
+                  > 
+                    <DatePicker 
+                      className={styles.modernDatePicker}
+                      format="YYYY-MM-DD" 
+                      disabledDate={current => current && current > dayjs().endOf('day')}
+                      placeholder="Seleccione fecha"
+                    />
+                  </Form.Item>
+                </div>
+
+                <hr className={styles.divider} />
+
+                <div className={styles.formSection}>
+                  <div className={styles.sectionTitle}>
+                    <EnvironmentOutlined /> Información de Ubicación
+                  </div>
+                  
+                  <Form.Item 
+                    label={<span className={styles.formLabel}>Departamento</span>} 
+                    name="departamento_id" 
+                    rules={[{ required: true, message: 'Seleccione un departamento' }]}
+                  > 
+                    <Select
+                      placeholder="Seleccione un departamento"
+                      onChange={handleDepartamentoChange}
+                      onDropdownVisibleChange={handleDepartamentoDropdown}
+                      options={departamentos.map(dep => ({ label: dep.nombre, value: dep.idDepartamento }))}
+                      showSearch
+                      optionFilterProp="label"
+                      className={styles.modernSelect}
+                    />
+                  </Form.Item>
+
+                  <div className={styles.formGrid}>
+                    <Form.Item 
+                      label={<span className={styles.formLabel}>Municipio</span>} 
+                      name="municipio_id" 
+                      rules={[{ required: true, message: 'Seleccione un municipio' }]}
+                    > 
+                      <Select
+                        placeholder="Seleccione un municipio"
+                        onChange={handleMunicipioChange}
+                        options={municipios.map(mun => ({ label: mun.nombre, value: mun.idMunicipio }))}
+                        showSearch
+                        optionFilterProp="label"
+                        disabled={!form.getFieldValue('departamento_id')}
+                        className={styles.modernSelect}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={<span className={styles.formLabel}>Aldea</span>} name="aldea_id"> 
+                      <Select
+                        placeholder="Seleccione una aldea"
+                        options={aldeas.map(ald => ({ label: ald.nombre, value: ald.idAldea }))}
+                        showSearch
+                        optionFilterProp="label"
+                        disabled={!form.getFieldValue('municipio_id')}
+                        className={styles.modernSelect}
+                      />
+                    </Form.Item>
+                  </div>
+
+                  <Form.Item label={<span className={styles.formLabel}>Dirección completa</span>} name="direccion_completa">
+                    <Input.TextArea rows={3} maxLength={255} className={styles.modernTextarea} />
+                  </Form.Item>
+
+                  <div className={styles.formGrid}>
+                    <Form.Item label={<span className={styles.formLabel}>Zona</span>} name="zona">
+                      <Input maxLength={50} className={styles.modernInput} />
+                    </Form.Item>
+                    <Form.Item label={<span className={styles.formLabel}>Referencia</span>} name="referencia">
+                      <Input maxLength={100} className={styles.modernInput} />
+                    </Form.Item>
+                  </div>
+                </div>
+
+                <Form.Item>
+                  <Button 
+                    type="primary" 
+                    htmlType="submit" 
+                    loading={saving} 
+                    block
+                    className={styles.primaryButton}
+                  >
+                    💾 Guardar Cambios
+                  </Button>
+                </Form.Item>
+              </Form>
+            </div>
+          </Card>
+
+          {/* Card de información médica solo si es paciente */}
+          {perfil?.esPaciente && (
+            <Card className={styles.profileCard}>
+              <div className={styles.cardHeader}>
+                <Title level={3} className={styles.cardTitle}>
+                  <MedicineBoxOutlined className={styles.cardIcon} />
+                  Información Médica
+                </Title>
+              </div>
+              <div className={styles.cardContent}>
+                {loadingMedico ? (
+                  <div className={styles.loadingContainer}>
+                    <Spin />
+                    <Text>Cargando información médica...</Text>
+                  </div>
+                ) : (
+                  <Form
+                    form={formMedico}
+                    layout="vertical"
+                    onFinish={async (values) => {
+                      setSavingMedico(true);
+                      try {
+                        let payload = { ...values };
+                        if (!payload.numero_expediente) {
+                          const today = new Date();
+                          const ymd = today.toISOString().slice(0,10).replace(/-/g, '');
+                          payload.numero_expediente = `P-${ymd}-${perfil.idPaciente}`;
+                        }
+                        await pacienteService.updatePaciente(perfil.idPaciente, payload);
+                        formMedico.setFieldsValue({ ...payload });
+                        message.success('Datos médicos actualizados correctamente');
+                      } catch (e) {
+                        if (e.message && e.message.includes('No encontrado')) {
+                          message.error('El paciente no existe o fue eliminado.');
+                        } else {
+                          message.error(e.message || 'Error al actualizar datos médicos');
+                        }
+                      } finally {
+                        setSavingMedico(false);
+                      }
+                    }}
+                    className={styles.modernForm}
+                  >
+                    <div className={styles.formSection}>
+                      <div className={styles.sectionTitle}>
+                        <HeartOutlined /> Información Clínica
+                      </div>
+
+                      <Form.Item label={<span className={styles.formLabel}>Número de expediente</span>} name="numero_expediente">
+                        <Input 
+                          maxLength={50} 
+                          disabled 
+                          placeholder="Se generará automáticamente al guardar" 
+                          className={`${styles.modernInput} ${styles.disabledInput}`}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={<span className={styles.formLabel}>Tipo de sangre</span>} name="tipo_sangre">
+                        <Input 
+                          maxLength={5} 
+                          placeholder="Ej: O+, A-, B+, etc." 
+                          className={styles.modernInput}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={<span className={styles.formLabel}>Alergias</span>} name="alergias">
+                        <Input.TextArea 
+                          rows={3} 
+                          maxLength={255} 
+                          placeholder="Describa cualquier alergia conocida"
+                          className={styles.modernTextarea}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={<span className={styles.formLabel}>Enfermedades crónicas</span>} name="enfermedades_cronicas">
+                        <Input.TextArea 
+                          rows={3} 
+                          maxLength={255} 
+                          placeholder="Describa enfermedades crónicas o condiciones médicas"
+                          className={styles.modernTextarea}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={<span className={styles.formLabel}>Medicamentos actuales</span>} name="medicamentos_actuales">
+                        <Input.TextArea 
+                          rows={3} 
+                          maxLength={255} 
+                          placeholder="Liste los medicamentos que toma actualmente"
+                          className={styles.modernTextarea}
+                        />
+                      </Form.Item>
+                    </div>
+
+                    <hr className={styles.divider} />
+
+                    <div className={styles.formSection}>
+                      <div className={styles.sectionTitle}>
+                        <ContactsOutlined /> Contacto de Emergencia
+                      </div>
+
+                      <Form.Item label={<span className={styles.formLabel}>Nombre completo</span>} name="contacto_emergencia_nombre">
+                        <Input 
+                          maxLength={100} 
+                          className={styles.modernInput}
+                          placeholder="Nombre del contacto de emergencia"
+                        />
+                      </Form.Item>
+
+                      <div className={styles.formGrid}>
+                        <Form.Item label={<span className={styles.formLabel}>Teléfono</span>} name="contacto_emergencia_telefono">
+                          <Input 
+                            maxLength={20} 
+                            className={styles.modernInput}
+                            prefix={<PhoneOutlined style={{ color: '#a0aec0' }} />}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label={<span className={styles.formLabel}>Parentesco</span>} name="contacto_emergencia_parentesco">
+                          <Input 
+                            maxLength={50} 
+                            className={styles.modernInput}
+                            placeholder="Ej: Madre, Hermano, etc."
+                          />
+                        </Form.Item>
+                      </div>
+                    </div>
+
+                    <Form.Item>
+                      <Button 
+                        type="primary" 
+                        htmlType="submit" 
+                        loading={savingMedico} 
+                        block
+                        className={styles.primaryButton}
+                      >
+                        🏥 Guardar Información Médica
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                )}
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import PaginaRecetas from './pages/PaginaRecetas';
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
@@ -7,6 +8,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard.jsx';
 import GestionCitas from './pages/GestionCitas.jsx';
 import GestionSolicitudesRol from './pages/GestionSolicitudesRol.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
 import Perfil from './pages/Perfil.jsx';
 import { useParams, useLocation } from 'react-router-dom';
 import VideoComponent from './components/VideoComponent';
@@ -29,11 +31,13 @@ function App() {
       <Route path="/home" element={<Home />} />
       <Route path="/video" element={<Video />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/citas" element={<GestionCitas />} />
-      <Route path="/admin/solicitudes-rol" element={<GestionSolicitudesRol />} />
-  <Route path="/perfil" element={<Perfil />} />
-      <Route path="/videollamada/:roomId" element={<VideoComponentWrapper />} />
+    <Route path="/dashboard" element={<Dashboard />} />
+    <Route path="/citas" element={<GestionCitas />} />
+    <Route path="/admin/solicitudes-rol" element={<GestionSolicitudesRol />} />
+    <Route path="/admin" element={<AdminDashboard />} />
+    <Route path="/perfil" element={<Perfil />} />
+    <Route path="/videollamada/:roomId" element={<VideoComponentWrapper />} />
+    <Route path="/recetas" element={<PaginaRecetas />} />
     </Routes>
   );
 }
