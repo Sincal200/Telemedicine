@@ -92,6 +92,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8093:8093"
+    volumes:
+      - recetas_data:/usr/src/app/archivos_recetas
     environment:
       - PORT=8093
       - REDIS_HOST=${REDIS_HOST}
@@ -112,4 +114,6 @@ volumes:
   postgres_data:
     driver: local
   mysql_data:
+    driver: local
+  recetas_data:
     driver: local
