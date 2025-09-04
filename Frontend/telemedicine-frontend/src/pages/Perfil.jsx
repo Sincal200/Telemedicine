@@ -14,11 +14,16 @@ import userProfileService from '../services/userProfileService';
 import catalogoDireccionService from '../services/catalogoDireccionService';
 import direccionService from '../services/direccionService';
 import pacienteService from '../services/pacienteService';
+import especialidadService from '../services/especialidadService';
 import styles from '../styles/components/Perfil.module.css';
 
 const { Title, Text } = Typography;
 
 const Perfil = () => {
+  // Estado para especialidad del doctor
+  const [especialidades, setEspecialidades] = useState([]);
+  const [especialidadId, setEspecialidadId] = useState(null);
+  const [savingEspecialidad, setSavingEspecialidad] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -43,6 +48,16 @@ const Perfil = () => {
       } catch (e) { message.error('Error cargando departamentos'); }
     }
   };
+
+  // Cargar especialidades si es médico
+  useEffect(() => {
+    if (perfil && (perfil.esMedico === true || perfil.esMedico === "true" || perfil.esMedico == 1) && perfil.idPersonalMedico) {
+      especialidadService.getEspecialidades().then(setEspecialidades);
+      especialidadService.getPersonalMedico(perfil.idPersonalMedico).then(medico => {
+        setEspecialidadId(medico.especialidad_id);
+      });
+    }
+  }, [perfil]);
 
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -388,6 +403,57 @@ const Perfil = () => {
               </Form>
             </div>
           </Card>
+
+          {/* Card de especialidad solo si es médico y perfil cargado (acepta string o boolean) */}
+          {perfil && (perfil.esMedico === true || perfil.esMedico === "true" || perfil.esMedico == 1) && (
+            <Card className={styles.profileCard}>
+              <div className={styles.cardHeader}>
+                <Title level={3} className={styles.cardTitle}>
+                  <MedicineBoxOutlined className={styles.cardIcon} />
+                  Especialidad Médica
+                </Title>
+              </div>
+              <div className={styles.cardContent}>
+                {/* ...sin depuración visual... */}
+                <Form
+                  layout="vertical"
+                  onFinish={async (values) => {
+                    setSavingEspecialidad(true);
+                    try {
+                      await especialidadService.updateEspecialidad(perfil.idPersonalMedico, values.especialidad_id);
+                      setEspecialidadId(values.especialidad_id);
+                      message.success('Especialidad actualizada correctamente');
+                    } catch (e) {
+                      message.error('Error al actualizar especialidad');
+                    } finally {
+                      setSavingEspecialidad(false);
+                    }
+                  }}
+                  initialValues={{ especialidad_id: especialidadId }}
+                >
+                  <Form.Item
+                    label={<span className={styles.formLabel}>Especialidad</span>}
+                    name="especialidad_id"
+                    rules={[{ required: true, message: 'Seleccione una especialidad' }]}
+                  >
+                    <Select
+                      placeholder={especialidades.length === 0 ? "No hay especialidades disponibles" : "Seleccione especialidad"}
+                      options={especialidades.map(e => ({ label: e.nombre, value: e.idEspecialidad }))}
+                      className={styles.modernSelect}
+                      value={especialidadId}
+                      onChange={setEspecialidadId}
+                      disabled={especialidades.length === 0}
+                    />
+                  </Form.Item>
+                  <Form.Item>
+                    <Button type="primary" htmlType="submit" loading={savingEspecialidad} block className={styles.primaryButton} disabled={especialidades.length === 0}>
+                      Guardar Especialidad
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </div>
+            </Card>
+          )}
 
           {/* Card de información médica solo si es paciente */}
           {perfil?.esPaciente && (

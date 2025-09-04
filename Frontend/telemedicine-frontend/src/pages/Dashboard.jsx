@@ -161,6 +161,7 @@ function Dashboard() {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'Configuración',
+      onClick: () => navigate('/configuracion-horario'),
     },
     // Botón para cambiar vista si es admin
     ...(userRoles.includes('admin') ? [
@@ -505,16 +506,26 @@ function Dashboard() {
             <Col xs={24} lg={8}>
               {/* Calendario - Solo mostrar si no está en vista admin */}
               {displayRole !== 'admin' && (
-                <Card 
-                  title="Calendario" 
-                  className={styles.calendarCard}
-                  size="small"
-                >
-                  <Calendar 
-                    fullscreen={false} 
-                    className={styles.miniCalendar}
-                  />
-                </Card>
+                <>
+                  <Card 
+                    title="Calendario" 
+                    className={styles.calendarCard}
+                    size="small"
+                  >
+                    <Calendar 
+                      fullscreen={false} 
+                      className={styles.miniCalendar}
+                    />
+                  </Card>
+                  <Button
+                    type="default"
+                    icon={<SettingOutlined />}
+                    onClick={() => navigate('/configuracion-horario')}
+                    style={{ margin: '16px 0', width: '100%' }}
+                  >
+                    Configurar Horario Médico
+                  </Button>
+                </>
               )}
               
               {/* Actividad reciente adaptada al rol */}
