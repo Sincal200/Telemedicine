@@ -28,13 +28,14 @@ import {
 } from '@ant-design/icons';
 import citaService from '../services/citaService';
 import userProfileService from '../services/userProfileService';
+import consultaService from '../services/consultaService';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { Title, Text } = Typography;
 
-function ProgramarCita({ visible, onClose, onSuccess }) {
+function ProgramarCita({ visible, onClose, onSuccess, tipoCitaPreseleccionado, pacienteId, consultaId }) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [buscandoHorarios, setBuscandoHorarios] = useState(false);
@@ -54,8 +55,12 @@ function ProgramarCita({ visible, onClose, onSuccess }) {
   useEffect(() => {
     if (visible) {
       cargarDatosIniciales();
+      // Si hay tipoCitaPreseleccionado, setear el valor en el formulario
+      if (tipoCitaPreseleccionado) {
+        form.setFieldsValue({ tipoCitaId: tipoCitaPreseleccionado });
+      }
     }
-  }, [visible]);
+  }, [visible, tipoCitaPreseleccionado]);
 
   const cargarDatosIniciales = async () => {
     setLoading(true);
@@ -103,17 +108,20 @@ function ProgramarCita({ visible, onClose, onSuccess }) {
   };
 
   const seleccionarHorario = (horario) => {
-    setHorarioSeleccionado(horario);
+    // Si hay consultaId, agregarlo al horario seleccionado
+    const horarioConConsulta = consultaId ? { ...horario, consultaId } : horario;
+    setHorarioSeleccionado(horarioConConsulta);
     setMostrarConfirmacion(true);
   };
 
   const confirmarCita = async (motivoCita) => {
     setProgramandoCita(true);
-    
     try {
-      // Obtener ID del paciente actual
-      const idPaciente = await userProfileService.obtenerIdPaciente();
-      
+      // Usar pacienteId prop si está presente (doctor agenda para paciente), si no, obtener del perfil
+      let idPaciente = pacienteId;
+      if (!idPaciente) {
+        idPaciente = await userProfileService.obtenerIdPaciente();
+      }
       if (!idPaciente) {
         throw new Error('No se pudo obtener la información del paciente. Asegúrate de estar registrado como paciente.');
       }
@@ -139,17 +147,29 @@ function ProgramarCita({ visible, onClose, onSuccess }) {
       };
 
       await citaService.programarCita(datosCita);
-      
+
+      // Si es cita de seguimiento y existe consulta, actualizar automáticamente la fecha de seguimiento y requiere_seguimiento
+      if (tipoCitaPreseleccionado === 3 && horarioSeleccionado.consultaId) {
+        try {
+          await consultaService.actualizarConsulta(horarioSeleccionado.consultaId, {
+            fecha_seguimiento: fecha,
+            requiere_seguimiento: 1
+          });
+        } catch (e) {
+          // No bloquear el flujo si falla
+          console.warn('No se pudo actualizar la fecha de seguimiento en la consulta:', e);
+        }
+      }
+
       message.success('¡Cita programada exitosamente!');
       setMostrarConfirmacion(false);
       form.resetFields();
       setHorariosDisponibles([]);
       setHorarioSeleccionado(null);
-      
+
       if (onSuccess) {
         onSuccess();
       }
-      
       if (onClose) {
         onClose();
       }

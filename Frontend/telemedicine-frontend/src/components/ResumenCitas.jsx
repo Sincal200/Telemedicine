@@ -89,16 +89,18 @@ function ResumenCitas({ userRole = 'patient', userId = 1 }) {
           return fechaCita.isAfter(dayjs().subtract(1, 'day')) && 
                  ![4, 5, 6].includes(cita.estado_cita_id);
         });
-      // Priorizar las que tengan videollamada
-      citasProximas = citasProximas.sort((a, b) => {
-        if (a.room_id && !b.room_id) return -1;
-        if (!a.room_id && b.room_id) return 1;
-        const fechaA = new Date(combinarFechaHora(a.fecha, a.hora_inicio));
-        const fechaB = new Date(combinarFechaHora(b.fecha, b.hora_inicio));
-        return fechaA - fechaB;
-      });
-      // Limitar a las próximas 3
-      citasProximas = citasProximas.slice(0, 3);
+        // Priorizar las que tengan videollamada o sean SEGUIMIENTO (tipoCitaId === 3)
+        citasProximas = citasProximas.sort((a, b) => {
+          const aTelemed = a.room_id || a.tipo_cita_id === 3;
+          const bTelemed = b.room_id || b.tipo_cita_id === 3;
+          if (aTelemed && !bTelemed) return -1;
+          if (!aTelemed && bTelemed) return 1;
+          const fechaA = new Date(combinarFechaHora(a.fecha, a.hora_inicio));
+          const fechaB = new Date(combinarFechaHora(b.fecha, b.hora_inicio));
+          return fechaA - fechaB;
+        });
+  // Limitar a las próximas 5
+  citasProximas = citasProximas.slice(0, 5);
       setCitas(citasProximas);
     } catch (error) {
       console.error('Error cargando citas:', error);
@@ -203,11 +205,11 @@ function ResumenCitas({ userRole = 'patient', userId = 1 }) {
                             {formatearHora(combinarFechaHora(cita.fecha, cita.hora_inicio))}
                           </Text>
                         </Space>
-                        {/* Botón para videollamada si aplica */}
-                        {cita.room_id && (
+                        {/* Botón para videollamada si aplica o si es SEGUIMIENTO */}
+                        {(cita.room_id || cita.tipo_cita_id === 3) && (
                           <Button
                             type="primary"
-                            onClick={() => navigate(`/videollamada/${cita.room_id}`, {
+                            onClick={() => navigate(`/videollamada/${cita.room_id || 'seguimiento-' + cita.idCita}`, {
                               state: {
                                 userId,
                                 userRole

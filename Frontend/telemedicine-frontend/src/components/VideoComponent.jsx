@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ProgramarCita from './ProgramarCita';
 import { Drawer, Button, Form, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Video.module.css';
@@ -48,16 +49,16 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     tratamiento: '',
     observaciones: '',
     receta_medica: '',
-    examenes_solicitados: '',
-    proxima_cita_recomendada: '',
-    requiere_seguimiento: false,
-    fecha_seguimiento: ''
+    examenes_solicitados: ''
   });
   const [medicoLoading, setMedicoLoading] = useState(false);
 
   // Tabs del rail
   const [tab, setTab] = useState('pre'); // 'pre' | 'exp' | 'notas'
   const railRef = useRef(null);
+
+  // Modal para programar cita de seguimiento
+  const [modalSeguimientoVisible, setModalSeguimientoVisible] = useState(false);
 
 
   // Drawer Receta
@@ -218,27 +219,20 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     if (!cita) return;
     setMedicoLoading(true);
     try {
-      const normalizeDate = (val) => (!val || val === 'Invalid date') ? null : val;
-      // Excluir receta_medica del payload
+      // Solo enviar los campos relevantes, sin seguimiento
       const {
         diagnostico_principal,
         diagnosticos_secundarios,
         tratamiento,
         observaciones,
-        examenes_solicitados,
-        proxima_cita_recomendada,
-        requiere_seguimiento,
-        fecha_seguimiento
+        examenes_solicitados
       } = formMedico;
       const payload = {
         diagnostico_principal,
         diagnosticos_secundarios,
         tratamiento,
         observaciones,
-        examenes_solicitados,
-        proxima_cita_recomendada: normalizeDate(proxima_cita_recomendada),
-        requiere_seguimiento,
-        fecha_seguimiento: normalizeDate(fecha_seguimiento)
+        examenes_solicitados
       };
 
       let consultaGuardada = null;
@@ -631,6 +625,26 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                 }}
                 onClick={openDrawerReceta}
               />
+              <Button
+                type="primary"
+                shape="circle"
+                icon={<span role="img" aria-label="Seguimiento">📅</span>}
+                size="large"
+                style={{
+                  position: 'fixed',
+                  bottom: 168,
+                  right: 32,
+                  zIndex: 1001
+                }}
+                onClick={() => setModalSeguimientoVisible(true)}
+              />
+              <ProgramarCita
+                visible={modalSeguimientoVisible}
+                onClose={() => setModalSeguimientoVisible(false)}
+                tipoCitaPreseleccionado={3}
+                pacienteId={cita?.paciente_id}
+                consultaId={consulta?.idConsulta}
+              />
             </>
           )}
           {/* Pantallas pequeñas: un botón menú flotante */}
@@ -743,7 +757,7 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
             </div>
           </details>
           <details className={`${styles.collapseGroup} ${styles.fullRow}`}>
-            <summary className={styles.collapseSummary}>Estudios y seguimiento</summary>
+            <summary className={styles.collapseSummary}>Estudios</summary>
             <div className={styles.collapseBody}>
               <label className={styles.formLabel}>Exámenes solicitados</label>
               <textarea
@@ -752,27 +766,6 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                 value={formMedico.examenes_solicitados}
                 onChange={e => setFormMedico(f => ({ ...f, examenes_solicitados: e.target.value }))}
                 placeholder="Estudios de laboratorio o imagen…"
-              />
-              <label className={styles.formLabel}>Próxima cita recomendada</label>
-              <input
-                className={styles.formInput}
-                type="date"
-                value={formMedico.proxima_cita_recomendada}
-                onChange={e => setFormMedico(f => ({ ...f, proxima_cita_recomendada: e.target.value }))}
-              />
-              <label className={styles.formLabel}>¿Requiere seguimiento?</label>
-              <input
-                className={styles.formCheckbox}
-                type="checkbox"
-                checked={formMedico.requiere_seguimiento}
-                onChange={e => setFormMedico(f => ({ ...f, requiere_seguimiento: e.target.checked }))}
-              />
-              <label className={styles.formLabel}>Fecha de seguimiento</label>
-              <input
-                className={styles.formInput}
-                type="date"
-                value={formMedico.fecha_seguimiento}
-                onChange={e => setFormMedico(f => ({ ...f, fecha_seguimiento: e.target.value }))}
               />
             </div>
           </details>
