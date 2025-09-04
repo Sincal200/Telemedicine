@@ -4,6 +4,7 @@ import { Drawer, Button, Form, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Video.module.css';
 import consultaService from '../services/consultaService';
+import signosVitalesService from '../services/signosVitalesService';
 import expedienteService from '../services/expedienteService';
 
 // ICE
@@ -49,7 +50,19 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     tratamiento: '',
     observaciones: '',
     receta_medica: '',
-    examenes_solicitados: ''
+    examenes_solicitados: '',
+    presion_sistolica: '',
+    presion_diastolica: '',
+    frecuencia_cardiaca: '',
+    temperatura: '',
+    peso: '',
+    altura: '',
+    imc: '',
+    oximetria: '',
+    glucosa: '',
+    frecuencia_respiratoria: '',
+    circunferencia_abdominal: '',
+    notas_signos: ''
   });
   const [medicoLoading, setMedicoLoading] = useState(false);
 
@@ -70,6 +83,120 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   const [drawerNotasOpen, setDrawerNotasOpen] = useState(false);
   const openDrawerNotas = () => setDrawerNotasOpen(true);
   const closeDrawerNotas = () => setDrawerNotasOpen(false);
+
+  // Drawer Signos Vitales
+  const [drawerSignosOpen, setDrawerSignosOpen] = useState(false);
+  const openDrawerSignos = () => {
+    setDrawerSignosOpen(true);
+    cargarSignosExistentes(); // Cargar datos existentes al abrir
+  };
+  const closeDrawerSignos = () => setDrawerSignosOpen(false);
+
+  // Handler para guardar signos vitales desde Drawer
+  const [signosLoading, setSignosLoading] = useState(false);
+  const [signosExistentes, setSignosExistentes] = useState(null);
+  
+  const handleGuardarSignos = async () => {
+    if (!consulta?.idConsulta) {
+      alert('No hay consulta activa para asociar los signos vitales.');
+      return;
+    }
+    setSignosLoading(true);
+    try {
+      const {
+        presion_sistolica,
+        presion_diastolica,
+        frecuencia_cardiaca,
+        temperatura,
+        peso,
+        altura,
+        imc,
+        oximetria,
+        glucosa,
+        frecuencia_respiratoria,
+        circunferencia_abdominal,
+        notas_signos
+      } = formMedico;
+
+      const signosPayload = {
+        consulta_id: consulta.idConsulta,
+        tomado_por: userId
+      };
+
+      // Solo agregar campos que no estén vacíos
+      if (presion_sistolica && presion_sistolica !== '') signosPayload.presion_sistolica = parseInt(presion_sistolica);
+      if (presion_diastolica && presion_diastolica !== '') signosPayload.presion_diastolica = parseInt(presion_diastolica);
+      if (frecuencia_cardiaca && frecuencia_cardiaca !== '') signosPayload.frecuencia_cardiaca = parseInt(frecuencia_cardiaca);
+      if (temperatura && temperatura !== '') signosPayload.temperatura = parseFloat(temperatura);
+      if (peso && peso !== '') signosPayload.peso = parseFloat(peso);
+      if (altura && altura !== '') signosPayload.altura = parseFloat(altura);
+      if (imc && imc !== '') signosPayload.imc = parseFloat(imc);
+      if (oximetria && oximetria !== '') signosPayload.oximetria = parseFloat(oximetria);
+      if (glucosa && glucosa !== '') signosPayload.glucosa = parseInt(glucosa);
+      if (frecuencia_respiratoria && frecuencia_respiratoria !== '') signosPayload.frecuencia_respiratoria = parseInt(frecuencia_respiratoria);
+      if (circunferencia_abdominal && circunferencia_abdominal !== '') signosPayload.circunferencia_abdominal = parseFloat(circunferencia_abdominal);
+      if (notas_signos && notas_signos !== '') signosPayload.notas = notas_signos;
+
+      // Solo guardar si al menos un campo está lleno (excluyendo consulta_id y tomado_por)
+      const camposDatos = Object.keys(signosPayload).filter(key => key !== 'consulta_id' && key !== 'tomado_por');
+      if (camposDatos.length === 0) {
+        alert('Por favor, ingresa al menos un signo vital.');
+        return;
+      }
+
+      // Verificar si ya existen signos vitales para esta consulta
+      let signosGuardados;
+      if (signosExistentes && signosExistentes.length > 0) {
+        // Actualizar el registro existente
+        const signoExistente = signosExistentes[0];
+        signosGuardados = await signosVitalesService.actualizarSignosVitales(signoExistente.idSignosVitales, signosPayload);
+        alert('Signos vitales actualizados correctamente');
+      } else {
+        // Crear nuevo registro
+        signosGuardados = await signosVitalesService.crearSignosVitales(signosPayload);
+        alert('Signos vitales guardados correctamente');
+      }
+      
+      closeDrawerSignos();
+    } catch (error) {
+      console.error('Error guardando signos vitales:', error);
+      alert('Error guardando signos vitales');
+    } finally {
+      setSignosLoading(false);
+    }
+  };
+
+  // Cargar signos vitales existentes al abrir el drawer
+  const cargarSignosExistentes = async () => {
+    if (!consulta?.idConsulta) return;
+    try {
+      const signos = await signosVitalesService.obtenerPorConsulta(consulta.idConsulta);
+      setSignosExistentes(signos);
+      
+      // Si hay signos existentes, llenar el formulario con esos datos
+      if (signos && signos.length > 0) {
+        const signo = signos[0]; // Tomar el primer registro
+        setFormMedico(prev => ({
+          ...prev,
+          presion_sistolica: signo.presion_sistolica || '',
+          presion_diastolica: signo.presion_diastolica || '',
+          frecuencia_cardiaca: signo.frecuencia_cardiaca || '',
+          temperatura: signo.temperatura || '',
+          peso: signo.peso || '',
+          altura: signo.altura || '',
+          imc: signo.imc || '',
+          oximetria: signo.oximetria || '',
+          glucosa: signo.glucosa || '',
+          frecuencia_respiratoria: signo.frecuencia_respiratoria || '',
+          circunferencia_abdominal: signo.circunferencia_abdominal || '',
+          notas_signos: signo.notas || ''
+        }));
+      }
+    } catch (error) {
+      console.error('Error cargando signos vitales:', error);
+      setSignosExistentes(null);
+    }
+  };
 
   // Handler para guardar receta desde Drawer
   const [recetaDraft, setRecetaDraft] = useState('');
@@ -220,12 +347,25 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
     setMedicoLoading(true);
     try {
       // Solo enviar los campos relevantes, sin seguimiento
+      // Guardar información médica
       const {
         diagnostico_principal,
         diagnosticos_secundarios,
         tratamiento,
         observaciones,
-        examenes_solicitados
+        examenes_solicitados,
+        presion_sistolica,
+        presion_diastolica,
+        frecuencia_cardiaca,
+        temperatura,
+        peso,
+        altura,
+        imc,
+        oximetria,
+        glucosa,
+        frecuencia_respiratoria,
+        circunferencia_abdominal,
+        notas_signos
       } = formMedico;
       const payload = {
         diagnostico_principal,
@@ -242,6 +382,29 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         consultaGuardada = await consultaService.crearConsulta({ cita_id: cita.idCita, ...payload });
       }
       setConsulta(consultaGuardada);
+
+      // Guardar signos vitales si hay datos
+      const signosPayload = {
+        consulta_id: consultaGuardada.idConsulta,
+        presion_sistolica,
+        presion_diastolica,
+        frecuencia_cardiaca,
+        temperatura,
+        peso,
+        altura,
+        imc,
+        oximetria,
+        glucosa,
+        frecuencia_respiratoria,
+        circunferencia_abdominal,
+        notas: notas_signos,
+        tomado_por: userId
+      };
+      // Solo guardar si al menos un campo está lleno
+      const tieneSignos = Object.values(signosPayload).some(v => v && v !== '' && v !== null && v !== undefined);
+      if (tieneSignos) {
+        await signosVitalesService.crearSignosVitales(signosPayload);
+      }
       alert('Información médica guardada');
     } catch {
       alert('Error guardando información médica');
@@ -628,6 +791,19 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
               <Button
                 type="primary"
                 shape="circle"
+                icon={<span role="img" aria-label="Signos">🩺</span>}
+                size="large"
+                style={{
+                  position: 'fixed',
+                  bottom: 100,
+                  right: 100,
+                  zIndex: 1001
+                }}
+                onClick={openDrawerSignos}
+              />
+              <Button
+                type="primary"
+                shape="circle"
                 icon={<span role="img" aria-label="Seguimiento">📅</span>}
                 size="large"
                 style={{
@@ -695,6 +871,16 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                     openDrawerReceta();
                   }}
                 >Receta Médica</Button>
+                <Button
+                  type="default"
+                  icon={<span role="img" aria-label="Signos">🩺</span>}
+                  block
+                  size="large"
+                  onClick={() => {
+                    setMenuDrawerOpen(false);
+                    openDrawerSignos();
+                  }}
+                >Signos Vitales</Button>
               </Drawer>
             </>
           )}
@@ -795,6 +981,126 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
           </Form.Item>
           <Button type="primary" onClick={handleGuardarReceta} block>
             Guardar receta
+          </Button>
+        </Form>
+      </Drawer>
+
+      {/* Drawer de signos vitales */}
+      <Drawer
+        title="Signos Vitales"
+        placement="right"
+        onClose={closeDrawerSignos}
+        open={drawerSignosOpen}
+        width={window.innerWidth < 600 ? '100%' : 500}
+        bodyStyle={{ paddingBottom: 80 }}
+      >
+        <Form layout="vertical">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <Form.Item label="Presión Sistólica (mmHg)">
+              <Input 
+                type="number" 
+                placeholder="120" 
+                value={formMedico.presion_sistolica} 
+                onChange={e => setFormMedico(f => ({ ...f, presion_sistolica: e.target.value }))} 
+              />
+            </Form.Item>
+            <Form.Item label="Presión Diastólica (mmHg)">
+              <Input 
+                type="number" 
+                placeholder="80" 
+                value={formMedico.presion_diastolica} 
+                onChange={e => setFormMedico(f => ({ ...f, presion_diastolica: e.target.value }))} 
+              />
+            </Form.Item>
+            <Form.Item label="Frecuencia Cardíaca (lpm)">
+              <Input 
+                type="number" 
+                placeholder="72" 
+                value={formMedico.frecuencia_cardiaca} 
+                onChange={e => setFormMedico(f => ({ ...f, frecuencia_cardiaca: e.target.value }))} 
+              />
+            </Form.Item>
+            <Form.Item label="Temperatura (°C)">
+              <Input 
+                type="number" 
+                step="0.1" 
+                placeholder="36.5" 
+                value={formMedico.temperatura} 
+                onChange={e => setFormMedico(f => ({ ...f, temperatura: e.target.value }))} 
+              />
+            </Form.Item>
+            <Form.Item label="Peso (kg)">
+              <Input 
+                type="number" 
+                step="0.1" 
+                placeholder="70.0" 
+                value={formMedico.peso} 
+                onChange={e => setFormMedico(f => ({ ...f, peso: e.target.value }))} 
+              />
+            </Form.Item>
+            <Form.Item label="Altura (cm)">
+              <Input 
+                type="number" 
+                step="0.1" 
+                placeholder="170.0" 
+                value={formMedico.altura} 
+                onChange={e => setFormMedico(f => ({ ...f, altura: e.target.value }))} 
+              />
+            </Form.Item>
+            <Form.Item label="IMC">
+              <Input 
+                type="number" 
+                step="0.1" 
+                placeholder="24.2" 
+                value={formMedico.imc} 
+                onChange={e => setFormMedico(f => ({ ...f, imc: e.target.value }))} 
+              />
+            </Form.Item>
+            <Form.Item label="Oximetría (%)">
+              <Input 
+                type="number" 
+                step="0.1" 
+                placeholder="98.0" 
+                value={formMedico.oximetria} 
+                onChange={e => setFormMedico(f => ({ ...f, oximetria: e.target.value }))} 
+              />
+            </Form.Item>
+            <Form.Item label="Glucosa (mg/dL)">
+              <Input 
+                type="number" 
+                placeholder="100" 
+                value={formMedico.glucosa} 
+                onChange={e => setFormMedico(f => ({ ...f, glucosa: e.target.value }))} 
+              />
+            </Form.Item>
+            <Form.Item label="Frecuencia Respiratoria (rpm)">
+              <Input 
+                type="number" 
+                placeholder="16" 
+                value={formMedico.frecuencia_respiratoria} 
+                onChange={e => setFormMedico(f => ({ ...f, frecuencia_respiratoria: e.target.value }))} 
+              />
+            </Form.Item>
+          </div>
+          <Form.Item label="Circunferencia Abdominal (cm)">
+            <Input 
+              type="number" 
+              step="0.1" 
+              placeholder="85.0" 
+              value={formMedico.circunferencia_abdominal} 
+              onChange={e => setFormMedico(f => ({ ...f, circunferencia_abdominal: e.target.value }))} 
+            />
+          </Form.Item>
+          <Form.Item label="Notas">
+            <Input.TextArea
+              rows={3}
+              placeholder="Observaciones sobre los signos vitales..."
+              value={formMedico.notas_signos}
+              onChange={e => setFormMedico(f => ({ ...f, notas_signos: e.target.value }))}
+            />
+          </Form.Item>
+          <Button type="primary" onClick={handleGuardarSignos} block loading={signosLoading}>
+            {signosLoading ? 'Guardando...' : 'Guardar signos vitales'}
           </Button>
         </Form>
       </Drawer>
