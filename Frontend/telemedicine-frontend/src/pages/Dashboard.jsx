@@ -27,7 +27,9 @@ import {
   HeartOutlined,
   FileTextOutlined,
   BellOutlined,
-  DashboardOutlined
+  DashboardOutlined,
+  RobotOutlined,
+  MessageOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Dashboard.module.css';
@@ -338,8 +340,8 @@ function Dashboard() {
               {displayRole === 'admin' 
                 ? 'Panel de control y administración del sistema'
                 : displayRole === 'doctor' 
-                  ? 'Aquí tienes un resumen de tus consultas de hoy'
-                  : 'Gestiona tus citas y consultas médicas'
+                  ? 'Aquí tienes un resumen de tus consultas de hoy. También puedes usar el Chat Médico Pro para consultas profesionales avanzadas.'
+                  : 'Gestiona tus citas y consultas médicas. Prueba nuestro chat médico con IA para orientación inicial.'
               }
             </Text>
             {/* Indicador de vista y roles para usuarios con múltiples roles */}
@@ -420,6 +422,36 @@ function Dashboard() {
                 className={styles.actionCard}
                 extra={<Button type="link" icon={<SettingOutlined />} />}
               >
+                {/* Destacar Chat IA para pacientes */}
+                {displayRole === 'patient' && (
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    padding: '16px', 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    borderRadius: '12px',
+                    color: '#fff'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <RobotOutlined style={{ fontSize: '32px' }} />
+                      <div style={{ flex: 1 }}>
+                        <Title level={5} style={{ color: '#fff', margin: 0 }}>
+                          🤖 Chat Médico con IA
+                        </Title>
+                        <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px' }}>
+                          Obtén orientación médica inicial describiendo tus síntomas
+                        </Text>
+                      </div>
+                      <Button 
+                        type="primary" 
+                        ghost
+                        onClick={() => navigate('/chat-diagnostico')}
+                        style={{ borderColor: '#fff', color: '#fff' }}
+                      >
+                        Iniciar Chat
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <Row gutter={[16, 16]}>
                   <Col xs={12} sm={8}>
                     <Button 
@@ -445,19 +477,57 @@ function Dashboard() {
                        displayRole === 'doctor' ? 'Mis Consultas Realizadas' : 'Historial de Consultas'}
                     </Button>
                   </Col>
-                  {/* Botón de configuración de horario para doctores */}
-                  {displayRole === 'doctor' && (
+                  {/* Chat de Diagnóstico - principalmente para pacientes */}
+                  {displayRole === 'patient' && (
                     <Col xs={12} sm={8}>
                       <Button 
-                        icon={<SettingOutlined />}
+                        icon={<RobotOutlined />}
                         block
                         size="large"
                         className={styles.actionButton}
-                        onClick={() => navigate('/configuracion-horario')}
+                        onClick={() => navigate('/chat-diagnostico')}
+                        style={{ 
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          borderColor: '#667eea',
+                          color: '#fff'
+                        }}
                       >
-                        Configurar Horario
+                        Chat Médico IA
                       </Button>
                     </Col>
+                  )}
+                  {/* Botón de configuración de horario para doctores */}
+                  {displayRole === 'doctor' && (
+                    <>
+                      <Col xs={12} sm={8}>
+                        <Button 
+                          icon={<SettingOutlined />}
+                          block
+                          size="large"
+                          className={styles.actionButton}
+                          onClick={() => navigate('/configuracion-horario')}
+                        >
+                          Configurar Horario
+                        </Button>
+                      </Col>
+                      {/* Chat diagnóstico también para doctores como herramienta */}
+                      <Col xs={12} sm={8}>
+                        <Button 
+                          icon={<MessageOutlined />}
+                          block
+                          size="large"
+                          className={styles.actionButton}
+                          onClick={() => navigate('/chat-medico')}
+                          style={{ 
+                            background: 'linear-gradient(135deg, #722ed1 0%, #9254de 100%)',
+                            borderColor: '#722ed1',
+                            color: '#fff'
+                          }}
+                        >
+                          Chat Médico Pro
+                        </Button>
+                      </Col>
+                    </>
                   )}
                   {displayRole === 'admin' && (
                     <Col xs={12} sm={8}>

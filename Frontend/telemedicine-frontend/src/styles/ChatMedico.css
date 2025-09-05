@@ -1,0 +1,218 @@
+/* Chat Médico Profesional Styles */
+.chat-medico-container {
+  height: 100vh;
+  background: linear-gradient(135deg, #e6f7ff 0%, #f0f5ff 100%);
+}
+
+.chat-medico-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(114, 46, 209, 0.2);
+  height: auto !important;
+  min-height: 64px !important;
+  padding: 12px 16px !important;
+}
+
+.chat-medico-header .ant-typography {
+  margin: 0 !important;
+}
+
+.chat-medico-header .ant-btn {
+  height: auto;
+  padding: 4px 8px;
+}
+
+.chat-medico-messages {
+  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+  scrollbar-width: thin;
+  scrollbar-color: #d9d9d9 transparent;
+  scroll-behavior: smooth;
+  padding-bottom: 20px;
+}
+
+.chat-medico-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-medico-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-medico-messages::-webkit-scrollbar-thumb {
+  background-color: #d9d9d9;
+  border-radius: 3px;
+}
+
+.chat-medico-messages::-webkit-scrollbar-thumb:hover {
+  background-color: #bfbfbf;
+}
+
+.message-bubble-medico {
+  animation: fadeInUpMedico 0.3s ease-out;
+  transform-origin: bottom;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  max-height: none !important;
+  overflow: visible !important;
+  line-height: 1.6;
+  min-height: auto;
+  height: auto;
+  display: block;
+}
+
+@keyframes fadeInUpMedico {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-message-medico {
+  background: linear-gradient(135deg, #722ed1, #9254de) !important;
+  box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3);
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.bot-message-medico {
+  background: linear-gradient(135deg, #ffffff, #f8f9fa) !important;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.typing-indicator-container-medico {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chat-input-container-medico {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(114, 46, 209, 0.2);
+}
+
+.send-button-medico {
+  background: linear-gradient(135deg, #722ed1, #9254de) !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.send-button-medico:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 6px 16px rgba(114, 46, 209, 0.4) !important;
+}
+
+.status-indicator-medico {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.status-dot-medico {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #722ed1;
+  animation: statusPulseMedico 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes statusPulseMedico {
+  0% {
+    box-shadow: 0 0 0 0 rgba(114, 46, 209, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(114, 46, 209, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(114, 46, 209, 0);
+  }
+}
+
+/* Message content styling */
+.message-content-medico {
+  display: block;
+  width: 100%;
+  min-height: auto;
+  overflow: visible;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.6;
+}
+
+/* Long text handling */
+.message-bubble-medico p {
+  margin: 0 0 8px 0;
+  white-space: pre-wrap;
+}
+
+.message-bubble-medico p:last-child {
+  margin-bottom: 0;
+}
+
+/* Ensure full content display */
+.message-bubble-medico * {
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .message-bubble-medico {
+    max-width: 85% !important;
+  }
+  
+  .chat-medico-header .ant-typography {
+    font-size: 14px !important;
+  }
+  
+  .chat-medico-header {
+    padding: 8px 12px !important;
+    min-height: 56px !important;
+  }
+  
+  .chat-medico-header .ant-btn {
+    padding: 2px 6px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-medico-header .ant-typography h4 {
+    font-size: 14px !important;
+  }
+  
+  .chat-medico-header .ant-typography {
+    font-size: 10px !important;
+  }
+  
+  .chat-medico-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .chat-medico-messages {
+    background: linear-gradient(to bottom, #1f1f1f, #2a2a2a);
+  }
+  
+  .bot-message-medico {
+    background: linear-gradient(135deg, #2a2a2a, #3a3a3a) !important;
+    border: 1px solid #404040 !important;
+    color: #ffffff !important;
+  }
+}

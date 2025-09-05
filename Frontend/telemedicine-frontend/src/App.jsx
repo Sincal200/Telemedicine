@@ -1,5 +1,6 @@
 import PaginaRecetas from './pages/PaginaRecetas';
 import ChatDiagnostico from './pages/ChatDiagnostico.jsx';
+import ChatMedico from './pages/ChatMedico.jsx';
 import ConfiguracionHorarioMedico from './pages/ConfiguracionHorarioMedico.jsx';
 import PaginaHistorialConsultasDoctor from './pages/PaginaHistorialConsultasDoctor.jsx';
 import { Routes, Route } from 'react-router-dom';
@@ -34,18 +35,19 @@ function App() {
       <Route path="/home" element={<Home />} />
       <Route path="/video" element={<Video />} />
       <Route path="/register" element={<Register />} />
-    <Route path="/dashboard" element={<Dashboard />} />
-    <Route path="/citas" element={<GestionCitas />} />
-    <Route path="/admin/solicitudes-rol" element={<GestionSolicitudesRol />} />
-    <Route path="/admin" element={<AdminDashboard />} />
-    <Route path="/perfil" element={<Perfil />} />
-  <Route path="/videollamada/:roomId" element={<VideoComponentWrapper />} />
-  <Route path="/recetas" element={<PaginaRecetas />} />
-  <Route path="/historial-consultas" element={<PaginaRecetas />} />
-  <Route path="/historial-consultas-doctor" element={<PaginaHistorialConsultasDoctor />} />
-  <Route path="/chat-diagnostico" element={<ChatDiagnostico />} />
-  <Route path="/configuracion-horario" element={<ConfiguracionHorarioMedico personal_medico_id={1} />} />
-  </Routes>
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/citas" element={<GestionCitas />} />
+      <Route path="/admin/solicitudes-rol" element={<GestionSolicitudesRol />} />
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/perfil" element={<Perfil />} />
+      <Route path="/videollamada/:roomId" element={<VideoComponentWrapper />} />
+      <Route path="/recetas" element={<PaginaRecetas />} />
+      <Route path="/historial-consultas" element={<PaginaRecetas />} />
+      <Route path="/historial-consultas-doctor" element={<PaginaHistorialConsultasDoctor />} />
+      <Route path="/chat-diagnostico" element={<ChatDiagnostico />} />
+      <Route path="/chat-medico" element={<ChatMedico />} />
+      <Route path="/configuracion-horario" element={<ConfiguracionHorarioMedico personal_medico_id={1} />} />
+    </Routes>
   );
 }
 
