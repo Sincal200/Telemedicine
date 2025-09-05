@@ -1,5 +1,6 @@
 import generarRecetaRoutes from './routes/generarRecetaRoutes.js';
 import diagnosticoOpenAIRoutes from './routes/diagnosticoOpenAIRoutes.js';
+import consultaMedicaOpenAIRoutes from './routes/consultaMedicaOpenAIRoutes.js';
 import recetaDescargaRoutes from './routes/recetaDescargaRoutes.js';
 import express from 'express';
 import dotenv from 'dotenv';
@@ -84,6 +85,7 @@ app.use('/dias-semana', diasSemanaRoutes);
 app.use('/direccion', direccionRoutes)
 app.use('/disponibilidad-personal-medico', disponibilidadPersonalMedicoRoutes);
 app.use('/diagnostico-openai', diagnosticoOpenAIRoutes);
+app.use('/consulta-medica-ai', consultaMedicaOpenAIRoutes);
 app.use('/especialidades', especialidadesRoutes)
 app.use('/estadisticas-diarias', estadisticasDiariasRoutes);
 app.use('/estados-cita', estadosCitaRoutes)
