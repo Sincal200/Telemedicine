@@ -10,6 +10,7 @@ const router = express.Router();
 router.get('/cita/:citaId', consultaController.obtenerConsultaPorCita);
 router.get('/paciente/:pacienteId', consultaController.obtenerConsultasPaciente);
 router.get('/paciente/:pacienteId/completas', consultaController.obtenerConsultasCompletasPaciente);
+router.get('/doctor/:personalMedicoId', consultaController.obtenerConsultasDoctor);
 
 // Rutas CRUD genéricas
 const consultaCrud = crudController(db.Consulta);

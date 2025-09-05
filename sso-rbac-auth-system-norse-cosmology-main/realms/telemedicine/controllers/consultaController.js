@@ -182,6 +182,87 @@ const consultaController = {
       console.error('Error obteniendo consultas completas del paciente:', error);
       next(error);
     }
+  },
+
+  /**
+   * Obtener todas las consultas realizadas por un doctor
+   * GET /api/consulta/doctor/:personalMedicoId
+   */
+  async obtenerConsultasDoctor(req, res, next) {
+    try {
+      const { personalMedicoId } = req.params;
+
+      // Obtener todas las citas del doctor (sin importar el estado)
+      const citas = await db.Cita.findAll({
+        where: {
+          personal_medico_id: personalMedicoId
+        },
+        include: [
+          {
+            model: db.Paciente,
+            as: 'paciente',
+            include: [
+              {
+                model: db.Persona,
+                as: 'persona'
+              }
+            ]
+          },
+          {
+            model: db.PersonalMedico,
+            as: 'personal_medico',
+            include: [
+              {
+                model: db.Persona,
+                as: 'persona'
+              },
+              {
+                model: db.Especialidades,
+                as: 'especialidad'
+              }
+            ]
+          },
+          {
+            model: db.TiposCita,
+            as: 'tipo_citum'
+          },
+          {
+            model: db.EstadosCita,
+            as: 'estado_citum'
+          },
+          {
+            model: db.Consulta,
+            as: 'Consultum',
+            include: [
+              {
+                model: db.Archivo,
+                as: 'Archivos',
+                where: {
+                  tipo_archivo: 'Receta'
+                },
+                required: false // LEFT JOIN para incluir consultas sin recetas
+              }
+            ]
+          }
+        ],
+        order: [['fecha', 'DESC'], ['hora_inicio', 'DESC']]
+      });
+
+      // Formatear la respuesta
+      const historialCompleto = citas.map(cita => ({
+        ...cita.toJSON(),
+        consulta: cita.Consultum,
+        recetas: cita.Consultum?.Archivos || []
+      }));
+
+      res.json({
+        success: true,
+        data: historialCompleto
+      });
+    } catch (error) {
+      console.error('Error obteniendo consultas del doctor:', error);
+      next(error);
+    }
   }
 };
 
