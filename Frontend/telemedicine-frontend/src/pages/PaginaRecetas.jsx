@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Spin, Alert, Typography, Card, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftOutlined, FileTextOutlined, MedicineBoxOutlined } from '@ant-design/icons';
-import RecetasPaciente from '../components/RecetasPaciente';
+import HistorialConsultas from '../components/HistorialConsultas';
 import userProfileService from '../services/userProfileService';
 import styles from '../styles/components/Perfil.module.css'; // Reutilizamos los estilos del perfil
 
@@ -168,7 +168,7 @@ function PaginaRecetas() {
 
           {/* Contenido principal */}
           <div style={{ marginTop: '2rem' }}>
-            <RecetasPaciente pacienteId={pacienteId} />
+            <HistorialConsultas pacienteId={pacienteId} />
           </div>
         </div>
       </Spin>

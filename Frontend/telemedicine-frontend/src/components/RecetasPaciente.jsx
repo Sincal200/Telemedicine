@@ -1,50 +1,35 @@
 import { useEffect, useState } from 'react';
-import { List, Button, Typography, Spin, Empty, Card, message } from 'antd';
-import { DownloadOutlined } from '@ant-design/icons';
+import { List, Button, Typography, Spin, Empty, Card, message, Tag, Descriptions, Divider } from 'antd';
+import { DownloadOutlined, CalendarOutlined, UserOutlined, MedicineBoxOutlined, FileTextOutlined } from '@ant-design/icons';
+import citaService from '../services/citaService';
 import archivoService from '../services/archivoService';
-import consultaDetalleService from '../services/consultaDetalleService';
+import dayjs from 'dayjs';
 
 const { Text, Title } = Typography;
 
 function RecetasPaciente({ pacienteId }) {
-  const [recetas, setRecetas] = useState([]);
+  const [historialConsultas, setHistorialConsultas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [downloadingIds, setDownloadingIds] = useState(new Set());
-  const [detallesConsulta, setDetallesConsulta] = useState({});
-  const [loadingDetalles, setLoadingDetalles] = useState(false);
 
   useEffect(() => {
-    async function cargarRecetas() {
+    async function cargarHistorialConsultas() {
       if (!pacienteId) return;
       
       setLoading(true);
       try {
-        const recetasData = await archivoService.obtenerRecetasPorPacienteId(pacienteId);
-        setRecetas(recetasData);
-        
-        // Obtener IDs únicos de consultas
-        const consultaIds = [...new Set(recetasData.map(r => r.consulta_id).filter(Boolean))];
-        
-        if (consultaIds.length > 0) {
-          setLoadingDetalles(true);
-          try {
-            const detalles = await consultaDetalleService.obtenerDetallesConsultas(consultaIds);
-            setDetallesConsulta(detalles);
-          } catch (error) {
-            console.warn('Error cargando detalles de consultas:', error);
-          } finally {
-            setLoadingDetalles(false);
-          }
-        }
+        const historial = await citaService.obtenerHistorialConsultas(pacienteId);
+        setHistorialConsultas(historial);
       } catch (error) {
-        console.error('Error cargando recetas:', error);
-        setRecetas([]);
+        console.error('Error cargando historial de consultas:', error);
+        message.error('Error al cargar el historial de consultas');
+        setHistorialConsultas([]);
       } finally {
         setLoading(false);
       }
     }
     
-    cargarRecetas();
+    cargarHistorialConsultas();
   }, [pacienteId]);
 
   const handleDescargar = async (receta) => {

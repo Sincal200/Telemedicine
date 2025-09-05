@@ -296,6 +296,35 @@ class CitaService {
   }
 
   /**
+   * Obtiene las citas completadas de un paciente con información de consulta y recetas
+   * @param {number} pacienteId - ID del paciente
+   * @returns {Promise<Array>} Array de citas completadas con consultas y recetas
+   */
+  async obtenerHistorialConsultas(pacienteId) {
+    try {
+      // Usar el nuevo endpoint que trae toda la información en una sola consulta
+      const response = await fetch(
+        this.buildUrl(`/consulta/paciente/${pacienteId}/completas`), 
+        {
+          method: 'GET',
+          headers: this.getHeaders()
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error obteniendo historial de consultas');
+      }
+
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error('Error obteniendo historial de consultas:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Actualiza una cita
    * @param {number} citaId - ID de la cita
    * @param {Object} datos - Datos a actualizar
