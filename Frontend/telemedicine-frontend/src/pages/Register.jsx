@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Form, Input, Button, Typography, Card, message, Select } from 'antd';
-import { UserOutlined, LockOutlined, MailOutlined, MedicineBoxOutlined, IdcardOutlined, UserSwitchOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, MailOutlined, MedicineBoxOutlined, IdcardOutlined, UserSwitchOutlined, TeamOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from '../styles/components/Register.module.css';
 import registerService from '../services/registerService';
+import TipoDocumentoService from '../services/tipoDocumentoService';
 import ROLES_CONFIG from '../config/rolesConfig';
 
 const { Title, Text } = Typography;
@@ -13,6 +14,13 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+
+  // Opciones de sexo fijas basadas en la BD
+  const opcionesSexo = [
+    { id: 1, descripcion: 'Masculino' },
+    { id: 2, descripcion: 'Femenino' },
+    { id: 3, descripcion: 'Otro' }
+  ];
 
 
   const onFinish = async (values) => {
@@ -62,7 +70,9 @@ function Register() {
         lastName: values.lastName,
         email: values.email,
         userType: values.userType,
-        numero_documento: null,
+        tipo_documento_id: values.tipo_documento_id,
+        numero_documento: values.numero_documento,
+        sexo_id: values.sexo_id,
         fecha_nacimiento: null,
         telefono: null,
         justificacion: `Registro automático como ${values.userType === 'doctor' ? 'médico' : 'paciente'}`
@@ -226,6 +236,66 @@ function Register() {
                   </div>
                 </Option>
               </Select>
+            </Form.Item>
+
+            <Form.Item
+              label="Sexo"
+              name="sexo_id"
+              className={styles.formItem}
+              rules={[{ required: true, message: 'Selecciona una opción' }]}
+            >
+              <Select
+                placeholder="Selecciona una opción"
+                size="large"
+                className={styles.modernSelect}
+                suffixIcon={<TeamOutlined className={styles.inputIcon} />}
+              >
+                {opcionesSexo.map(sexo => (
+                  <Option key={sexo.id} value={sexo.id}>
+                    {sexo.descripcion}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              label="Tipo de Documento"
+              name="tipo_documento_id"
+              className={styles.formItem}
+              rules={[{ required: true, message: 'Selecciona un tipo de documento' }]}
+            >
+              <Select
+                placeholder="Selecciona tipo de documento"
+                size="large"
+                className={styles.modernSelect}
+                suffixIcon={<IdcardOutlined className={styles.inputIcon} />}
+              >
+                {TipoDocumentoService.obtenerOpciones().map(tipo => (
+                  <Option key={tipo.id} value={tipo.id}>
+                    {tipo.codigo} - {tipo.descripcion}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              label="Número de Documento"
+              name="numero_documento"
+              className={styles.formItem}
+              rules={[
+                { required: true, message: 'Ingrese su número de documento' },
+                { min: 8, message: 'Mínimo 8 caracteres' },
+                { max: 20, message: 'Máximo 20 caracteres' },
+                { pattern: /^[A-Za-z0-9]+$/, message: 'Solo letras y números' }
+              ]}
+            >
+              <Input
+                placeholder="Ingrese número de documento"
+                size="large"
+                className={styles.modernInput}
+                prefix={<IdcardOutlined className={styles.inputIcon} />}
+                maxLength={20}
+              />
             </Form.Item>
 
             {/* Fila de contraseñas */}

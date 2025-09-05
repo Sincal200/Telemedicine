@@ -20,12 +20,12 @@ class RegistroController {
         lastName, 
         email, 
         userType,
+        tipo_documento_id,
+        sexo_id,
         // Datos adicionales para doctores
         numero_documento,
-        tipo_documento_id = 1, // DPI por defecto
         fecha_nacimiento,
         telefono,
-        sexo_id = 1, // Masculino por defecto
         // Datos específicos para médicos
         numero_licencia,
         numero_colegiado,
@@ -36,9 +36,9 @@ class RegistroController {
       } = req.body;
 
       // Validar datos requeridos
-      if (!keycloak_user_id || !firstName || !lastName || !email || !userType) {
+      if (!keycloak_user_id || !firstName || !lastName || !email || !userType || !sexo_id || !tipo_documento_id || !numero_documento) {
         return res.status(400).json({
-          error: 'Faltan campos requeridos: keycloak_user_id, firstName, lastName, email, userType'
+          error: 'Faltan campos requeridos: keycloak_user_id, firstName, lastName, email, userType, sexo_id, tipo_documento_id, numero_documento'
         });
       }
 
@@ -53,13 +53,56 @@ class RegistroController {
         });
       }
 
-      // 2. Crear dirección por defecto (se puede mejorar después)
-      const direccionDefault = await db.Direccion.findOne({
-        where: { activo: true }
+      // 1.1. Verificar que no exista otra persona con el mismo tipo y número de documento
+      const personaConDocumento = await db.Persona.findOne({
+        where: { 
+          tipo_documento_id: tipo_documento_id,
+          numero_documento: numero_documento 
+        }
       });
 
+      if (personaConDocumento) {
+        return res.status(409).json({
+          error: 'Ya existe una persona registrada con este tipo y número de documento'
+        });
+      }
+
+      // 2. Crear o obtener dirección "Por completar" para registro inicial
+      let direccionDefault = await db.Direccion.findOne({
+        where: { 
+          direccion_completa: 'Por completar en perfil',
+          activo: true 
+        }
+      });
+
+      // Si no existe, crear la dirección genérica
       if (!direccionDefault) {
-        throw new Error('No hay direcciones disponibles en el sistema');
+        // Obtener el primer departamento disponible para la referencia
+        const primerDepartamento = await db.Departamento.findOne({ 
+          where: { activo: true },
+          order: [['idDepartamento', 'ASC']]
+        });
+
+        if (!primerDepartamento) {
+          throw new Error('No hay departamentos disponibles en el sistema');
+        }
+
+        // Crear dirección genérica
+        const ultimaDireccion = await db.Direccion.findOne({
+          order: [['idDireccion', 'DESC']]
+        });
+        const nuevoIdDireccion = (ultimaDireccion?.idDireccion || 0) + 1;
+
+        direccionDefault = await db.Direccion.create({
+          idDireccion: nuevoIdDireccion,
+          departamento_id: primerDepartamento.idDepartamento,
+          municipio_id: null,
+          aldea_id: null,
+          direccion_completa: 'Por completar en perfil',
+          zona: null,
+          referencia: 'Dirección temporal para registro inicial',
+          activo: true
+        }, { transaction });
       }
 
       // 3. Obtener siguiente ID para Persona
@@ -72,7 +115,7 @@ class RegistroController {
       const persona = await db.Persona.create({
         idPersona: nuevoIdPersona,
         tipo_documento_id: tipo_documento_id,
-        numero_documento: numero_documento || `TEMP-${Date.now()}`, // Temporal si no se proporciona
+        numero_documento: numero_documento,
         nombres: firstName,
         apellidos: lastName,
         email: email,

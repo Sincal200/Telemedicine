@@ -7,7 +7,9 @@ import {
   CalendarOutlined,
   EnvironmentOutlined,
   HeartOutlined,
-  ContactsOutlined
+  ContactsOutlined,
+  TeamOutlined,
+  IdcardOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import userProfileService from '../services/userProfileService';
@@ -15,6 +17,8 @@ import catalogoDireccionService from '../services/catalogoDireccionService';
 import direccionService from '../services/direccionService';
 import pacienteService from '../services/pacienteService';
 import especialidadService from '../services/especialidadService';
+import SexoService from '../services/sexoService';
+import TipoDocumentoService from '../services/tipoDocumentoService';
 import styles from '../styles/components/Perfil.module.css';
 
 const { Title, Text } = Typography;
@@ -90,6 +94,9 @@ const Perfil = () => {
           nombres: data.persona?.nombres || '',
           apellidos: data.persona?.apellidos || '',
           email: data.persona?.email || '',
+          tipo_documento_id: data.persona?.tipo_documento_id || undefined,
+          numero_documento: data.persona?.numero_documento || '',
+          sexo_id: data.persona?.sexo_id || undefined,
           telefono: data.persona?.telefono || '',
           telefono_emergencia: data.persona?.telefono_emergencia || '',
           fecha_nacimiento: data.persona?.fecha_nacimiento ? dayjs(data.persona.fecha_nacimiento) : null,
@@ -180,6 +187,9 @@ const Perfil = () => {
       }
       // Construir el payload solo con los campos editables
       const payload = {
+        tipo_documento_id: values.tipo_documento_id,
+        numero_documento: values.numero_documento,
+        sexo_id: values.sexo_id,
         telefono: values.telefono,
         telefono_emergencia: values.telefono_emergencia,
         fecha_nacimiento: values.fecha_nacimiento ? values.fecha_nacimiento.format('YYYY-MM-DD') : null,
@@ -237,7 +247,9 @@ const Perfil = () => {
             <div className={styles.profileInfo}>
               <h1>{perfil?.persona?.nombres} {perfil?.persona?.apellidos}</h1>
               <p><strong>Email:</strong> {perfil?.persona?.email}</p>
+              <p><strong>Documento:</strong> {TipoDocumentoService.obtenerCodigoPorId(perfil?.persona?.tipo_documento_id)} - {perfil?.persona?.numero_documento}</p>
               <p><strong>Teléfono:</strong> {perfil?.persona?.telefono || 'No especificado'}</p>
+              <p><strong>Sexo:</strong> {SexoService.obtenerDescripcionPorId(perfil?.persona?.sexo_id)}</p>
               <div className={styles.profileBadge}>
                 {perfil?.esPaciente ? '👤 Paciente' : '👨‍⚕️ Personal Médico'}
               </div>
@@ -280,6 +292,63 @@ const Perfil = () => {
                       disabled 
                       prefix={<UserOutlined style={{ color: '#a0aec0' }} />}
                     />
+                  </Form.Item>
+
+                  <div className={styles.formGrid}>
+                    <Form.Item 
+                      label={<span className={styles.formLabel}>Tipo de Documento</span>} 
+                      name="tipo_documento_id" 
+                      rules={[{ required: true, message: 'Seleccione un tipo de documento' }]}
+                    >
+                      <Select
+                        placeholder="Selecciona tipo de documento"
+                        className={styles.modernSelect}
+                        suffixIcon={<IdcardOutlined style={{ color: '#a0aec0' }} />}
+                      >
+                        {TipoDocumentoService.obtenerOpciones().map(tipo => (
+                          <Select.Option key={tipo.id} value={tipo.id}>
+                            {tipo.codigo} - {tipo.descripcion}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+
+                    <Form.Item 
+                      label={<span className={styles.formLabel}>Número de Documento</span>} 
+                      name="numero_documento" 
+                      rules={[
+                        { required: true, message: 'Ingrese su número de documento' },
+                        { min: 8, message: 'Mínimo 8 caracteres' },
+                        { max: 20, message: 'Máximo 20 caracteres' },
+                        { pattern: /^[A-Za-z0-9]+$/, message: 'Solo letras y números' }
+                      ]}
+                    >
+                      <Input 
+                        maxLength={20} 
+                        className={styles.modernInput}
+                        prefix={<IdcardOutlined style={{ color: '#a0aec0' }} />}
+                        placeholder="Número de documento"
+                      />
+                    </Form.Item>
+                  </div>
+
+                  <Form.Item 
+                    label={<span className={styles.formLabel}>Sexo</span>} 
+                    name="sexo_id" 
+                    className={styles.formGridFull}
+                    rules={[{ required: true, message: 'Seleccione una opción' }]}
+                  >
+                    <Select
+                      placeholder="Selecciona una opción"
+                      className={styles.modernSelect}
+                      suffixIcon={<TeamOutlined style={{ color: '#a0aec0' }} />}
+                    >
+                      {SexoService.obtenerOpciones().map(sexo => (
+                        <Select.Option key={sexo.id} value={sexo.id}>
+                          {sexo.descripcion}
+                        </Select.Option>
+                      ))}
+                    </Select>
                   </Form.Item>
 
                   <div className={styles.formGrid}>
