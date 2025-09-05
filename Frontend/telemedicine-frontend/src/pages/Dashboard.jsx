@@ -210,7 +210,11 @@ function Dashboard() {
   };
 
   const irAHistorialConsultas = () => {
-    navigate('/historial-consultas');
+    if (displayRole === 'doctor') {
+      navigate('/historial-consultas-doctor');
+    } else {
+      navigate('/historial-consultas');
+    }
   };
 
   const upcomingAppointments = [
@@ -437,7 +441,8 @@ function Dashboard() {
                       className={styles.actionButton}
                       onClick={irAHistorialConsultas}
                     >
-                      {displayRole === 'admin' ? 'Reportes' : 'Historial de Consultas'}
+                      {displayRole === 'admin' ? 'Reportes' : 
+                       displayRole === 'doctor' ? 'Mis Consultas Realizadas' : 'Historial de Consultas'}
                     </Button>
                   </Col>
                   {/* Botón de configuración de horario para doctores */}

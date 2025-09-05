@@ -325,6 +325,34 @@ class CitaService {
   }
 
   /**
+   * Obtiene todas las consultas realizadas por un doctor con información de citas y recetas
+   * @param {number} personalMedicoId - ID del personal médico
+   * @returns {Promise<Array>} Array de todas las citas del doctor con consultas y recetas
+   */
+  async obtenerHistorialConsultasDoctor(personalMedicoId) {
+    try {
+      const response = await fetch(
+        this.buildUrl(`/consulta/doctor/${personalMedicoId}`), 
+        {
+          method: 'GET',
+          headers: this.getHeaders()
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error obteniendo historial de consultas del doctor');
+      }
+
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error('Error obteniendo historial de consultas del doctor:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Actualiza una cita
    * @param {number} citaId - ID de la cita
    * @param {Object} datos - Datos a actualizar

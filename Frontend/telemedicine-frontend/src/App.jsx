@@ -1,6 +1,7 @@
 import PaginaRecetas from './pages/PaginaRecetas';
 import ChatDiagnostico from './pages/ChatDiagnostico.jsx';
 import ConfiguracionHorarioMedico from './pages/ConfiguracionHorarioMedico.jsx';
+import PaginaHistorialConsultasDoctor from './pages/PaginaHistorialConsultasDoctor.jsx';
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
@@ -41,6 +42,7 @@ function App() {
   <Route path="/videollamada/:roomId" element={<VideoComponentWrapper />} />
   <Route path="/recetas" element={<PaginaRecetas />} />
   <Route path="/historial-consultas" element={<PaginaRecetas />} />
+  <Route path="/historial-consultas-doctor" element={<PaginaHistorialConsultasDoctor />} />
   <Route path="/chat-diagnostico" element={<ChatDiagnostico />} />
   <Route path="/configuracion-horario" element={<ConfiguracionHorarioMedico personal_medico_id={1} />} />
   </Routes>
