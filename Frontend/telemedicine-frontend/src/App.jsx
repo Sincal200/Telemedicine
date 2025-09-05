@@ -40,6 +40,7 @@ function App() {
     <Route path="/perfil" element={<Perfil />} />
   <Route path="/videollamada/:roomId" element={<VideoComponentWrapper />} />
   <Route path="/recetas" element={<PaginaRecetas />} />
+  <Route path="/historial-consultas" element={<PaginaRecetas />} />
   <Route path="/chat-diagnostico" element={<ChatDiagnostico />} />
   <Route path="/configuracion-horario" element={<ConfiguracionHorarioMedico personal_medico_id={1} />} />
   </Routes>

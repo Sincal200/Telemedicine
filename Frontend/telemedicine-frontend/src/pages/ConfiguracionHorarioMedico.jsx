@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import userProfileService from '../services/userProfileService';
 import { getDisponibilidadMedico, crearDisponibilidadMedico, actualizarDisponibilidadMedico, eliminarDisponibilidadMedico } from '../services/disponibilidadMedicoService';
-import { Button, Table, Modal, Form, Input, Select, TimePicker, Checkbox, message } from 'antd';
+import { Button, Table, Modal, Form, Input, Select, TimePicker, Checkbox, message, Alert, Spin } from 'antd';
 import dayjs from 'dayjs';
 
 const diasSemana = [
@@ -15,12 +16,14 @@ const diasSemana = [
 ];
 
 export default function ConfiguracionHorarioMedico() {
+  const navigate = useNavigate();
   const [disponibilidad, setDisponibilidad] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editData, setEditData] = useState(null);
   const [form] = Form.useForm();
   const [personalMedicoId, setPersonalMedicoId] = useState(null);
+  const [isDoctor, setIsDoctor] = useState(null);
 
   const fetchDisponibilidad = async (id) => {
     setLoading(true);
@@ -35,9 +38,20 @@ export default function ConfiguracionHorarioMedico() {
 
   useEffect(() => {
     async function getIdAndFetch() {
-      const id = await userProfileService.obtenerIdPersonalMedico();
-      setPersonalMedicoId(id);
-      if (id) fetchDisponibilidad(id);
+      try {
+        const id = await userProfileService.obtenerIdPersonalMedico();
+        setPersonalMedicoId(id);
+        setIsDoctor(!!id);
+        if (id) {
+          fetchDisponibilidad(id);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error obteniendo ID de personal médico:', error);
+        setIsDoctor(false);
+        setLoading(false);
+      }
     }
     getIdAndFetch();
   }, []);
@@ -118,6 +132,35 @@ export default function ConfiguracionHorarioMedico() {
       </>
     ) },
   ];
+
+  // Loading state
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <Spin size="large" />
+        <p style={{ marginTop: '1rem' }}>Cargando configuración...</p>
+      </div>
+    );
+  }
+
+  // Si no es doctor, mostrar mensaje de acceso restringido
+  if (isDoctor === false) {
+    return (
+      <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
+        <Alert
+          message="Acceso Restringido"
+          description="Esta función está disponible únicamente para personal médico. Los pacientes no pueden acceder a la configuración de horarios."
+          type="warning"
+          showIcon
+          action={
+            <Button size="small" onClick={() => navigate('/dashboard')}>
+              Volver al Dashboard
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div>

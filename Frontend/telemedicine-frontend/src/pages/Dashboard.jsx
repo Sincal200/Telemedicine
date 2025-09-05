@@ -18,7 +18,6 @@ import {
 import {
   UserOutlined,
   MedicineBoxOutlined,
-  VideoCameraOutlined,
   CalendarOutlined,
   SettingOutlined,
   LogoutOutlined,
@@ -157,12 +156,15 @@ function Dashboard() {
       label: 'Mi Perfil',
       onClick: () => navigate('/perfil'),
     },
-    {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: 'Configuración',
-      onClick: () => navigate('/configuracion-horario'),
-    },
+    // Configuración de horario solo para doctores
+    ...(displayRole === 'doctor' ? [
+      {
+        key: 'settings',
+        icon: <SettingOutlined />,
+        label: 'Configuración de Horario',
+        onClick: () => navigate('/configuracion-horario'),
+      }
+    ] : []),
     // Botón para cambiar vista si es admin
     ...(userRoles.includes('admin') ? [
       {
@@ -203,12 +205,12 @@ function Dashboard() {
     },
   ];
 
-  const startVideoCall = () => {
-    navigate('/video');
-  };
-
   const irAGestionCitas = () => {
     navigate('/citas');
+  };
+
+  const irAHistorialConsultas = () => {
+    navigate('/historial-consultas');
   };
 
   const upcomingAppointments = [
@@ -417,18 +419,6 @@ function Dashboard() {
                 <Row gutter={[16, 16]}>
                   <Col xs={12} sm={8}>
                     <Button 
-                      type="primary" 
-                      icon={<VideoCameraOutlined />}
-                      block
-                      size="large"
-                      className={styles.actionButton}
-                      onClick={startVideoCall}
-                    >
-                      Nueva Consulta
-                    </Button>
-                  </Col>
-                  <Col xs={12} sm={8}>
-                    <Button 
                       icon={<PlusOutlined />}
                       block
                       size="large"
@@ -445,10 +435,25 @@ function Dashboard() {
                       block
                       size="large"
                       className={styles.actionButton}
+                      onClick={irAHistorialConsultas}
                     >
-                      {displayRole === 'admin' ? 'Reportes' : 'Historial'}
+                      {displayRole === 'admin' ? 'Reportes' : 'Historial de Consultas'}
                     </Button>
                   </Col>
+                  {/* Botón de configuración de horario para doctores */}
+                  {displayRole === 'doctor' && (
+                    <Col xs={12} sm={8}>
+                      <Button 
+                        icon={<SettingOutlined />}
+                        block
+                        size="large"
+                        className={styles.actionButton}
+                        onClick={() => navigate('/configuracion-horario')}
+                      >
+                        Configurar Horario
+                      </Button>
+                    </Col>
+                  )}
                   {displayRole === 'admin' && (
                     <Col xs={12} sm={8}>
                       <Button 
@@ -517,14 +522,6 @@ function Dashboard() {
                       className={styles.miniCalendar}
                     />
                   </Card>
-                  <Button
-                    type="default"
-                    icon={<SettingOutlined />}
-                    onClick={() => navigate('/configuracion-horario')}
-                    style={{ margin: '16px 0', width: '100%' }}
-                  >
-                    Configurar Horario Médico
-                  </Button>
                 </>
               )}
               
