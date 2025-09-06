@@ -6,6 +6,7 @@ import styles from '../styles/components/Video.module.css';
 import consultaService from '../services/consultaService';
 import signosVitalesService from '../services/signosVitalesService';
 import expedienteService from '../services/expedienteService';
+import pacienteService from '../services/pacienteService';
 
 // ICE
 const stunServers = {
@@ -43,6 +44,8 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
   const [consulta, setConsulta] = useState(null);
   const [expediente, setExpediente] = useState(null);
   const [expedienteLoading, setExpedienteLoading] = useState(false);
+  const [pacienteCompleto, setPacienteCompleto] = useState(null);
+  const [pacienteLoading, setPacienteLoading] = useState(false);
 
   const [formMedico, setFormMedico] = useState({
     diagnostico_principal: '',
@@ -269,19 +272,29 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
         const res = await import('../services/citaService');
         const citaService = res.default;
         let citaData = null;
+        
+        console.log('🔍 Buscando cita para:', { roomId, userId, userRole });
+        
         if (userRole === 'doctor') {
           const citas = await citaService.obtenerCitasMedico(userId);
+          console.log('📋 Citas del médico:', citas);
           citaData = citas.find(c => c.room_id === roomId);
         } else {
           const citas = await citaService.obtenerCitasPaciente(userId);
+          console.log('📋 Citas del paciente:', citas);
           citaData = citas.find(c => c.room_id === roomId);
         }
+        
+        console.log('🎯 Cita encontrada:', citaData);
         setCita(citaData || null);
 
         if (citaData) {
+          console.log('👤 ID del paciente en la cita:', citaData.paciente_id);
+          
           // Consulta
           try {
             const consultaData = await consultaService.obtenerConsultaPorCitaId(citaData.idCita);
+            console.log('📝 Consulta encontrada:', consultaData);
             if (consultaData) {
               setConsulta(consultaData);
               setFormMedico({
@@ -309,7 +322,8 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
                 fecha_seguimiento: ''
               });
             }
-          } catch {
+          } catch (error) {
+            console.error('❌ Error cargando consulta:', error);
             setConsulta(null);
             setFormMedico({
               diagnostico_principal: '',
@@ -324,17 +338,46 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
             });
           }
 
-          // Expediente
+          // Expediente y datos completos del paciente
           if (citaData.paciente_id) {
             setExpedienteLoading(true);
+            setPacienteLoading(true);
             try {
+              console.log('📊 Cargando expediente para paciente ID:', citaData.paciente_id);
+              
+              // Cargar expediente (ya incluye algunos datos de persona)
               const expedienteData = await expedienteService.obtenerExpedientePorPacienteId(citaData.paciente_id);
+              console.log('📊 Expediente cargado:', expedienteData);
               setExpediente(expedienteData);
-            } catch { setExpediente(null); }
-            finally { setExpedienteLoading(false); }
+              
+              // Cargar datos completos del paciente (datos médicos)
+              console.log('👤 Cargando datos completos del paciente ID:', citaData.paciente_id);
+              const pacienteData = await pacienteService.getPaciente(citaData.paciente_id);
+              console.log('👤 Datos del paciente cargados:', pacienteData);
+              setPacienteCompleto(pacienteData);
+
+              // Los datos de persona deberían estar en el expediente (expedienteData.paciente?.persona)
+              // Pero también están disponibles en pacienteData.persona si el backend los incluye
+              console.log('🔍 Datos de persona en expediente:', expedienteData?.paciente?.persona);
+              console.log('🔍 Datos de persona en paciente:', pacienteData?.persona);
+              
+            } catch (error) { 
+              console.error('❌ Error cargando datos del paciente:', error);
+              setExpediente(null); 
+              setPacienteCompleto(null);
+            }
+            finally { 
+              setExpedienteLoading(false); 
+              setPacienteLoading(false);
+            }
+          } else {
+            console.warn('⚠️ No se encontró paciente_id en la cita');
           }
+        } else {
+          console.warn('⚠️ No se encontró cita para esta sala');
         }
-      } catch {
+      } catch (error) {
+        console.error('❌ Error general cargando datos:', error);
         setCita(null); setConsulta(null); setExpediente(null);
       }
     };
@@ -1159,39 +1202,147 @@ const VideoChat = ({ roomId, userRole, userId, onLeaveRoom }) => {
               <div className={`${styles.infoCard}`}>
                 <div className={styles.infoCardTitle}>Expediente Clínico</div>
                 <div className={styles.infoCardContent}>
-                  {expedienteLoading && <div>Cargando expediente...</div>}
-                  {!expedienteLoading && expediente && (
+                  {(expedienteLoading || pacienteLoading) && <div>Cargando expediente...</div>}
+                  
+                  {!expedienteLoading && !pacienteLoading && (expediente || pacienteCompleto) && (
                     <>
-                      <div><b>Paciente:</b> {expediente.paciente?.persona?.nombres} {expediente.paciente?.persona?.apellidos}</div>
-                      <div><b>Número de expediente:</b> {expediente.paciente?.numero_expediente}</div>
-                      <div><b>Tipo de sangre:</b> {expediente.paciente?.tipo_sangre}</div>
-                      <div><b>Alergias:</b> {expediente.paciente?.alergias}</div>
-                      <div><b>Enfermedades crónicas:</b> {expediente.paciente?.enfermedades_cronicas}</div>
-                      <div><b>Medicamentos actuales:</b> {expediente.paciente?.medicamentos_actuales}</div>
-
-                      <div style={{ marginTop: 8 }}><b>Consultas previas:</b></div>
-                      {expediente.citas?.length ? (
-                        <ul style={{ maxHeight: '140px', overflowY: 'auto', fontSize: 13 }}>
-                          {expediente.citas.map(c => (
-                            <li key={c.idCita}>
-                              <b>{c.fecha}</b> - {c.Consultum?.diagnostico_principal || 'Sin diagnóstico'}
-                              {c.Consultum?.SignosVitales?.length > 0 && (
+                      {/* Información Personal */}
+                      <div style={{ marginBottom: 16, padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: 8, color: '#1890ff' }}>📋 Información Personal</div>
+                        {(() => {
+                          // Priorizar datos de persona del expediente, luego del paciente completo
+                          const persona = expediente?.paciente?.persona || pacienteCompleto?.persona;
+                          const pacienteInfo = expediente?.paciente || pacienteCompleto;
+                          
+                          console.log('🔍 Persona seleccionada para mostrar:', persona);
+                          console.log('🔍 Paciente info seleccionada:', pacienteInfo);
+                          
+                          if (!persona && !pacienteInfo) {
+                            return (
+                              <div style={{ color: '#ff7875', fontStyle: 'italic' }}>
+                                ❌ No se pudieron cargar los datos personales
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <>
+                              {persona && (
                                 <>
-                                  <br />
-                                  <span style={{ fontSize: 12 }}>
-                                    Signos: {c.Consultum.SignosVitales.map(sv =>
-                                      `T: ${sv.temperatura}°C, FC: ${sv.frecuencia_cardiaca}, PA: ${sv.presion_sistolica}/${sv.presion_diastolica}`
-                                    ).join(' | ')}
-                                  </span>
+                                  <div><b>Nombre completo:</b> {persona.nombres || 'No registrado'} {persona.apellidos || ''}</div>
+                                  <div><b>Número de documento:</b> {persona.numero_documento || 'No registrado'}</div>
+                                  <div><b>Fecha de nacimiento:</b> {persona.fecha_nacimiento ? new Date(persona.fecha_nacimiento).toLocaleDateString('es-ES') : 'No registrada'}</div>
+                                  <div><b>Edad:</b> {persona.fecha_nacimiento ? 
+                                    Math.floor((new Date() - new Date(persona.fecha_nacimiento)) / (365.25 * 24 * 60 * 60 * 1000)) : 'No calculada'} años</div>
+                                  <div><b>Sexo:</b> {persona.Sexo?.descripcion || (persona.sexo_id === 1 ? 'Masculino' : persona.sexo_id === 2 ? 'Femenino' : 'No especificado')}</div>
+                                  <div><b>Teléfono:</b> {persona.telefono || 'No registrado'}</div>
+                                  <div><b>Email:</b> {persona.email || 'No registrado'}</div>
+                                  {persona.Direccion && (
+                                    <div><b>Dirección:</b> {persona.Direccion.direccion_completa || 'No registrada'}</div>
+                                  )}
                                 </>
                               )}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : <div>No hay consultas previas.</div>}
+                              {pacienteInfo && (
+                                <>
+                                  <div><b>Número de expediente:</b> {pacienteInfo.numero_expediente || 'No asignado'}</div>
+                                  <div><b>Contacto de emergencia:</b> {pacienteInfo.contacto_emergencia_nombre || 'No registrado'}</div>
+                                  <div><b>Teléfono de emergencia:</b> {persona?.telefono_emergencia || pacienteInfo.contacto_emergencia_telefono || 'No registrado'}</div>
+                                  <div><b>Parentesco:</b> {pacienteInfo.contacto_emergencia_parentesco || 'No registrado'}</div>
+                                </>
+                              )}
+                              {!persona && pacienteInfo && (
+                                <div style={{ color: '#fa8c16', fontStyle: 'italic', marginTop: 8 }}>
+                                  ⚠️ Algunos datos personales no están disponibles. Solo se muestran datos médicos.
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Información Médica */}
+                      <div style={{ marginBottom: 16, padding: '12px', backgroundColor: '#fff2e8', borderRadius: '6px' }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: 8, color: '#fa8c16' }}>🩺 Información Médica</div>
+                        {(() => {
+                          // Priorizar datos médicos del expediente, luego del paciente completo
+                          const datosMedicos = expediente?.paciente || pacienteCompleto;
+                          
+                          console.log('🏥 DEBUG - Datos médicos encontrados:', datosMedicos);
+                          console.log('🩺 DEBUG - Expediente.paciente:', expediente?.paciente);
+                          console.log('👤 DEBUG - PacienteCompleto:', pacienteCompleto);
+                          
+                          if (!datosMedicos) {
+                            return (
+                              <div style={{ color: '#ff7875', fontStyle: 'italic' }}>
+                                ❌ No se pudieron cargar los datos médicos
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <>
+                              <div><b>Tipo de sangre:</b> {datosMedicos.tipo_sangre || 'No registrado'}</div>
+                              <div><b>Alergias:</b> {datosMedicos.alergias || 'Ninguna registrada'}</div>
+                              <div><b>Enfermedades crónicas:</b> {datosMedicos.enfermedades_cronicas || 'Ninguna registrada'}</div>
+                              <div><b>Medicamentos actuales:</b> {datosMedicos.medicamentos_actuales || 'Ninguno registrado'}</div>
+                              <div><b>Seguro médico:</b> {datosMedicos.seguro_medico || 'No registrado'}</div>
+                              <div><b>Número de seguro:</b> {datosMedicos.numero_seguro || 'No registrado'}</div>
+                              <div><b>Fecha primera consulta:</b> {datosMedicos.fecha_primera_consulta ? new Date(datosMedicos.fecha_primera_consulta).toLocaleDateString('es-ES') : 'No registrada'}</div>
+                            </>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Historial de Consultas */}
+                      <div style={{ marginBottom: 8, padding: '12px', backgroundColor: '#f6ffed', borderRadius: '6px' }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: 8, color: '#52c41a' }}>📊 Consultas Previas</div>
+                        {expediente?.citas?.length ? (
+                          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            {expediente.citas.slice(0, 5).map(c => (
+                              <div key={c.idCita} style={{ 
+                                marginBottom: '8px', 
+                                padding: '8px', 
+                                backgroundColor: 'white', 
+                                borderRadius: '4px',
+                                border: '1px solid #d9d9d9',
+                                fontSize: '13px'
+                              }}>
+                                <div style={{ fontWeight: 'bold' }}>📅 {new Date(c.fecha).toLocaleDateString()}</div>
+                                <div><b>Diagnóstico:</b> {c.Consultum?.diagnostico_principal || 'Sin diagnóstico'}</div>
+                                {c.Consultum?.tratamiento && (
+                                  <div><b>Tratamiento:</b> {c.Consultum.tratamiento}</div>
+                                )}
+                                {c.Consultum?.SignosVitales?.length > 0 && (
+                                  <div style={{ fontSize: '12px', color: '#666' }}>
+                                    <b>Signos vitales:</b> {c.Consultum.SignosVitales.map(sv => {
+                                      const signos = [];
+                                      if (sv.temperatura) signos.push(`T: ${sv.temperatura}°C`);
+                                      if (sv.frecuencia_cardiaca) signos.push(`FC: ${sv.frecuencia_cardiaca}`);
+                                      if (sv.presion_sistolica && sv.presion_diastolica) signos.push(`PA: ${sv.presion_sistolica}/${sv.presion_diastolica}`);
+                                      return signos.join(', ');
+                                    }).join(' | ')}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            {expediente.citas.length > 5 && (
+                              <div style={{ fontSize: '12px', color: '#666', textAlign: 'center' }}>
+                                ... y {expediente.citas.length - 5} consultas más
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ color: '#666', fontStyle: 'italic' }}>No hay consultas previas registradas.</div>
+                        )}
+                      </div>
                     </>
                   )}
-                  {!expedienteLoading && !expediente && <div>No se pudo cargar el expediente.</div>}
+                  
+                  {!expedienteLoading && !pacienteLoading && !expediente && !pacienteCompleto && (
+                    <div style={{ color: '#ff4d4f', textAlign: 'center', padding: '20px' }}>
+                      ❌ No se pudo cargar la información del paciente
+                    </div>
+                  )}
                 </div>
               </div>
             )}

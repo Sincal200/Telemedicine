@@ -130,10 +130,20 @@ function ProgramarCita({ visible, onClose, onSuccess, tipoCitaPreseleccionado, p
       const [fecha, horaCompleta] = horarioSeleccionado.fechaHora.split(' ');
       const horaInicio = horaCompleta.substring(0, 5); // HH:MM
 
-      // Detectar si el tipo de cita es telemedicina (ajusta según tu lógica)
+      // Detectar si el tipo de cita es telemedicina
       const tipoCitaId = form.getFieldValue('tipoCitaId');
       const tipoCita = tiposCita.find(tc => tc.idTipoCita === tipoCitaId);
-      const esTelemedicina = tipoCita && tipoCita.nombre.toLowerCase().includes('telemedicina');
+      
+      // Si es cita de seguimiento (tipo 3) o el nombre incluye "telemedicina", es telemedicina
+      const esTelemedicina = tipoCitaPreseleccionado === 3 || 
+                            (tipoCita && tipoCita.nombre.toLowerCase().includes('telemedicina'));
+
+      console.log('🏥 Creando cita:', {
+        tipoCitaId,
+        tipoCitaPreseleccionado,
+        esTelemedicina,
+        esSeguimiento: tipoCitaPreseleccionado === 3
+      });
 
       const datosCita = {
         pacienteId: idPaciente,
@@ -143,10 +153,15 @@ function ProgramarCita({ visible, onClose, onSuccess, tipoCitaPreseleccionado, p
         tipoCitaId,
         motivoConsulta: motivoCita,
         prioridadId: 1, // Normal por defecto
-        esTelemedicina
+        esTelemedicina: esTelemedicina, // Ya viene como boolean, el backend lo convierte
+        esSeguimiento: tipoCitaPreseleccionado === 3 ? true : false // Marcar si es seguimiento
       };
 
-      await citaService.programarCita(datosCita);
+      console.log('📤 Enviando datos de cita:', datosCita);
+
+      const citaCreada = await citaService.programarCita(datosCita);
+      
+      console.log('✅ Cita creada:', citaCreada);
 
       // Si es cita de seguimiento y existe consulta, actualizar automáticamente la fecha de seguimiento y requiere_seguimiento
       if (tipoCitaPreseleccionado === 3 && horarioSeleccionado.consultaId) {
@@ -161,7 +176,11 @@ function ProgramarCita({ visible, onClose, onSuccess, tipoCitaPreseleccionado, p
         }
       }
 
-      message.success('¡Cita programada exitosamente!');
+      message.success(
+        esTelemedicina 
+          ? '¡Cita de telemedicina programada exitosamente! Se ha generado la sala de videollamada.' 
+          : '¡Cita programada exitosamente!'
+      );
       setMostrarConfirmacion(false);
       form.resetFields();
       setHorariosDisponibles([]);
@@ -375,7 +394,14 @@ function ProgramarCita({ visible, onClose, onSuccess, tipoCitaPreseleccionado, p
           >
             <Card style={{ marginBottom: 16 }}>
               <Space direction="vertical" style={{ width: '100%' }}>
-                <Text strong>Detalles de la Cita:</Text>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text strong>Detalles de la Cita:</Text>
+                  {(tipoCitaPreseleccionado === 3 || (tiposCita.find(tc => tc.idTipoCita === form.getFieldValue('tipoCitaId'))?.nombre.toLowerCase().includes('telemedicina'))) && (
+                    <Tag color="blue" icon={<CalendarOutlined />}>
+                      📹 Telemedicina
+                    </Tag>
+                  )}
+                </div>
                 <Space>
                   <CalendarOutlined />
                   <Text>{formatearFecha(horarioSeleccionado.fechaHora.split(' ')[0])}</Text>
@@ -392,6 +418,18 @@ function ProgramarCita({ visible, onClose, onSuccess, tipoCitaPreseleccionado, p
                   <MedicineBoxOutlined />
                   <Text>{horarioSeleccionado.medico.especialidad}</Text>
                 </Space>
+                {tipoCitaPreseleccionado === 3 && (
+                  <div style={{ 
+                    padding: '8px 12px', 
+                    backgroundColor: '#e6f7ff', 
+                    borderRadius: '6px',
+                    border: '1px solid #91d5ff'
+                  }}>
+                    <Text style={{ color: '#1890ff', fontSize: '13px' }}>
+                      📋 Esta es una cita de seguimiento. Se generará automáticamente una sala de videollamada.
+                    </Text>
+                  </div>
+                )}
               </Space>
             </Card>
 
